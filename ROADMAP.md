@@ -58,14 +58,44 @@ Everything below is placeholder primitives (capsules/boxes) — no art committed
 - **Combat feel decided by playing** — hence the `combat_mode` switch in `combat.gd`. Currently ranged. _(2026-05-29)_
 - **First-person added as a toggle, not a replacement** — so we can A/B without losing the iso work. _(2026-05-29)_
 - **Art deferred** — placeholder shapes until the loop is proven fun. _(2026-05-29)_
+- **Considering: view-switching as a core mechanic** — keep both iso and FP and design around
+  the swap, rather than picking one. Not yet committed; see the idea section below. _(2026-05-29)_
 
-## The big fork: pick a camera direction
+## The camera question (was "the big fork")
 
-We can't polish two control schemes forever. Decide, then delete the loser's scaffolding.
+Originally framed as "pick one view and delete the other." A new direction is on the table
+that changes this: **keep both, and make switching between them a core mechanic** (see below).
+So this is no longer purely a pick-one decision — it's pick-one *or* commit to the dual-view
+idea.
 
-- [ ] Play both modes through the whole level and note which is more fun
-- [ ] Decide: first-person, isometric, or third-person over-shoulder
-- [ ] Once decided, design encounters/level geometry *for that view* (sightlines differ a lot)
+- [ ] Play both modes through the whole level and note how each feels
+- [ ] Decide the direction: single view (FP / iso / over-shoulder) **or** dual-view-as-mechanic
+- [ ] Once decided, design encounters/level geometry for it (sightlines differ a lot between views)
+
+## Idea: view-switching as a core mechanic ⭐
+
+The standout idea — instead of choosing iso *or* first-person, the player **switches between
+them on purpose** (currently the **V** key), and the game is *designed around* that switch.
+Isometric and first-person each reveal and hide different things, so the swap becomes a verb.
+
+Why it's promising: we already have both views working and sharing all combat/enemy/level
+logic, so the expensive part is mostly done — the switch is real today.
+
+Open design questions (to explore, not yet decided):
+- **What does each view give you?** e.g. iso = see the whole arena, enemy positions, platform
+  layout, incoming attacks; FP = precise aiming, see far down corridors, spot things hidden
+  from the top-down angle. The switch is interesting only if each view has a real advantage.
+- **Puzzles/level design that *require* switching** — a platform gap you can only judge in iso,
+  a distant target you can only hit in FP, a hidden path visible from only one angle.
+- **Is the switch free, or costed?** Instant/free, on a cooldown, limited charges, or tied to a
+  resource? A cost makes "when do I switch?" a decision.
+- **Combat framing** — does aiming/feel differ enough that you'd switch mid-fight (FP to snipe,
+  iso to kite a swarm)?
+- **Readability & comfort** — sudden iso↔FP swaps can be disorienting; may want a quick
+  transition/tween rather than a hard cut.
+
+Next concrete step if we pursue it: prototype one encounter that is only solvable by switching
+views, and see if the switch feels like a tool or a chore.
 
 ## Next up (near-term, roughly prioritized)
 
