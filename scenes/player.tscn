@@ -1,0 +1,70 @@
+[gd_scene load_steps=9 format=3 uid="uid://carl_player"]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/health.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/combat.gd" id="3_combat"]
+[ext_resource type="PackedScene" uid="uid://carl_projectile" path="res://scenes/projectile.tscn" id="4_proj"]
+
+[sub_resource type="CapsuleShape3D" id="shape_player"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="CapsuleMesh" id="mesh_player"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="CylinderMesh" id="mesh_marker"]
+top_radius = 0.6
+bottom_radius = 0.6
+height = 0.05
+
+[sub_resource type="StandardMaterial3D" id="mat_marker"]
+transparency = 1
+albedo_color = Color(0.3, 0.9, 1, 0.55)
+emission_enabled = true
+emission = Color(0.3, 0.9, 1, 1)
+emission_energy_multiplier = 0.6
+
+[node name="Player" type="CharacterBody3D" groups=["player"]]
+collision_layer = 1
+collision_mask = 4
+script = ExtResource("1_player")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("shape_player")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh_player")
+
+[node name="Snout" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.6, 0, 0.2, -0.7)
+mesh = SubResource("mesh_player")
+
+[node name="SwingFx" type="MeshInstance3D" parent="."]
+transform = Transform3D(2, 0, 0, 0, 0.1, 0, 0, 0, 2, 0, 0.2, -1.1)
+visible = false
+mesh = SubResource("mesh_player")
+
+[node name="GroundRay" type="RayCast3D" parent="."]
+target_position = Vector3(0, -60, 0)
+collision_mask = 4
+
+[node name="FPCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+current = false
+fov = 75.0
+
+[node name="LandingMarker" type="MeshInstance3D" parent="."]
+top_level = true
+mesh = SubResource("mesh_marker")
+material_override = SubResource("mat_marker")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 100.0
+
+[node name="Combat" type="Node" parent="."]
+script = ExtResource("3_combat")
+combat_mode = 1
+projectile_scene = ExtResource("4_proj")
+hittable_layers = 2

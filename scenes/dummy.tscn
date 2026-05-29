@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://carl_dummy"]
+
+[ext_resource type="Script" path="res://scripts/dummy.gd" id="1_dummy"]
+[ext_resource type="Script" path="res://scripts/health.gd" id="2_health"]
+
+[sub_resource type="BoxShape3D" id="shape_dummy"]
+size = Vector3(1.2, 2.0, 1.2)
+
+[sub_resource type="BoxMesh" id="mesh_dummy"]
+size = Vector3(1.2, 2.0, 1.2)
+
+[node name="Dummy" type="StaticBody3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_dummy")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("shape_dummy")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh_dummy")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 50.0
