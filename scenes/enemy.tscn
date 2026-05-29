@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=3 uid="uid://carl_enemy"]
+
+[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/health.gd" id="2_health"]
+
+[sub_resource type="CapsuleShape3D" id="shape_enemy"]
+radius = 0.45
+height = 1.4
+
+[sub_resource type="CapsuleMesh" id="mesh_enemy"]
+radius = 0.45
+height = 1.4
+
+[sub_resource type="StandardMaterial3D" id="mat_enemy"]
+albedo_color = Color(0.7, 0.35, 0.7, 1)
+
+[node name="Enemy" type="CharacterBody3D" groups=["enemy"]]
+collision_layer = 2
+collision_mask = 4
+script = ExtResource("1_enemy")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("shape_enemy")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("mesh_enemy")
+material_override = SubResource("mat_enemy")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+max_health = 30.0
