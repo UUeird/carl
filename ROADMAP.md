@@ -4,7 +4,7 @@ A living planning doc for the game. We edit this together as we go: check items 
 add new ones, move things between sections, and revise decisions when we learn something
 from playing. Keep it honest — if something's half-done or unproven, say so.
 
-_Last updated: 2026-05-29 · Current version: 2026.05.29 (see [CHANGELOG.md](CHANGELOG.md))_
+_Last updated: 2026-05-29 · Current version: 2026.05.29.2 (see [CHANGELOG.md](CHANGELOG.md))_
 
 ---
 
@@ -25,6 +25,11 @@ become the body. Move items here from "Next up" as they ship; once recorded in
 [CHANGELOG.md](CHANGELOG.md) under a version they can be trimmed to keep this readable.
 
 Everything below is placeholder primitives (capsules/boxes) — no art committed yet.
+
+### Weapons & FPS-style shooting
+- Body gun (visible iso/third-person) + first-person viewmodel (bottom-right, FP-only)
+- Projectiles spawn from the active muzzle; FP shots follow the camera's full 3D aim
+  (incl. pitch), iso stays flat
 
 ### First-person mode + presentation polish
 - First-person view toggle (**V**): mouse-look, camera-relative movement, camera-forward aim
@@ -64,7 +69,12 @@ We can't polish two control schemes forever. Decide, then delete the loser's sca
 
 ## Next up (near-term, roughly prioritized)
 
-- [ ] **(if FP) Tune mouse-look feel** — sensitivity, optional invert-Y, FOV
+- [ ] **First-person feel & weapon polish** — the FP gun works but feels flat:
+  - [ ] Muzzle flash + a tracer/visible-bullet read on firing
+  - [ ] Recoil / weapon-sway / fire kick so shots have weight
+  - [ ] Replace the blocky placeholder gun shapes with something more gun-like
+  - [ ] Crosshair could tighten/tint when on-target
+  - [ ] Mouse-look tuning — sensitivity, optional invert-Y, adjustable FOV
 - [ ] **Enemy variety** — at least one ranged/turret enemy so fights aren't all melee-chasers
 - [ ] **Combat feedback** — hit sound/particle, damage numbers or screen-shake, death effect polish
 - [ ] **Boss fight depth** — more than one attack; a second phase at low HP

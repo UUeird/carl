@@ -13,6 +13,19 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ---
 
+## 2026.05.29.2
+
+### Added
+- **Weapons** — a gun on the player body (visible in iso/third-person) and a first-person
+  viewmodel (bottom-right, FP-only). Projectiles now spawn from the active gun's muzzle.
+
+### Changed
+- **Projectile aim** — in first-person, shots travel along the camera's full 3D aim
+  (including up/down pitch) instead of always flying flat. Isometric keeps the flat,
+  floor-aimed shot that suits its top-down view.
+
+---
+
 ## 2026.05.29
 
 First recorded version. Everything is placeholder primitives (capsules/boxes); no art yet.

@@ -30,6 +30,10 @@ signal checkpoint_reached(point: Vector3)
 @onready var fp_camera: Camera3D = $FPCamera
 @onready var mesh: MeshInstance3D = $Mesh
 @onready var snout: MeshInstance3D = $Snout
+@onready var body_gun: Node3D = $BodyGun
+@onready var body_muzzle: Marker3D = $BodyGun/Muzzle
+@onready var fp_viewmodel: Node3D = $FPCamera/FPViewmodel
+@onready var fp_muzzle: Marker3D = $FPCamera/FPViewmodel/Muzzle
 
 var _aim_point: Vector3
 var _spawn_point: Vector3
@@ -84,9 +88,11 @@ func _set_fp_mode(on: bool) -> void:
 	fp_camera.current = on
 	if not on and _iso_camera:
 		_iso_camera.current = true
-	# Hide the player body + aim helpers in first person.
+	# Hide the player body + aim helpers in first person; swap which gun shows.
 	mesh.visible = not on
 	snout.visible = not on
+	body_gun.visible = not on
+	fp_viewmodel.visible = on
 	landing_marker.visible = landing_marker.visible and not on
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if on else Input.MOUSE_MODE_VISIBLE
 	var hud := get_node_or_null(hud_path)
@@ -177,13 +183,17 @@ func _update_aim_fp() -> void:
 	_aim_point = fp_camera.global_position - fp_camera.global_transform.basis.z * 50.0
 
 func _attack() -> void:
-	var facing: Vector3
-	if _fp_mode:
-		facing = -fp_camera.global_transform.basis.z
-	else:
-		facing = -global_transform.basis.z  # forward (toward aim)
+	# Flat body facing drives melee in both modes.
+	var facing := -global_transform.basis.z
 	facing.y = 0.0
-	combat.try_attack(global_position, facing.normalized())
+	facing = facing.normalized()
+	if _fp_mode:
+		# Shoot from the viewmodel muzzle along the full 3D camera aim (incl. pitch).
+		var aim := -fp_camera.global_transform.basis.z
+		combat.try_attack(global_position, facing, fp_muzzle.global_position, aim)
+	else:
+		# Shoot from the body-gun muzzle along the flat facing (iso stays flat).
+		combat.try_attack(global_position, facing, body_muzzle.global_position, facing)
 	if combat.combat_mode != Combat.Mode.RANGED:
 		_show_swing()
 

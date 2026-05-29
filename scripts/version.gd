@@ -5,4 +5,4 @@ extends RefCounted
 ## for a second cut the same day). Keep this in sync with the top of CHANGELOG.md.
 ## Shown in-app via the HUD's bottom-right overlay.
 
-const STRING := "2026.05.29"
+const STRING := "2026.05.29.2"

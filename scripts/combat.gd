@@ -33,23 +33,29 @@ func _process(delta: float) -> void:
 func can_attack() -> bool:
 	return _cooldown_left <= 0.0
 
-## origin: world position the attack starts from (the attacker).
-## facing: normalized horizontal direction the attacker is aiming (toward cursor).
-func try_attack(origin: Vector3, facing: Vector3) -> void:
+## origin: world position the attacker stands at.
+## facing: normalized horizontal direction the attacker faces (used by melee).
+## muzzle: world position projectiles spawn from (the gun's muzzle). Defaults to
+##   origin if not given.
+## aim_dir: full 3D direction projectiles travel (e.g. camera forward in FP).
+##   Defaults to facing (flat) if not given — correct for the iso view.
+func try_attack(origin: Vector3, facing: Vector3, muzzle: Vector3 = Vector3.INF, aim_dir: Vector3 = Vector3.INF) -> void:
 	if not can_attack():
 		return
+	var shot_origin := origin if muzzle == Vector3.INF else muzzle
+	var shot_dir := facing if aim_dir == Vector3.INF else aim_dir
 	match combat_mode:
 		Mode.MELEE:
 			_do_melee(origin, facing)
 			_cooldown_left = melee_cooldown
 		Mode.RANGED:
-			_do_ranged(origin, facing)
+			_do_ranged(shot_origin, shot_dir)
 			_cooldown_left = ranged_cooldown
 		Mode.MIXED:
 			# Mixed = melee swing + a projectile on the same press. Cheap way to
 			# feel both at once; we split to separate inputs later if it's promising.
 			_do_melee(origin, facing)
-			_do_ranged(origin, facing)
+			_do_ranged(shot_origin, shot_dir)
 			_cooldown_left = max(melee_cooldown, ranged_cooldown)
 
 func _do_melee(origin: Vector3, facing: Vector3) -> void:
@@ -79,18 +85,18 @@ func _do_melee(origin: Vector3, facing: Vector3) -> void:
 		if facing.angle_to(to_target.normalized()) <= half_arc:
 			_apply_damage(collider, melee_damage)
 
-func _do_ranged(origin: Vector3, facing: Vector3) -> void:
+func _do_ranged(muzzle: Vector3, dir: Vector3) -> void:
 	if projectile_scene == null:
 		push_warning("Combat: RANGED mode but no projectile_scene assigned.")
 		return
 	var proj := projectile_scene.instantiate()
 	# Spawn into the current scene so it outlives any attack animation.
 	get_tree().current_scene.add_child(proj)
-	var spawn_pos := origin + facing * 1.0 + Vector3.UP * 0.8
+	# Spawn right at the muzzle and fly along the full 3D aim (FP: includes pitch).
 	if proj.has_method("launch"):
-		proj.launch(spawn_pos, facing, projectile_speed, ranged_damage, hittable_layers)
+		proj.launch(muzzle, dir.normalized(), projectile_speed, ranged_damage, hittable_layers)
 	else:
-		proj.global_position = spawn_pos
+		proj.global_position = muzzle
 
 func _apply_damage(target: Node, amount: float) -> void:
 	# Convention: damageable entities expose take_damage() OR have a Health child.

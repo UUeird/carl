@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://carl_player"]
+[gd_scene load_steps=13 format=3 uid="uid://carl_player"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/health.gd" id="2_health"]
@@ -25,6 +25,17 @@ emission_enabled = true
 emission = Color(0.3, 0.9, 1, 1)
 emission_energy_multiplier = 0.6
 
+[sub_resource type="BoxMesh" id="mesh_gun_body"]
+size = Vector3(0.18, 0.22, 0.7)
+
+[sub_resource type="BoxMesh" id="mesh_gun_barrel"]
+size = Vector3(0.09, 0.09, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="mat_gun"]
+albedo_color = Color(0.12, 0.13, 0.16, 1)
+metallic = 0.6
+roughness = 0.4
+
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 1
 collision_mask = 4
@@ -49,10 +60,41 @@ mesh = SubResource("mesh_player")
 target_position = Vector3(0, -60, 0)
 collision_mask = 4
 
+[node name="BodyGun" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.2, -0.35)
+
+[node name="Body" type="MeshInstance3D" parent="BodyGun"]
+mesh = SubResource("mesh_gun_body")
+material_override = SubResource("mat_gun")
+
+[node name="Barrel" type="MeshInstance3D" parent="BodyGun"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, -0.55)
+mesh = SubResource("mesh_gun_barrel")
+material_override = SubResource("mat_gun")
+
+[node name="Muzzle" type="Marker3D" parent="BodyGun"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, -0.85)
+
 [node name="FPCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 current = false
 fov = 75.0
+
+[node name="FPViewmodel" type="Node3D" parent="FPCamera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, -0.28, -0.6)
+visible = false
+
+[node name="Body" type="MeshInstance3D" parent="FPCamera/FPViewmodel"]
+mesh = SubResource("mesh_gun_body")
+material_override = SubResource("mat_gun")
+
+[node name="Barrel" type="MeshInstance3D" parent="FPCamera/FPViewmodel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, -0.55)
+mesh = SubResource("mesh_gun_barrel")
+material_override = SubResource("mat_gun")
+
+[node name="Muzzle" type="Marker3D" parent="FPCamera/FPViewmodel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, -0.85)
 
 [node name="LandingMarker" type="MeshInstance3D" parent="."]
 top_level = true
