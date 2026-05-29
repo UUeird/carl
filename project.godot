@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes on its own line
+;   param=value ; value formats, as far as I know, are:
+;     - number, string, reference
+;     - array  : [ value, ... ]
+;     - dictionary : { "key": value, ... }
+;     - color(red, green, blue, alpha)
+;     - 2d vec  : vec2(x,y)
+;     - 3d vec  : vec3(x,y,z)
+;     - basis   : "basis(x,y,z)"
+;     - plane   : "plane(x,y,z,dist)"
+;     - quat    : "quat(x,y,z,w)"
+;     - rect2   : "rect2(x, y, w, h)"
+;     - aabb    : "aabb(x, y, z, w, h, d)"
+;     - transform2d : "transform2d(xx, yx, xo, xy, yy, yo)"
+;     - color   : "color(r, g, b, a)"
+;     - node path : "path("some/path")"
+;     - rid      : "rid()"
+;     - object  : "Object(ClassDB, "ClassName")"
+;     - raw string : "!StringName(stringname)"
+
+[application]
+
+config/name="carl"
+config/features=PackedStringArray("4.x")
+config/icon="res://icon.svg"
+run/main_scene="res://scenes/main.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
