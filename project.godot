@@ -28,7 +28,7 @@
 config/name="carl"
 config/features=PackedStringArray("4.x")
 config/icon="res://icon.svg"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/td_main.tscn"
 
 [input]
 

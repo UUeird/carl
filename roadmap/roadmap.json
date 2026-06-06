@@ -27,50 +27,15 @@
   ],
   "items": [
     {
-      "section": "next", "status": "todo", "title": "Decide the TD core spec (design pass)",
-      "note": "lock the basics before building — answers drive everything below",
+      "section": "completed", "status": "done", "title": "First playable TD prototype (core loop)",
+      "note": "3D iso, fixed path, fixed buildable slots — the full minimal loop is playable",
       "children": [
-        "View: 2D top-down, or reuse the 3D iso camera looking down? (leaning iso to reuse tooling)",
-        "Map: one fixed path to start; grid-snapped tower slots vs. free placement near the path",
-        "Economy: currency from kills + per-wave bonus; tower cost / upgrade / sell rules",
-        "Lose condition: lives lost when an enemy reaches the goal (e.g. 20 lives)",
-        "Win condition: survive N waves"
-      ]
-    },
-    {
-      "section": "next", "status": "todo", "title": "Map + path + waypoints",
-      "note": "the board the whole game sits on",
-      "children": [
-        "A single level scene: ground, a drawn path, a spawn point and a goal",
-        "Path as an ordered list of waypoints (reuse Godot Path3D/Path2D or a simple point array)",
-        "Mark valid tower-placement spots"
-      ]
-    },
-    {
-      "section": "next", "status": "todo", "title": "Enemies that walk the path",
-      "note": "can likely adapt the old enemy movement + health.gd",
-      "children": [
-        "Enemy follows waypoints from spawn to goal at a set speed",
-        "Health + death; reaching the goal costs the player a life",
-        "One placeholder enemy type to start"
-      ]
-    },
-    {
-      "section": "next", "status": "todo", "title": "Tower placement + targeting + shooting",
-      "note": "the core verb; towers are basically stationary auto-shooters (reuse projectile/health)",
-      "children": [
-        "Click a slot to place a tower (costs currency)",
-        "Tower acquires the nearest/first in-range enemy and fires on a cooldown",
-        "Projectile or hitscan damage; reuse the stepped-overlap projectile if it fits"
-      ]
-    },
-    {
-      "section": "next", "status": "todo", "title": "Wave system + economy + HUD",
-      "note": "ties it into an actual game loop",
-      "children": [
-        "Spawn enemies in timed waves; 'start next wave' control",
-        "Currency: earn on kill + wave bonus; spend on towers",
-        "HUD: lives, currency, wave number; win after N waves / lose at 0 lives"
+        "L-shaped path via Path3D → waypoints; ground, slots, red goal; lit iso scene (reused)",
+        "Enemies walk the path (reuse health.gd); leaking costs a life, kills pay currency",
+        "Click a green slot to build a tower (costs currency); towers auto-target the leader & fire",
+        "Homing projectile so shots connect with moving creeps",
+        "Waves (5), economy (kills + start bank), 20 lives, win/lose, R to restart",
+        "HUD: lives / currency / wave + Start-wave button + messages; new td_main.tscn is the main scene"
       ]
     },
     {
@@ -110,6 +75,8 @@
 
     { "section": "debt", "status": "debt", "title": "Old action scenes/scripts (player, boss, combat, level) still in the repo — decide per-file what to salvage vs. delete as TD takes shape." },
     { "section": "debt", "status": "debt", "title": "In-app version overlay (version.gd) still reads as the action prototype's; revisit once TD has its own build." },
+    { "section": "debt", "status": "debt", "title": "Start-wave button is logically disabled mid-wave but doesn't look obviously disabled; could grey it out / add a 'wave in progress' state." },
+    { "section": "debt", "status": "debt", "title": "No tower range preview when placing; you can't see a tower's reach before/after building." },
 
     {
       "section": "archived", "status": "done", "title": "Interactive HTML roadmap (tooling — still in use)",
