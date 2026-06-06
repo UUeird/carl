@@ -1,0 +1,170 @@
+[gd_scene load_steps=18 format=3 uid="uid://td_main"]
+
+[ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://td_enemy" path="res://scenes/td_enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" uid="uid://td_tower" path="res://scenes/td_tower.tscn" id="3_tower"]
+[ext_resource type="PackedScene" uid="uid://td_tower_slot" path="res://scenes/tower_slot.tscn" id="4_slot"]
+[ext_resource type="Script" path="res://scripts/td_hud.gd" id="5_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.38, 0.45, 0.6, 1)
+sky_horizon_color = Color(0.6, 0.62, 0.66, 1)
+ground_bottom_color = Color(0.2, 0.22, 0.26, 1)
+ground_horizon_color = Color(0.45, 0.47, 0.5, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.6, 0.62, 0.7, 1)
+ambient_light_sky_contribution = 0.5
+ambient_light_energy = 1.0
+tonemap_mode = 2
+
+[sub_resource type="BoxMesh" id="ground_mesh"]
+size = Vector3(46, 1, 30)
+
+[sub_resource type="StandardMaterial3D" id="ground_mat"]
+albedo_color = Color(0.22, 0.3, 0.24, 1)
+
+[sub_resource type="Curve3D" id="path_curve"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -18, 0, -6, 0, 0, 0, 0, 0, 0, -6, 0, -6, 0, 0, 0, 0, 0, 0, -6, 0, 6, 0, 0, 0, 0, 0, 0, 10, 0, 6, 0, 0, 0, 0, 0, 0, 18, 0, 6),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0)
+}
+point_count = 5
+
+[sub_resource type="BoxMesh" id="path_seg"]
+size = Vector3(1, 0.15, 1)
+
+[sub_resource type="StandardMaterial3D" id="path_mat"]
+albedo_color = Color(0.55, 0.47, 0.34, 1)
+
+[sub_resource type="StandardMaterial3D" id="goal_mat"]
+albedo_color = Color(0.85, 0.3, 0.3, 1)
+emission_enabled = true
+emission = Color(0.8, 0.2, 0.2, 1)
+emission_energy_multiplier = 0.5
+
+[node name="TDMain" type="Node3D"]
+script = ExtResource("1_game")
+enemy_scene = ExtResource("2_enemy")
+tower_scene = ExtResource("3_tower")
+path_node = NodePath("Path3D")
+starting_currency = 150
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.707107, -0.408248, 0.577351, 0, 0.816497, 0.57735, -0.707107, -0.408248, 0.577351, 22, 26, 30)
+projection = 1
+size = 36.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, 30, 0)
+light_energy = 0.95
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("ground_mesh")
+material_override = SubResource("ground_mat")
+
+[node name="Path3D" type="Path3D" parent="."]
+curve = SubResource("path_curve")
+
+[node name="PathVis" type="Node3D" parent="."]
+
+[node name="s0" type="MeshInstance3D" parent="PathVis"]
+transform = Transform3D(12, 0, 0, 0, 1, 0, 0, 0, 2, -12, 0.05, -6)
+mesh = SubResource("path_seg")
+material_override = SubResource("path_mat")
+
+[node name="s1" type="MeshInstance3D" parent="PathVis"]
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 12, -6, 0.05, 0)
+mesh = SubResource("path_seg")
+material_override = SubResource("path_mat")
+
+[node name="s2" type="MeshInstance3D" parent="PathVis"]
+transform = Transform3D(16, 0, 0, 0, 1, 0, 0, 0, 2, 2, 0.05, 6)
+mesh = SubResource("path_seg")
+material_override = SubResource("path_mat")
+
+[node name="Goal" type="MeshInstance3D" parent="PathVis"]
+transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 2, 18, 0.6, 6)
+mesh = SubResource("path_seg")
+material_override = SubResource("goal_mat")
+
+[node name="Slots" type="Node3D" parent="."]
+
+[node name="Slot0" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0.05, -3)
+
+[node name="Slot1" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.05, 0)
+
+[node name="Slot2" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.05, 3)
+
+[node name="Slot3" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.05, 9)
+
+[node name="Slot4" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.05, 3)
+
+[node name="Slot5" parent="Slots" instance=ExtResource("4_slot")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.05, 9)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
+game_path = NodePath("..")
+
+[node name="Root" type="Control" parent="HUD"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Stats" type="Label" parent="HUD/Root"]
+offset_left = 20.0
+offset_top = 16.0
+offset_right = 420.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 20
+text = "♥ 20    ⬢ 150    Wave 0/5"
+
+[node name="Hint" type="Label" parent="HUD/Root"]
+offset_left = 20.0
+offset_top = 46.0
+offset_right = 700.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
+
+[node name="StartBtn" type="Button" parent="HUD/Root"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -190.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = 54.0
+text = "Start wave 1  ▶"
+
+[node name="Message" type="Label" parent="HUD/Root"]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -56.0
+offset_right = 300.0
+offset_bottom = -28.0
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18

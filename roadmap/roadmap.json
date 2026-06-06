@@ -4,120 +4,120 @@
     "blurb": "A living plan for the game. We edit roadmap.json together: flip statuses, add items, revise decisions as we learn from playing. Keep it honest — if something's half-done or unproven, say so.",
     "version": "2026.06.06",
     "updated": "2026-06-06",
-    "vision": "A 3D action game with boss fights, fighting through levels, and puzzles. Built in Godot 4. Currently a prototype — proving the core loop is fun before scaling up.",
-    "note": "Everything is placeholder primitives (capsules/boxes) — no art committed yet."
+    "vision": "A classic fixed-path tower-defense game: enemies advance along set paths in waves, and you place & upgrade towers along them to stop them before they reach the goal. Built in Godot 4 (pivoted from an earlier 3D action prototype — same engine, rebuilt gameplay).",
+    "note": "Pre-prototype for the TD direction. Placeholder primitives only; reuse engine + tooling, rebuild the game."
   },
   "sections": [
-    { "id": "next", "title": "Next up", "kind": "todo", "desc": "Near-term, roughly prioritized." },
-    { "id": "completed", "title": "Completed", "kind": "done", "desc": "Shipped chunks of work, newest first. Each group maps to one commit." },
-    { "id": "later", "title": "Later", "kind": "todo", "desc": "Bigger bets, not yet scheduled." },
+    { "id": "next", "title": "Next up", "kind": "todo", "desc": "First TD prototype, roughly in build order." },
+    { "id": "completed", "title": "Completed", "kind": "done", "desc": "Shipped TD work, newest first. (Pre-pivot work is archived below.)" },
+    { "id": "later", "title": "Later", "kind": "todo", "desc": "Bigger TD bets, not yet scheduled." },
     { "id": "ideas", "title": "Ideas & open questions", "kind": "idea", "desc": "Directions under consideration, not yet committed." },
-    { "id": "debt", "title": "Known issues / debt", "kind": "debt", "desc": "Things that work but aren't right yet." }
+    { "id": "debt", "title": "Known issues / debt", "kind": "debt", "desc": "Things that work but aren't right yet." },
+    { "id": "archived", "title": "Archived — action prototype (pre-pivot)", "kind": "done", "desc": "Built before the tower-defense pivot. Kept for history; not the current game. Still in git + CHANGELOG." }
   ],
   "decisions": [
-    { "text": "3D isometric first — to test the most ambitious vision before simplifying.", "date": "2026-05-29" },
-    { "text": "Combat feel decided by playing — hence the combat_mode switch in combat.gd. Currently ranged.", "date": "2026-05-29" },
-    { "text": "First-person added as a toggle, not a replacement — so we can A/B without losing the iso work.", "date": "2026-05-29" },
-    { "text": "Art deferred — placeholder shapes until the loop is proven fun.", "date": "2026-05-29" },
-    { "text": "Considering: view-switching as a core mechanic — keep both iso and FP and design around the swap, rather than picking one. Not yet committed.", "date": "2026-05-29" }
+    { "text": "PIVOT to tower defense — classic fixed-path TD (enemies on set paths, place towers along them). Replaces the 3D action/boss/puzzle direction.", "date": "2026-06-06" },
+    { "text": "Keep Godot + the engine/tooling (incl. the interactive roadmap); rebuild gameplay. Combat/level/boss systems are scrapped as the game, but health/projectile/enemy-movement code may be salvaged as reference.", "date": "2026-06-06" },
+    { "text": "Plan-first: this branch (plan-tower-defense) updates the roadmap only — no game code yet.", "date": "2026-06-06" },
+    { "text": "View-switching idea survives the pivot, reimagined for TD (tactical overview vs. zoomed-in). Still an idea, not committed.", "date": "2026-06-06" },
+    { "text": "[pre-pivot] 3D isometric first — to test the most ambitious action vision before simplifying.", "date": "2026-05-29" },
+    { "text": "[pre-pivot] Combat feel decided by playing — combat_mode switch; landed on ranged.", "date": "2026-05-29" },
+    { "text": "[pre-pivot] First-person added as a toggle, not a replacement.", "date": "2026-05-29" },
+    { "text": "Art deferred — placeholder shapes until the loop is proven fun. (Still holds for TD.)", "date": "2026-05-29" }
   ],
   "items": [
     {
-      "section": "completed", "status": "done", "title": "Interactive HTML roadmap",
+      "section": "completed", "status": "done", "title": "First playable TD prototype (core loop)",
+      "note": "3D iso, fixed path, fixed buildable slots — the full minimal loop is playable",
       "children": [
-        "Roadmap moved from markdown to a JSON-backed HTML page (roadmap/index.html + roadmap.json)",
-        "Dashboard stats, search, status filters, collapsible sections, hash deep-links, starred-idea highlight",
-        "In-browser editing (add/edit/reorder/delete/status/star) saved to disk via a tiny stdlib server (roadmap/server.py)",
-        "ROADMAP.md retired to a pointer; .claude/ gitignored"
+        "L-shaped path via Path3D → waypoints; ground, slots, red goal; lit iso scene (reused)",
+        "Enemies walk the path (reuse health.gd); leaking costs a life, kills pay currency",
+        "Click a green slot to build a tower (costs currency); towers auto-target the leader & fire",
+        "Homing projectile so shots connect with moving creeps",
+        "Waves (5), economy (kills + start bank), 20 lives, win/lose, R to restart",
+        "HUD: lives / currency / wave + Start-wave button + messages; new td_main.tscn is the main scene"
       ]
     },
     {
-      "section": "completed", "status": "done", "title": "Weapons & FPS-style shooting",
+      "section": "completed", "status": "done", "title": "2nd tower type + tiered upgrades + sell",
+      "note": "the variety that makes it a game, not a tech demo",
       "children": [
-        "Body gun (visible iso/third-person) + first-person viewmodel (bottom-right, FP-only)",
-        "Projectiles spawn from the active muzzle; FP shots follow the camera's full 3D aim (incl. pitch), iso stays flat"
+        "Frost tower: lower damage, slows enemies on hit (blue tint + slow-factor/duration); enemies have a slow effect",
+        "Two build-type buttons (Cannon / Frost) with costs; pick one, then click a slot",
+        "Tiered upgrades (Lv 1→3) via a click-to-select tower panel; stats + rising cost, capped at max",
+        "Sell a placed tower for 50% of total spent; frees the slot",
+        "Data-driven tower stats (TYPES table) so balancing/new tiers is a one-place edit"
       ]
     },
     {
-      "section": "completed", "status": "done", "title": "First-person mode + presentation polish",
-      "children": [
-        "First-person view toggle (V): mouse-look, camera-relative movement, camera-forward aim",
-        "FP crosshair (HUD, FP-only); fixed the HUD swallowing mouse-look input",
-        "Lit environment (sky + ambient) so both iso and FP read clearly",
-        "Per-instance enemy/boss materials (fixed all enemies flashing together)"
-      ]
-    },
-    {
-      "section": "completed", "status": "done", "title": "Level, platforming & enemies",
-      "children": [
-        "One linear level: start → path → arena → platforming → arena → sealed boss arena",
-        "Jump + gravity + coyote time; platforming over pits; landing marker (iso) to judge jumps",
-        "Fall → checkpoint respawn with fall damage; checkpoints at each arena",
-        "Small chaser enemies (detect → chase → contact damage)",
-        "Boss: dormant until you enter its arena, then CHASE → TELEGRAPH → ATTACK → COOLDOWN",
-        "Follow camera with look-ahead (iso)"
-      ]
-    },
-    {
-      "section": "completed", "status": "done", "title": "Core combat prototype",
-      "children": [
-        "Iso movement (camera-relative WASD) + mouse-cursor aiming",
-        "Combat system with a one-switch feel selector (combat_mode: melee / ranged / mixed) — currently ranged",
-        "Reliable projectile hits (stepped sphere-overlap; no tunnelling/vertical misses)",
-        "HUD: player + boss HP bars, win/lose message",
-        "Reusable health.gd shared by player/enemies/boss"
-      ]
+      "section": "next", "status": "todo", "title": "A 2nd enemy type",
+      "note": "contrast the basic creep — e.g. fast-but-weak vs. slow-but-tanky; mix within a wave",
+      "children": []
     },
 
-    {
-      "section": "next", "status": "todo", "title": "First-person feel & weapon polish",
-      "note": "the FP gun works but feels flat",
-      "children": [
-        "Muzzle flash + a tracer/visible-bullet read on firing",
-        "Recoil / weapon-sway / fire kick so shots have weight",
-        "Replace the blocky placeholder gun shapes with something more gun-like",
-        "Crosshair could tighten/tint when on-target",
-        "Mouse-look tuning — sensitivity, optional invert-Y, adjustable FOV"
-      ]
-    },
-    { "section": "next", "status": "todo", "title": "Enemy variety", "note": "at least one ranged/turret enemy so fights aren't all melee-chasers" },
-    { "section": "next", "status": "todo", "title": "Combat feedback", "note": "hit sound/particle, damage numbers or screen-shake, death effect polish" },
-    { "section": "next", "status": "todo", "title": "Boss fight depth", "note": "more than one attack; a second phase at low HP" },
-    { "section": "next", "status": "todo", "title": "A real puzzle", "note": "the pressure-plate/door probe exists; build one actual puzzle into the level" },
-    { "section": "next", "status": "todo", "title": "Player feedback when hit", "note": "screen flash / knockback (right now only the HP bar moves)" },
-
-    { "section": "later", "status": "todo", "title": "Main menu + pause + proper game-over/restart flow", "note": "beyond the R key" },
-    { "section": "later", "status": "todo", "title": "Multiple levels + progression between them" },
-    { "section": "later", "status": "todo", "title": "Save/checkpoint persistence across sessions" },
+    { "section": "later", "status": "todo", "title": "Multiple maps / levels with different path layouts" },
+    { "section": "later", "status": "todo", "title": "More tower types (splash, slow, chain, support/buff)" },
+    { "section": "later", "status": "todo", "title": "More enemy types (armored, flying, shielded, boss waves)" },
+    { "section": "later", "status": "todo", "title": "Meta-progression between runs (unlocks, persistent upgrades)" },
+    { "section": "later", "status": "todo", "title": "Main menu + pause + game-over/victory screens" },
     { "section": "later", "status": "todo", "title": "Audio pass (music + SFX)" },
-    { "section": "later", "status": "todo", "title": "Art pass", "note": "commit to a style once the loop is locked" },
-    { "section": "later", "status": "todo", "title": "Settings (controls, sensitivity, volume)" },
+    { "section": "later", "status": "todo", "title": "Art pass — commit to a style once the loop is fun" },
 
     {
-      "section": "ideas", "status": "idea", "starred": true, "title": "View-switching as a core mechanic",
-      "note": "The standout idea: instead of choosing iso OR first-person, the player switches between them on purpose (V key), and the game is designed around that switch. Each view reveals and hides different things, so the swap becomes a verb. Promising because both views already work and share all combat/enemy/level logic — the switch is real today.",
+      "section": "ideas", "status": "idea", "starred": true, "title": "View-switching as a core mechanic (reimagined for TD)",
+      "note": "Carried over from the action design. The original idea — switch views on purpose and design around it — could fit TD in a fresh way. Still just an idea.",
       "children": [
-        "What does each view give you? iso = whole-arena read, enemy positions, platform layout, incoming attacks; FP = precise aiming, see far down corridors, spot things hidden from the top-down angle. Only interesting if each view has a real advantage.",
-        "Puzzles/level design that REQUIRE switching — a gap only judgeable in iso, a distant target only hittable in FP, a path visible from only one angle.",
-        "Is the switch free or costed? Instant, cooldown, limited charges, or a resource? A cost makes 'when do I switch?' a decision.",
-        "Combat framing — does aiming/feel differ enough to switch mid-fight (FP to snipe, iso to kite a swarm)?",
-        "Readability & comfort — sudden iso↔FP swaps can disorient; maybe a quick transition tween rather than a hard cut.",
-        "Next concrete step: prototype one encounter only solvable by switching views, and see if the switch feels like a tool or a chore."
+        "Tactical overview (iso/top-down) for placing & managing towers across the whole map…",
+        "…vs. a zoomed-in / first-person 'gunner' view where you manually aim or take control of a single tower for bonus effect during a wave.",
+        "Switch as a resource/decision: drop to the gunner view to clutch a leak, at the cost of overview of the rest of the map.",
+        "Open question: does manual control in a TD add depth or just busywork? Prototype one wave both ways before committing.",
+        "Keep parked until the plain fixed-path loop is proven fun."
       ]
     },
     {
-      "section": "ideas", "status": "idea", "title": "The camera question (single view vs dual-view)",
-      "note": "Originally 'pick one view and delete the other.' Now it's pick-one OR commit to the dual-view-as-mechanic idea above.",
-      "children": [
-        "Play both modes through the whole level and note how each feels",
-        "Decide the direction: single view (FP / iso / over-shoulder) or dual-view-as-mechanic",
-        "Once decided, design encounters/level geometry for it (sightlines differ a lot between views)"
-      ]
+      "section": "ideas", "status": "idea", "title": "Maze / free-placement TD twist",
+      "note": "We chose classic fixed-path for the first prototype. If that proves fun, revisit letting players build the path with tower placement (Desktop TD / GemCraft style) for deeper strategy.",
+      "children": []
     },
 
-    { "section": "debt", "status": "debt", "title": "Level geometry was laid out for the iso read; it works in FP but isn't designed for it." },
-    { "section": "debt", "status": "debt", "title": "No crosshair/aim-assist read in iso beyond the character facing; fine for now." },
-    { "section": "debt", "status": "debt", "title": "combat.gd MIXED mode is a quick 'both at once' — revisit if mixed becomes the direction." },
-    { "section": "debt", "status": "debt", "title": "Restart is just R (reloads the scene); no UI around death/victory yet." }
+    { "section": "debt", "status": "debt", "title": "Old action scenes/scripts (player, boss, combat, level) still in the repo — decide per-file what to salvage vs. delete as TD takes shape." },
+    { "section": "debt", "status": "debt", "title": "In-app version overlay (version.gd) still reads as the action prototype's; revisit once TD has its own build." },
+    { "section": "debt", "status": "debt", "title": "Start-wave button is logically disabled mid-wave but doesn't look obviously disabled; could grey it out / add a 'wave in progress' state." },
+    { "section": "debt", "status": "debt", "title": "No tower range preview when placing; you can't see a tower's reach before/after building." },
+
+    {
+      "section": "archived", "status": "done", "title": "Interactive HTML roadmap (tooling — still in use)",
+      "children": [
+        "JSON-backed roadmap web app with live editing saved to disk via a stdlib server",
+        "This tool survives the pivot; only the game direction changed"
+      ]
+    },
+    {
+      "section": "archived", "status": "done", "title": "Weapons & FPS-style shooting",
+      "children": [
+        "Body gun + first-person viewmodel; projectiles from the active muzzle; FP shots follow full 3D aim"
+      ]
+    },
+    {
+      "section": "archived", "status": "done", "title": "First-person mode + presentation polish",
+      "children": [
+        "FP toggle (V): mouse-look, camera-relative movement, camera-forward aim, crosshair",
+        "Lit environment (sky + ambient); per-instance enemy/boss materials"
+      ]
+    },
+    {
+      "section": "archived", "status": "done", "title": "Level, platforming & enemies (action)",
+      "children": [
+        "Linear level with arenas, platforming over pits, checkpoints",
+        "Chaser enemies; boss FSM (dormant → CHASE → TELEGRAPH → ATTACK → COOLDOWN); follow camera"
+      ]
+    },
+    {
+      "section": "archived", "status": "done", "title": "Core combat prototype (action)",
+      "children": [
+        "Iso movement + mouse aim; combat_mode melee/ranged/mixed; reliable projectile hits",
+        "HUD HP bars; reusable health.gd (candidate for TD reuse)"
+      ]
+    }
   ]
 }

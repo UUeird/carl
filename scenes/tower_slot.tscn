@@ -1,0 +1,24 @@
+[gd_scene load_steps=4 format=3 uid="uid://td_tower_slot"]
+
+[ext_resource type="Script" path="res://scripts/tower_slot.gd" id="1_s"]
+
+[sub_resource type="CylinderShape3D" id="shape"]
+radius = 0.7
+height = 0.3
+
+[sub_resource type="CylinderMesh" id="mesh"]
+top_radius = 0.7
+bottom_radius = 0.7
+height = 0.1
+
+[node name="TowerSlot" type="Area3D" groups=["tower_slot"]]
+collision_layer = 8
+collision_mask = 0
+script = ExtResource("1_s")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("shape")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("mesh")

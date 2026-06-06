@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://td_enemy"]
+
+[ext_resource type="Script" path="res://scripts/td_enemy.gd" id="1_e"]
+[ext_resource type="Script" path="res://scripts/health.gd" id="2_h"]
+
+[sub_resource type="CapsuleShape3D" id="s"]
+radius = 0.4
+height = 1.2
+
+[sub_resource type="CapsuleMesh" id="m"]
+radius = 0.4
+height = 1.2
+
+[node name="TDEnemy" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_e")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+shape = SubResource("s")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("m")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_h")
+max_health = 30.0
