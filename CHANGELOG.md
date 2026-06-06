@@ -13,6 +13,18 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ---
 
+## 2026.06.06
+
+### Changed
+- **Roadmap is now an interactive HTML page** instead of a flat markdown doc. Data lives in
+  `roadmap/roadmap.json` (the source of truth); `roadmap/index.html` renders a dashboard with
+  progress stats, search, status filters, collapsible sections, hash-deep-linkable filters, and
+  the starred "view-switching" idea highlighted. `ROADMAP.md` is now a short pointer + the
+  "how we work" notes.
+- `.claude/` (local editor/agent settings) is now gitignored.
+
+---
+
 ## 2026.05.29.2
 
 ### Added

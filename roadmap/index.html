@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>carl — Roadmap</title>
+<style>
+  :root {
+    --bg: #14171c; --panel: #1c2027; --panel-2: #232833; --line: #2e3540;
+    --text: #e6e9ef; --dim: #9aa4b2; --faint: #6b7480;
+    --done: #46c98a; --todo: #5b9cf0; --idea: #d7a64a; --debt: #e0705f;
+    --accent: #7c5cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  header h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
+  header .blurb { color: var(--dim); margin: 0 0 16px; max-width: 70ch; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .chip {
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--dim);
+    padding: 4px 10px; border-radius: 999px; font-size: 12.5px;
+  }
+  .chip b { color: var(--text); font-weight: 600; }
+  .vision {
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; color: var(--dim);
+  }
+  .vision b { color: var(--text); }
+
+  /* dashboard */
+  .dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .stat .num { font-size: 26px; font-weight: 700; }
+  .stat .lbl { color: var(--faint); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat.done .num { color: var(--done); } .stat.todo .num { color: var(--todo); }
+  .stat.idea .num { color: var(--idea); } .stat.debt .num { color: var(--debt); }
+  .progress { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin: 16px 0 22px; border: 1px solid var(--line); }
+  .progress > div { height: 100%; background: linear-gradient(90deg, var(--done), #6fe0a8); transition: width .4s ease; }
+
+  /* controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 5; }
+  #search {
+    flex: 1; min-width: 200px; background: var(--panel-2); border: 1px solid var(--line);
+    color: var(--text); padding: 9px 12px; border-radius: 8px; font-size: 14px;
+  }
+  #search:focus { outline: none; border-color: var(--accent); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter {
+    background: var(--panel-2); border: 1px solid var(--line); color: var(--dim);
+    padding: 7px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; user-select: none;
+  }
+  .filter:hover { border-color: var(--faint); }
+  .filter.active { color: #fff; border-color: transparent; }
+  .filter.active[data-f="all"]  { background: var(--accent); }
+  .filter.active[data-f="done"] { background: var(--done); color: #06150d; }
+  .filter.active[data-f="todo"] { background: var(--todo); color: #04122b; }
+  .filter.active[data-f="idea"] { background: var(--idea); color: #1d1402; }
+  .filter.active[data-f="debt"] { background: var(--debt); color: #1d0703; }
+
+  /* sections + cards */
+  section.group { margin-bottom: 26px; }
+  .group-head { display: flex; align-items: baseline; gap: 10px; cursor: pointer; user-select: none; padding: 6px 0; }
+  .group-head h2 { margin: 0; font-size: 19px; }
+  .group-head .count { color: var(--faint); font-size: 13px; }
+  .group-head .arrow { color: var(--faint); transition: transform .2s; margin-left: auto; }
+  section.collapsed .group-body { display: none; }
+  section.collapsed .arrow { transform: rotate(-90deg); }
+  .group-desc { color: var(--faint); font-size: 13px; margin: 2px 0 10px; }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px 12px 16px; margin-bottom: 10px; border-left: 3px solid var(--line);
+  }
+  .card.s-done { border-left-color: var(--done); }
+  .card.s-todo { border-left-color: var(--todo); }
+  .card.s-idea { border-left-color: var(--idea); }
+  .card.s-debt { border-left-color: var(--debt); }
+  .card.starred { border-left-color: var(--idea); background: linear-gradient(180deg, rgba(215,166,74,.10), transparent 60%), var(--panel); }
+  .card-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 5px; font-weight: 700; }
+  .badge.done { background: rgba(70,201,138,.15); color: var(--done); }
+  .badge.todo { background: rgba(91,156,240,.15); color: var(--todo); }
+  .badge.idea { background: rgba(215,166,74,.15); color: var(--idea); }
+  .badge.debt { background: rgba(224,112,95,.15); color: var(--debt); }
+  .card .note { color: var(--dim); margin: 6px 0 0; font-size: 14px; }
+  .card ul { margin: 8px 0 0; padding-left: 18px; color: var(--dim); }
+  .card ul li { margin: 3px 0; }
+  .star { color: var(--idea); }
+
+  .decisions summary { cursor: pointer; font-size: 19px; font-weight: 600; padding: 6px 0; }
+  .decisions ul { list-style: none; padding: 0; margin: 8px 0 0; }
+  .decisions li { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; margin-bottom: 7px; color: var(--dim); }
+  .decisions .date { color: var(--faint); font-size: 12px; }
+
+  .empty { color: var(--faint); text-align: center; padding: 40px; font-style: italic; }
+  .error { background: #2a1c1c; border: 1px solid #5b2f2f; color: #f0c0b8; padding: 16px; border-radius: 10px; margin-top: 20px; }
+  .error code { background: #00000044; padding: 1px 6px; border-radius: 4px; }
+  footer { color: var(--faint); font-size: 12.5px; margin-top: 30px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title">carl — Roadmap</h1>
+    <p class="blurb" id="blurb"></p>
+    <div class="meta-row" id="metaRow"></div>
+    <div class="vision" id="vision"></div>
+  </header>
+
+  <div id="app"></div>
+</div>
+
+<script>
+const STATUS = { done: "Done", todo: "To do", idea: "Idea", debt: "Debt" };
+let DATA = null;
+let activeStatus = "all";
+let query = "";
+
+async function load() {
+  try {
+    const res = await fetch("roadmap.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    DATA = await res.json();
+    readHash();
+    render();
+    window.addEventListener("hashchange", () => { readHash(); render(); });
+  } catch (err) {
+    document.getElementById("app").innerHTML =
+      `<div class="error"><b>Couldn't load roadmap.json.</b><br>
+       ${String(err)}<br><br>
+       If you opened this file directly (<code>file://</code>), the browser blocks loading the JSON.
+       Serve the folder instead — from <code>roadmap/</code> run:
+       <br><code>python3 -m http.server 8000</code><br>
+       then open <code>http://localhost:8000/</code></div>`;
+  }
+}
+
+function matches(item) {
+  if (activeStatus !== "all" && item.status !== activeStatus) return false;
+  if (!query) return true;
+  const hay = [item.title, item.note, ...(item.children || [])].join(" ").toLowerCase();
+  return hay.includes(query);
+}
+
+function render() {
+  // header meta
+  document.getElementById("title").textContent = DATA.meta.title;
+  document.getElementById("blurb").textContent = DATA.meta.blurb;
+  document.getElementById("vision").innerHTML =
+    `<b>Vision.</b> ${DATA.meta.vision} <br><span style="font-size:13px">${DATA.meta.note}</span>`;
+  document.getElementById("metaRow").innerHTML =
+    `<span class="chip">Version <b>${DATA.meta.version}</b></span>
+     <span class="chip">Updated <b>${DATA.meta.updated}</b></span>`;
+
+  const counts = { done: 0, todo: 0, idea: 0, debt: 0 };
+  DATA.items.forEach(i => counts[i.status] !== undefined && counts[i.status]++);
+  const shipped = counts.done, planned = counts.todo;
+  const pct = (shipped + planned) ? Math.round(shipped / (shipped + planned) * 100) : 0;
+
+  let html = `
+    <div class="dash">
+      <div class="stat done"><div class="num">${counts.done}</div><div class="lbl">Shipped</div></div>
+      <div class="stat todo"><div class="num">${counts.todo}</div><div class="lbl">Planned</div></div>
+      <div class="stat idea"><div class="num">${counts.idea}</div><div class="lbl">Ideas</div></div>
+      <div class="stat debt"><div class="num">${counts.debt}</div><div class="lbl">Debt</div></div>
+    </div>
+    <div title="${pct}% of shipped+planned work done" class="progress"><div style="width:${pct}%"></div></div>
+
+    <div class="controls">
+      <input id="search" type="search" placeholder="Search the roadmap…" value="${query}">
+      <div class="filters">
+        ${["all","done","todo","idea","debt"].map(f =>
+          `<div class="filter ${activeStatus===f?'active':''}" data-f="${f}">${f==="all"?"All":STATUS[f]}</div>`
+        ).join("")}
+      </div>
+    </div>
+  `;
+
+  let anyShown = false;
+  DATA.sections.forEach(sec => {
+    const items = DATA.items.filter(i => i.section === sec.id && matches(i));
+    if (!items.length) return;
+    anyShown = true;
+    html += `<section class="group" data-sec="${sec.id}">
+      <div class="group-head">
+        <h2>${sec.title}</h2><span class="count">${items.length}</span>
+        <span class="arrow">▾</span>
+      </div>
+      <div class="group-body">
+        <div class="group-desc">${sec.desc || ""}</div>
+        ${items.map(cardHTML).join("")}
+      </div>
+    </section>`;
+  });
+
+  if (!anyShown) html += `<div class="empty">Nothing matches that filter / search.</div>`;
+
+  // decisions
+  html += `<details class="decisions" open><summary>Decisions log</summary><ul>
+    ${DATA.decisions.map(d => `<li>${escapeHTML(d.text)} <span class="date">— ${d.date}</span></li>`).join("")}
+  </ul></details>`;
+
+  html += `<footer>Edit <code>roadmap/roadmap.json</code> to change this page — it's the source of truth.
+    Shipped changes are recorded in <code>CHANGELOG.md</code>.</footer>`;
+
+  document.getElementById("app").innerHTML = html;
+  wireEvents();
+}
+
+function cardHTML(item) {
+  const star = item.starred ? `<span class="star" title="Standout idea">★</span> ` : "";
+  const kids = (item.children && item.children.length)
+    ? `<ul>${item.children.map(c => `<li>${escapeHTML(c)}</li>`).join("")}</ul>` : "";
+  const note = item.note ? `<p class="note">${escapeHTML(item.note)}</p>` : "";
+  return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}">
+    <div class="card-title">${star}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
+    ${note}${kids}
+  </div>`;
+}
+
+function wireEvents() {
+  const search = document.getElementById("search");
+  search.oninput = e => { query = e.target.value.trim().toLowerCase(); render(); search.focus(); };
+  // keep caret position friendly
+  search.setSelectionRange(search.value.length, search.value.length);
+
+  document.querySelectorAll(".filter").forEach(f =>
+    f.onclick = () => { activeStatus = f.dataset.f; syncHash(); render(); });
+
+  document.querySelectorAll(".group-head").forEach(h =>
+    h.onclick = () => h.closest("section").classList.toggle("collapsed"));
+}
+
+// Shareable filter via URL hash, e.g. #idea or #done.
+function syncHash() {
+  location.hash = activeStatus === "all" ? "" : activeStatus;
+}
+function readHash() {
+  const h = location.hash.replace("#", "");
+  if (["done", "todo", "idea", "debt", "all"].includes(h)) activeStatus = h;
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+load();
+</script>
+</body>
+</html>

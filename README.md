@@ -42,7 +42,8 @@ jump, and enemy logic):
   and aim straight down the camera via a center **crosshair**. The mouse is captured; press
   **Esc** to free it.
 
-Planning and the longer-term direction live in [ROADMAP.md](ROADMAP.md).
+Planning and the longer-term direction live in the interactive roadmap
+([roadmap/index.html](roadmap/index.html), data in [roadmap/roadmap.json](roadmap/roadmap.json)).
 
 ## The core experiment: combat feel
 
@@ -109,4 +110,5 @@ Collision layers: `1` = player, `2` = hittable (enemies/boss), `4` = environment
 
 ---
 
-What's decided, what's open, and what's next lives in [ROADMAP.md](ROADMAP.md).
+What's decided, what's open, and what's next lives in the interactive roadmap —
+see [ROADMAP.md](ROADMAP.md) for how to open it.
