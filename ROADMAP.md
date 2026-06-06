@@ -8,17 +8,20 @@ into a small HTML app backed by JSON.
 - **Viewer:** [roadmap/index.html](roadmap/index.html) — dashboard stats, search, status
   filters, collapsible sections, the starred idea highlighted.
 
-### Viewing it
+### Viewing & editing it
 
-The page loads `roadmap.json` via `fetch`, so it needs to be served (opening `index.html`
-directly via `file://` is blocked by the browser). From the repo root:
+Run the small editor server (stdlib Python, no installs) from the repo root:
 
 ```
-cd roadmap && python3 -m http.server 8000
+python3 roadmap/server.py
 ```
 
-then open <http://localhost:8000/>. You can deep-link a filter with a hash, e.g.
-`http://localhost:8000/#idea` or `#done`.
+then open <http://localhost:8770/>. Editing in the page — add / edit / reorder / delete items,
+change status or section, star an item — **saves straight to `roadmap/roadmap.json`** (atomic
+write), so the data stays git-trackable. A save indicator confirms each change.
+
+You can deep-link a filter with a hash, e.g. `http://localhost:8770/#idea` or `#done`.
+Opening `index.html` without the server still works as a **read-only** viewer (editing disabled).
 
 ---
 
@@ -34,8 +37,8 @@ then open <http://localhost:8000/>. You can deep-link a filter with a hash, e.g.
 
 ### Shipping a chunk of work
 
-1. Build it; move the item(s) in `roadmap.json` from the `next` section to `completed`
-   (set `"status": "done"`), grouping related work under one titled item.
+1. Build it; in the roadmap editor (or `roadmap.json` directly) move the item(s) from the
+   `next` section to `completed` (status → Done), grouping related work under one titled item.
 2. When ready to record a version, add a CHANGELOG entry (CalVer `YYYY.MM.DD`, `.N` for a
    second cut the same day), bump `Version.STRING` in [scripts/version.gd](scripts/version.gd)
    so the in-app overlay matches, and update `meta.version` / `meta.updated` in `roadmap.json`.

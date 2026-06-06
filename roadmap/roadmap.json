@@ -27,6 +27,7 @@
       "children": [
         "Roadmap moved from markdown to a JSON-backed HTML page (roadmap/index.html + roadmap.json)",
         "Dashboard stats, search, status filters, collapsible sections, hash deep-links, starred-idea highlight",
+        "In-browser editing (add/edit/reorder/delete/status/star) saved to disk via a tiny stdlib server (roadmap/server.py)",
         "ROADMAP.md retired to a pointer; .claude/ gitignored"
       ]
     },

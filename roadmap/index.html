@@ -17,6 +17,7 @@
     font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
+  button { font: inherit; }
 
   header h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
   header .blurb { color: var(--dim); margin: 0 0 16px; max-width: 70ch; }
@@ -45,7 +46,7 @@
   /* controls */
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 5; }
   #search {
-    flex: 1; min-width: 200px; background: var(--panel-2); border: 1px solid var(--line);
+    flex: 1; min-width: 180px; background: var(--panel-2); border: 1px solid var(--line);
     color: var(--text); padding: 9px 12px; border-radius: 8px; font-size: 14px;
   }
   #search:focus { outline: none; border-color: var(--accent); }
@@ -61,6 +62,17 @@
   .filter.active[data-f="todo"] { background: var(--todo); color: #04122b; }
   .filter.active[data-f="idea"] { background: var(--idea); color: #1d1402; }
   .filter.active[data-f="debt"] { background: var(--debt); color: #1d0703; }
+  .btn {
+    background: var(--accent); color: #fff; border: none; padding: 8px 14px;
+    border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
+  }
+  .btn.ghost { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+  .btn:hover { filter: brightness(1.08); }
+
+  #saveStatus { font-size: 12.5px; color: var(--faint); min-width: 90px; }
+  #saveStatus.saving { color: var(--idea); }
+  #saveStatus.saved { color: var(--done); }
+  #saveStatus.error { color: var(--debt); }
 
   /* sections + cards */
   section.group { margin-bottom: 26px; }
@@ -75,19 +87,22 @@
   .card {
     position: relative;
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    padding: 12px 14px 12px 16px; margin-bottom: 10px; border-left: 3px solid var(--line);
+    padding: 12px 56px 12px 16px; margin-bottom: 10px; border-left: 3px solid var(--line);
   }
-  /* delete button — hidden until the card is hovered/focused */
-  .card .del {
-    position: absolute; top: 8px; right: 8px;
+  .card .actions {
+    position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;
+    opacity: 0; transition: opacity .12s;
+  }
+  .card:hover .actions, .card:focus-within .actions { opacity: 1; }
+  .iconbtn {
     width: 22px; height: 22px; border-radius: 50%;
     border: 1px solid var(--line); background: var(--panel-2); color: var(--dim);
-    font-size: 15px; line-height: 1; cursor: pointer; padding: 0;
+    font-size: 13px; line-height: 1; cursor: pointer; padding: 0;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity .12s, background .12s, color .12s, border-color .12s;
   }
-  .card:hover .del, .card .del:focus { opacity: 1; }
-  .card .del:hover { background: var(--debt); color: #fff; border-color: var(--debt); }
+  .iconbtn:hover { color: #fff; border-color: var(--faint); }
+  .iconbtn.del:hover { background: var(--debt); border-color: var(--debt); }
+  .iconbtn:disabled { opacity: .3; cursor: default; }
   .card.s-done { border-left-color: var(--done); }
   .card.s-todo { border-left-color: var(--todo); }
   .card.s-idea { border-left-color: var(--idea); }
@@ -104,15 +119,33 @@
   .card ul li { margin: 3px 0; }
   .star { color: var(--idea); }
 
+  .add-row { margin: 4px 0 12px; }
+
   .decisions summary { cursor: pointer; font-size: 19px; font-weight: 600; padding: 6px 0; }
   .decisions ul { list-style: none; padding: 0; margin: 8px 0 0; }
   .decisions li { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; margin-bottom: 7px; color: var(--dim); }
   .decisions .date { color: var(--faint); font-size: 12px; }
 
-  .empty { color: var(--faint); text-align: center; padding: 40px; font-style: italic; }
+  .empty { color: var(--faint); text-align: center; padding: 20px; font-style: italic; }
   .error { background: #2a1c1c; border: 1px solid #5b2f2f; color: #f0c0b8; padding: 16px; border-radius: 10px; margin-top: 20px; }
   .error code { background: #00000044; padding: 1px 6px; border-radius: 4px; }
   footer { color: var(--faint); font-size: 12.5px; margin-top: 30px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+  /* modal */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; z-index: 50; overflow: auto; }
+  .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; width: 100%; max-width: 560px; padding: 22px; }
+  .modal h3 { margin: 0 0 14px; }
+  .modal label { display: block; font-size: 12.5px; color: var(--dim); margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+  .modal input[type=text], .modal textarea, .modal select {
+    width: 100%; background: var(--panel-2); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: inherit;
+  }
+  .modal textarea { resize: vertical; min-height: 64px; }
+  .modal .checkrow { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--dim); }
+  .modal .row2 { display: flex; gap: 12px; }
+  .modal .row2 > div { flex: 1; }
+  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .hint { color: var(--faint); font-size: 12px; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -126,30 +159,64 @@
 
   <div id="app"></div>
 </div>
+<div id="modalRoot"></div>
 
 <script>
 const STATUS = { done: "Done", todo: "To do", idea: "Idea", debt: "Debt" };
+const API = "/api/roadmap";
 let DATA = null;
 let activeStatus = "all";
 let query = "";
+let serverMode = true;  // false when opened without the server (read-only)
 
 async function load() {
   try {
-    const res = await fetch("roadmap.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status);
+    let res;
+    try {
+      res = await fetch(API, { cache: "no-store" });
+      if (!res.ok) throw new Error("api " + res.status);
+    } catch (_) {
+      // Fallback: static file (read-only, no saving).
+      serverMode = false;
+      res = await fetch("roadmap.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+    }
     DATA = await res.json();
     readHash();
     render();
     window.addEventListener("hashchange", () => { readHash(); render(); });
   } catch (err) {
     document.getElementById("app").innerHTML =
-      `<div class="error"><b>Couldn't load roadmap.json.</b><br>
-       ${String(err)}<br><br>
-       If you opened this file directly (<code>file://</code>), the browser blocks loading the JSON.
-       Serve the folder instead — from <code>roadmap/</code> run:
-       <br><code>python3 -m http.server 8000</code><br>
-       then open <code>http://localhost:8000/</code></div>`;
+      `<div class="error"><b>Couldn't load the roadmap.</b><br>${String(err)}<br><br>
+       Run the editor server so changes can save:
+       <br><code>python3 roadmap/server.py</code><br>
+       then open <code>http://localhost:8770/</code></div>`;
   }
+}
+
+async function save() {
+  if (!serverMode) { setStatus("read-only (run server.py to save)", "error"); return; }
+  setStatus("Saving…", "saving");
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(DATA),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    setStatus("Saved ✓", "saved");
+  } catch (err) {
+    setStatus("Save failed", "error");
+    console.error(err);
+  }
+}
+
+function setStatus(text, cls) {
+  const el = document.getElementById("saveStatus");
+  if (!el) return;
+  el.textContent = text;
+  el.className = cls || "";
+  if (cls === "saved") setTimeout(() => { if (el.textContent === text) el.textContent = ""; }, 1800);
 }
 
 function matches(item) {
@@ -160,14 +227,14 @@ function matches(item) {
 }
 
 function render() {
-  // header meta
   document.getElementById("title").textContent = DATA.meta.title;
   document.getElementById("blurb").textContent = DATA.meta.blurb;
   document.getElementById("vision").innerHTML =
-    `<b>Vision.</b> ${DATA.meta.vision} <br><span style="font-size:13px">${DATA.meta.note}</span>`;
+    `<b>Vision.</b> ${escapeHTML(DATA.meta.vision)} <br><span style="font-size:13px">${escapeHTML(DATA.meta.note)}</span>`;
   document.getElementById("metaRow").innerHTML =
-    `<span class="chip">Version <b>${DATA.meta.version}</b></span>
-     <span class="chip">Updated <b>${DATA.meta.updated}</b></span>`;
+    `<span class="chip">Version <b>${escapeHTML(DATA.meta.version)}</b></span>
+     <span class="chip">Updated <b>${escapeHTML(DATA.meta.updated)}</b></span>
+     ${serverMode ? "" : '<span class="chip" style="color:var(--debt)">read-only</span>'}`;
 
   const counts = { done: 0, todo: 0, idea: 0, debt: 0 };
   DATA.items.forEach(i => counts[i.status] !== undefined && counts[i.status]++);
@@ -184,12 +251,14 @@ function render() {
     <div title="${pct}% of shipped+planned work done" class="progress"><div style="width:${pct}%"></div></div>
 
     <div class="controls">
-      <input id="search" type="search" placeholder="Search the roadmap…" value="${query}">
+      <input id="search" type="search" placeholder="Search the roadmap…" value="${escapeAttr(query)}">
       <div class="filters">
         ${["all","done","todo","idea","debt"].map(f =>
           `<div class="filter ${activeStatus===f?'active':''}" data-f="${f}">${f==="all"?"All":STATUS[f]}</div>`
         ).join("")}
       </div>
+      <button class="btn" id="addBtn">+ Add item</button>
+      <span id="saveStatus"></span>
     </div>
   `;
 
@@ -200,38 +269,51 @@ function render() {
     anyShown = true;
     html += `<section class="group" data-sec="${sec.id}">
       <div class="group-head">
-        <h2>${sec.title}</h2><span class="count">${items.length}</span>
+        <h2>${escapeHTML(sec.title)}</h2><span class="count">${items.length}</span>
         <span class="arrow">▾</span>
       </div>
       <div class="group-body">
-        <div class="group-desc">${sec.desc || ""}</div>
-        ${items.map(cardHTML).join("")}
+        <div class="group-desc">${escapeHTML(sec.desc || "")}</div>
+        ${items.map(it => cardHTML(it, sec.id)).join("")}
       </div>
     </section>`;
   });
 
   if (!anyShown) html += `<div class="empty">Nothing matches that filter / search.</div>`;
 
-  // decisions
   html += `<details class="decisions" open><summary>Decisions log</summary><ul>
-    ${DATA.decisions.map(d => `<li>${escapeHTML(d.text)} <span class="date">— ${d.date}</span></li>`).join("")}
+    ${DATA.decisions.map(d => `<li>${escapeHTML(d.text)} <span class="date">— ${escapeHTML(d.date)}</span></li>`).join("")}
   </ul></details>`;
 
-  html += `<footer>Edit <code>roadmap/roadmap.json</code> to change this page — it's the source of truth.
+  html += `<footer>${serverMode
+    ? "Editing here saves straight to <code>roadmap/roadmap.json</code>."
+    : "Read-only — run <code>python3 roadmap/server.py</code> to edit."}
     Shipped changes are recorded in <code>CHANGELOG.md</code>.</footer>`;
 
   document.getElementById("app").innerHTML = html;
   wireEvents();
 }
 
-function cardHTML(item) {
+function cardHTML(item, secId) {
   const idx = DATA.items.indexOf(item);
+  // index of this item within its (unfiltered) section, for reorder bounds
+  const sectionItems = DATA.items.filter(i => i.section === secId);
+  const posInSec = sectionItems.indexOf(item);
+  const isFirst = posInSec === 0;
+  const isLast = posInSec === sectionItems.length - 1;
   const star = item.starred ? `<span class="star" title="Standout idea">★</span> ` : "";
   const kids = (item.children && item.children.length)
     ? `<ul>${item.children.map(c => `<li>${escapeHTML(c)}</li>`).join("")}</ul>` : "";
   const note = item.note ? `<p class="note">${escapeHTML(item.note)}</p>` : "";
+  const actions = serverMode ? `
+    <div class="actions">
+      <button class="iconbtn up" data-idx="${idx}" title="Move up" ${isFirst?"disabled":""}>↑</button>
+      <button class="iconbtn down" data-idx="${idx}" title="Move down" ${isLast?"disabled":""}>↓</button>
+      <button class="iconbtn edit" data-idx="${idx}" title="Edit">✎</button>
+      <button class="iconbtn del" data-idx="${idx}" title="Delete">×</button>
+    </div>` : "";
   return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}">
-    <button class="del" data-idx="${idx}" title="Delete this item" aria-label="Delete this item">×</button>
+    ${actions}
     <div class="card-title">${star}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
     ${note}${kids}
   </div>`;
@@ -240,7 +322,6 @@ function cardHTML(item) {
 function wireEvents() {
   const search = document.getElementById("search");
   search.oninput = e => { query = e.target.value.trim().toLowerCase(); render(); search.focus(); };
-  // keep caret position friendly
   search.setSelectionRange(search.value.length, search.value.length);
 
   document.querySelectorAll(".filter").forEach(f =>
@@ -249,46 +330,123 @@ function wireEvents() {
   document.querySelectorAll(".group-head").forEach(h =>
     h.onclick = () => h.closest("section").classList.toggle("collapsed"));
 
-  document.querySelectorAll(".card .del").forEach(b =>
-    b.onclick = e => { e.stopPropagation(); deleteItem(parseInt(b.dataset.idx, 10)); });
+  const addBtn = document.getElementById("addBtn");
+  if (addBtn) addBtn.onclick = () => openEditor(null);
+
+  document.querySelectorAll(".iconbtn.del").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); deleteItem(+b.dataset.idx); });
+  document.querySelectorAll(".iconbtn.edit").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); openEditor(+b.dataset.idx); });
+  document.querySelectorAll(".iconbtn.up").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); moveItem(+b.dataset.idx, -1); });
+  document.querySelectorAll(".iconbtn.down").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); moveItem(+b.dataset.idx, +1); });
 }
 
 function deleteItem(idx) {
   const item = DATA.items[idx];
   if (!item) return;
-  if (!confirm(`Delete this roadmap item?\n\n“${item.title}”\n\nThis can't be undone. A fresh roadmap.json will download — replace roadmap/roadmap.json with it to save the change.`))
-    return;
+  if (!confirm(`Delete this roadmap item?\n\n“${item.title}”\n\nThis can't be undone.`)) return;
   DATA.items.splice(idx, 1);
   render();
-  downloadJSON();
+  save();
 }
 
-// Browser can't write files directly, so hand back an updated roadmap.json to
-// drop into the repo (replacing roadmap/roadmap.json).
-function downloadJSON() {
-  const blob = new Blob([JSON.stringify(DATA, null, 2) + "\n"], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "roadmap.json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(a.href);
+// Move an item up/down among its section-mates (reorders the global array).
+function moveItem(idx, dir) {
+  const item = DATA.items[idx];
+  if (!item) return;
+  const sameSection = DATA.items
+    .map((it, i) => ({ it, i }))
+    .filter(x => x.it.section === item.section);
+  const pos = sameSection.findIndex(x => x.i === idx);
+  const swapWith = sameSection[pos + dir];
+  if (!swapWith) return;
+  const a = idx, b = swapWith.i;
+  [DATA.items[a], DATA.items[b]] = [DATA.items[b], DATA.items[a]];
+  render();
+  save();
 }
 
-// Shareable filter via URL hash, e.g. #idea or #done.
-function syncHash() {
-  location.hash = activeStatus === "all" ? "" : activeStatus;
+/* ---- editor modal ---- */
+function openEditor(idx) {
+  const isNew = idx === null;
+  const item = isNew
+    ? { title: "", note: "", status: "todo", section: DATA.sections[0].id, starred: false, children: [] }
+    : JSON.parse(JSON.stringify(DATA.items[idx]));
+
+  const secOptions = DATA.sections.map(s =>
+    `<option value="${s.id}" ${item.section===s.id?"selected":""}>${escapeHTML(s.title)}</option>`).join("");
+  const statusOptions = Object.entries(STATUS).map(([k,v]) =>
+    `<option value="${k}" ${item.status===k?"selected":""}>${v}</option>`).join("");
+
+  document.getElementById("modalRoot").innerHTML = `
+    <div class="overlay" id="overlay">
+      <div class="modal">
+        <h3>${isNew ? "Add item" : "Edit item"}</h3>
+        <label>Title</label>
+        <input type="text" id="f_title" value="${escapeAttr(item.title)}" placeholder="Short title">
+        <label>Note (optional)</label>
+        <textarea id="f_note" placeholder="One-line context">${escapeHTML(item.note || "")}</textarea>
+        <div class="row2">
+          <div>
+            <label>Section</label>
+            <select id="f_section">${secOptions}</select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="f_status">${statusOptions}</select>
+          </div>
+        </div>
+        <label>Sub-items (one per line, optional)</label>
+        <textarea id="f_children" placeholder="One bullet per line">${escapeHTML((item.children||[]).join("\n"))}</textarea>
+        <label class="checkrow"><input type="checkbox" id="f_starred" ${item.starred?"checked":""}> Star this item (highlight)</label>
+        <div class="modal-actions">
+          <button class="btn ghost" id="cancelBtn">Cancel</button>
+          <button class="btn" id="saveItemBtn">${isNew ? "Add" : "Save"}</button>
+        </div>
+      </div>
+    </div>`;
+
+  const close = () => { document.getElementById("modalRoot").innerHTML = ""; };
+  document.getElementById("cancelBtn").onclick = close;
+  document.getElementById("overlay").onclick = e => { if (e.target.id === "overlay") close(); };
+  document.getElementById("f_title").focus();
+
+  document.getElementById("saveItemBtn").onclick = () => {
+    const title = document.getElementById("f_title").value.trim();
+    if (!title) { alert("Title is required."); return; }
+    const edited = {
+      title,
+      note: document.getElementById("f_note").value.trim(),
+      section: document.getElementById("f_section").value,
+      status: document.getElementById("f_status").value,
+      starred: document.getElementById("f_starred").checked,
+      children: document.getElementById("f_children").value
+        .split("\n").map(s => s.trim()).filter(Boolean),
+    };
+    if (!edited.note) delete edited.note;
+    if (!edited.children.length) delete edited.children;
+    if (!edited.starred) delete edited.starred;
+
+    if (isNew) DATA.items.push(edited);
+    else DATA.items[idx] = edited;
+    close();
+    render();
+    save();
+  };
 }
+
+function syncHash() { location.hash = activeStatus === "all" ? "" : activeStatus; }
 function readHash() {
   const h = location.hash.replace("#", "");
   if (["done", "todo", "idea", "debt", "all"].includes(h)) activeStatus = h;
 }
-
 function escapeHTML(s) {
-  return String(s).replace(/[&<>"']/g, c =>
+  return String(s ?? "").replace(/[&<>"']/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+function escapeAttr(s) { return escapeHTML(s).replace(/"/g, "&quot;"); }
 
 load();
 </script>
