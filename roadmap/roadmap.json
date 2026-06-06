@@ -39,13 +39,20 @@
       ]
     },
     {
-      "section": "next", "status": "todo", "title": "Tower upgrades + a 2nd tower type + a 2nd enemy type",
-      "note": "the smallest amount of variety that makes it a game, not a tech demo",
+      "section": "completed", "status": "done", "title": "2nd tower type + tiered upgrades + sell",
+      "note": "the variety that makes it a game, not a tech demo",
       "children": [
-        "Upgrade a placed tower (damage/range/fire-rate); sell for partial refund",
-        "Second tower with a different role (e.g. slow vs. damage)",
-        "Second enemy (e.g. fast-but-weak vs. slow-but-tanky)"
+        "Frost tower: lower damage, slows enemies on hit (blue tint + slow-factor/duration); enemies have a slow effect",
+        "Two build-type buttons (Cannon / Frost) with costs; pick one, then click a slot",
+        "Tiered upgrades (Lv 1→3) via a click-to-select tower panel; stats + rising cost, capped at max",
+        "Sell a placed tower for 50% of total spent; frees the slot",
+        "Data-driven tower stats (TYPES table) so balancing/new tiers is a one-place edit"
       ]
+    },
+    {
+      "section": "next", "status": "todo", "title": "A 2nd enemy type",
+      "note": "contrast the basic creep — e.g. fast-but-weak vs. slow-but-tanky; mix within a wave",
+      "children": []
     },
 
     { "section": "later", "status": "todo", "title": "Multiple maps / levels with different path layouts" },

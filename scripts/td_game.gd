@@ -8,10 +8,11 @@ class_name TDGame
 signal state_changed                 ## currency / lives / wave changed
 signal game_over(victory: bool)
 signal message(text: String)
+signal tower_selected(tower)         ## player clicked a built tower
+signal selection_cleared
 
-@export var starting_currency: int = 80
+@export var starting_currency: int = 150
 @export var starting_lives: int = 20
-@export var tower_cost: int = 50
 @export var enemies_per_wave: int = 6
 @export var wave_count: int = 5
 @export var spawn_interval: float = 0.9
@@ -24,10 +25,13 @@ signal message(text: String)
 var currency: int
 var lives: int
 var wave: int = 0
+var build_type: int = 0               ## TDTower.Type to place (set by HUD)
 var _alive_enemies: int = 0
 var _spawning: bool = false
 var _over: bool = false
 var _waypoints: PackedVector3Array = PackedVector3Array()
+var _slot_tower: Dictionary = {}      ## slot -> tower built on it
+var _selected_slot = null             ## currently selected (for the panel)
 
 func _ready() -> void:
 	currency = starting_currency
@@ -104,18 +108,71 @@ func _dec_enemies() -> void:
 			message.emit("Wave %d cleared! Build, then start wave %d." % [wave, wave + 1])
 
 func _on_slot_clicked(slot) -> void:
-	if _over or slot.occupied:
+	if _over:
 		return
-	if currency < tower_cost:
-		message.emit("Not enough currency (need %d)." % tower_cost)
+	# Occupied slot → select its tower (open the panel).
+	if slot.occupied:
+		_select_slot(slot)
 		return
+	# Free slot → build the currently selected tower type.
 	if tower_scene == null:
+		return
+	var cost: int = TDTower.TYPES[build_type]["base_cost"]
+	if currency < cost:
+		message.emit("Not enough currency (need %d)." % cost)
 		return
 	var t := tower_scene.instantiate()
 	add_child(t)
 	t.global_position = slot.global_position
+	t.configure(build_type)
 	slot.set_occupied()
-	currency -= tower_cost
+	_slot_tower[slot] = t
+	currency -= cost
+	state_changed.emit()
+
+func set_build_type(type: int) -> void:
+	build_type = type
+	_clear_selection()
+
+func _select_slot(slot) -> void:
+	_selected_slot = slot
+	var tower = _slot_tower.get(slot)
+	if tower:
+		tower_selected.emit(tower)
+
+func _clear_selection() -> void:
+	_selected_slot = null
+	selection_cleared.emit()
+
+func upgrade_selected() -> void:
+	var tower = _slot_tower.get(_selected_slot)
+	if tower == null or _over:
+		return
+	if tower.is_max_level():
+		message.emit("Tower is already at max level.")
+		return
+	var cost: int = tower.upgrade_cost()
+	if currency < cost:
+		message.emit("Not enough currency to upgrade (need %d)." % cost)
+		return
+	currency -= cost
+	tower.upgrade()
+	state_changed.emit()
+	tower_selected.emit(tower)   # refresh the panel
+
+func sell_selected() -> void:
+	var slot = _selected_slot
+	var tower = _slot_tower.get(slot)
+	if tower == null or _over:
+		return
+	currency += tower.sell_value()
+	tower.queue_free()
+	_slot_tower.erase(slot)
+	if slot.has_method("set_free"):
+		slot.set_free()
+	else:
+		slot.occupied = false
+	_clear_selection()
 	state_changed.emit()
 
 func _end(victory: bool) -> void:

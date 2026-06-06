@@ -21,6 +21,11 @@ var _dead: bool = false
 var _material: StandardMaterial3D
 var _base_color: Color = Color(0.85, 0.4, 0.4)
 
+# Slow effect: while _slow_timer > 0, move at speed * _slow_factor.
+var _slow_factor: float = 1.0
+var _slow_timer: float = 0.0
+const SLOW_COLOR := Color(0.55, 0.75, 1.0)
+
 func _ready() -> void:
 	health.died.connect(_on_died)
 	# Own material instance so a hit flash on one creep doesn't affect others.
@@ -38,6 +43,7 @@ func set_path(points: PackedVector3Array) -> void:
 func _physics_process(delta: float) -> void:
 	if _dead or _target_idx >= _path.size():
 		return
+	_tick_slow(delta)
 	var target: Vector3 = _path[_target_idx]
 	var to: Vector3 = target - global_position
 	to.y = 0.0
@@ -47,7 +53,7 @@ func _physics_process(delta: float) -> void:
 		if _target_idx >= _path.size():
 			_leak()
 		return
-	var step := to.normalized() * speed * delta
+	var step := to.normalized() * (speed * _slow_factor) * delta
 	if step.length() >= dist:
 		global_position = Vector3(target.x, global_position.y, target.z)
 	else:
@@ -62,10 +68,33 @@ func take_damage(amount: float) -> void:
 	health.take_damage(amount)
 	_flash()
 
+## Apply a slow: factor in (0,1] multiplies speed; refreshes/keeps the stronger
+## slow and the longer remaining duration.
+func apply_slow(factor: float, duration: float) -> void:
+	if _dead:
+		return
+	_slow_factor = min(_slow_factor, factor) if _slow_timer > 0.0 else factor
+	_slow_timer = max(_slow_timer, duration)
+	_refresh_color()
+
+func _tick_slow(delta: float) -> void:
+	if _slow_timer > 0.0:
+		_slow_timer -= delta
+		if _slow_timer <= 0.0:
+			_slow_factor = 1.0
+			_refresh_color()
+
 func _flash() -> void:
 	_material.albedo_color = Color.WHITE
 	var tw := create_tween()
-	tw.tween_property(_material, "albedo_color", _base_color, 0.15)
+	tw.tween_property(_material, "albedo_color", _current_color(), 0.15)
+
+func _current_color() -> Color:
+	return SLOW_COLOR if _slow_timer > 0.0 else _base_color
+
+func _refresh_color() -> void:
+	# Don't stomp an in-progress flash tween mid-white; just set the resting color.
+	_material.albedo_color = _current_color()
 
 func _leak() -> void:
 	if _dead:

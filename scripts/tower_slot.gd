@@ -39,3 +39,7 @@ func _on_unhover() -> void:
 func set_occupied() -> void:
 	occupied = true
 	_material.albedo_color = COLOR_TAKEN
+
+func set_free() -> void:
+	occupied = false
+	_material.albedo_color = COLOR_FREE

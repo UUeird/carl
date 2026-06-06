@@ -55,7 +55,6 @@ enemy_scene = ExtResource("2_enemy")
 tower_scene = ExtResource("3_tower")
 path_node = NodePath("Path3D")
 starting_currency = 150
-tower_cost = 50
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")

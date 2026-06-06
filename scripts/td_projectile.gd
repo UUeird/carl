@@ -11,6 +11,8 @@ var _target: Node3D
 var _damage: float = 0.0
 var _dir: Vector3 = Vector3.FORWARD
 var _life: float = 2.5
+var _slow_factor: float = 1.0
+var _slow_dur: float = 0.0
 
 func launch(pos: Vector3, target: Node3D, damage: float, speed_override: float = -1.0) -> void:
 	global_position = pos
@@ -20,6 +22,11 @@ func launch(pos: Vector3, target: Node3D, damage: float, speed_override: float =
 		speed = speed_override
 	if is_instance_valid(target):
 		_dir = (target.global_position - pos).normalized()
+
+## Frost towers call this so the shot slows its target on hit.
+func set_slow(factor: float, duration: float) -> void:
+	_slow_factor = factor
+	_slow_dur = duration
 
 func _physics_process(delta: float) -> void:
 	if is_instance_valid(_target):
@@ -37,4 +44,6 @@ func _physics_process(delta: float) -> void:
 func _hit(body: Node) -> void:
 	if body and body.has_method("take_damage"):
 		body.take_damage(_damage)
+	if _slow_dur > 0.0 and body and body.has_method("apply_slow"):
+		body.apply_slow(_slow_factor, _slow_dur)
 	queue_free()
