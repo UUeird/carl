@@ -73,9 +73,21 @@
   .group-desc { color: var(--faint); font-size: 13px; margin: 2px 0 10px; }
 
   .card {
+    position: relative;
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
     padding: 12px 14px 12px 16px; margin-bottom: 10px; border-left: 3px solid var(--line);
   }
+  /* delete button — hidden until the card is hovered/focused */
+  .card .del {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--panel-2); color: var(--dim);
+    font-size: 15px; line-height: 1; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .12s, background .12s, color .12s, border-color .12s;
+  }
+  .card:hover .del, .card .del:focus { opacity: 1; }
+  .card .del:hover { background: var(--debt); color: #fff; border-color: var(--debt); }
   .card.s-done { border-left-color: var(--done); }
   .card.s-todo { border-left-color: var(--todo); }
   .card.s-idea { border-left-color: var(--idea); }
@@ -213,11 +225,13 @@ function render() {
 }
 
 function cardHTML(item) {
+  const idx = DATA.items.indexOf(item);
   const star = item.starred ? `<span class="star" title="Standout idea">★</span> ` : "";
   const kids = (item.children && item.children.length)
     ? `<ul>${item.children.map(c => `<li>${escapeHTML(c)}</li>`).join("")}</ul>` : "";
   const note = item.note ? `<p class="note">${escapeHTML(item.note)}</p>` : "";
   return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}">
+    <button class="del" data-idx="${idx}" title="Delete this item" aria-label="Delete this item">×</button>
     <div class="card-title">${star}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
     ${note}${kids}
   </div>`;
@@ -234,6 +248,32 @@ function wireEvents() {
 
   document.querySelectorAll(".group-head").forEach(h =>
     h.onclick = () => h.closest("section").classList.toggle("collapsed"));
+
+  document.querySelectorAll(".card .del").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); deleteItem(parseInt(b.dataset.idx, 10)); });
+}
+
+function deleteItem(idx) {
+  const item = DATA.items[idx];
+  if (!item) return;
+  if (!confirm(`Delete this roadmap item?\n\n“${item.title}”\n\nThis can't be undone. A fresh roadmap.json will download — replace roadmap/roadmap.json with it to save the change.`))
+    return;
+  DATA.items.splice(idx, 1);
+  render();
+  downloadJSON();
+}
+
+// Browser can't write files directly, so hand back an updated roadmap.json to
+// drop into the repo (replacing roadmap/roadmap.json).
+function downloadJSON() {
+  const blob = new Blob([JSON.stringify(DATA, null, 2) + "\n"], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "roadmap.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
 }
 
 // Shareable filter via URL hash, e.g. #idea or #done.
