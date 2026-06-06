@@ -8,8 +8,8 @@
     "note": "Everything is placeholder primitives (capsules/boxes) — no art committed yet."
   },
   "sections": [
-    { "id": "completed", "title": "Completed", "kind": "done", "desc": "Shipped chunks of work, newest first. Each group maps to one commit." },
     { "id": "next", "title": "Next up", "kind": "todo", "desc": "Near-term, roughly prioritized." },
+    { "id": "completed", "title": "Completed", "kind": "done", "desc": "Shipped chunks of work, newest first. Each group maps to one commit." },
     { "id": "later", "title": "Later", "kind": "todo", "desc": "Bigger bets, not yet scheduled." },
     { "id": "ideas", "title": "Ideas & open questions", "kind": "idea", "desc": "Directions under consideration, not yet committed." },
     { "id": "debt", "title": "Known issues / debt", "kind": "debt", "desc": "Things that work but aren't right yet." }
