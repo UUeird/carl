@@ -13,6 +13,22 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ---
 
+## 2026.06.06
+
+### Changed
+- **Roadmap is now an interactive HTML app** instead of a flat markdown doc. Data lives in
+  `roadmap/roadmap.json` (the source of truth); `roadmap/index.html` renders a dashboard with
+  progress stats, search, status filters, collapsible sections, hash-deep-linkable filters, and
+  the starred "view-switching" idea highlighted. `ROADMAP.md` is now a short pointer + the
+  "how we work" notes.
+- **In-browser editing that saves to disk** — a tiny stdlib Python server
+  (`roadmap/server.py`) serves the page and persists edits to `roadmap.json` (atomic write).
+  Add / edit / reorder / delete items, change status or section, and star items right in the
+  page; no more download-and-replace. Without the server it falls back to a read-only viewer.
+- `.claude/` (local editor/agent settings) is now gitignored.
+
+---
+
 ## 2026.05.29.2
 
 ### Added
