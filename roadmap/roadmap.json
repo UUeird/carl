@@ -83,6 +83,17 @@
     {
       "section": "completed",
       "status": "done",
+      "title": "Perf: health-bar billboard cost (measured ~16ms -> ~3ms)",
+      "note": "the one solid, repeatable win from the perf pass",
+      "children": [
+        "Per-frame billboard did a get_camera_3d() lookup + look_at() per bar (~29 bars)",
+        "Now uses one shared facing basis (correct for the orthographic iso camera), refreshed only if the camera moves",
+        "Other perf changes shipped alongside are hygiene, not measurably proven — see debt"
+      ]
+    },
+    {
+      "section": "completed",
+      "status": "done",
       "title": "Debug/perf overlay (bottom-left, debug builds only)",
       "note": "for diagnosing combat lag ahead of a bug-fix-or-rewrite decision",
       "children": [
@@ -276,32 +287,22 @@
     {
       "section": "debt",
       "status": "debt",
-      "title": "Perf: throttle + cache tower targeting (BIGGEST WIN) \u2014 _pick_target() runs every physics frame per tower and raycasts LOS for every in-range enemy. Re-pick every ~0.1\u20130.2s and cache the target while it stays valid/in range. Profiling showed combat at 70\u2013120ms/frame (~10 FPS) vs 2.3ms idle, dominated by hundreds of raycasts/frame."
+      "title": "Perf: locate the real combat hotspot with the IN-EDITOR profiler. Headless profiling proved too noisy to trust (same code measured 7\u2013153ms run-to-run), and earlier 'raycasts/projectiles' theories didn't hold up. Next: run from the Godot editor, Debugger \u2192 Profiler, sort by Self time during a heavy wave, and fix the top function with confidence."
     },
     {
       "section": "debt",
       "status": "debt",
-      "title": "Perf: early-out line-of-sight checks \u2014 _has_los() raycasts every in-range enemy even though only one target is kept. Sort/scan by path-progress first and raycast just the best candidate(s) until one passes."
+      "title": "Perf: investigate first-wave shader-compilation stutter \u2014 headless showed multi-second spikes on first render of each material (one-time cost, not steady-state). If real in-editor, fix with shader pre-warming, not per-frame optimization."
     },
     {
       "section": "debt",
       "status": "debt",
-      "title": "Perf: share materials instead of allocating per spawn \u2014 _tint_projectile() makes a new StandardMaterial3D per shot (td_tower.gd ~302); use one static material per tower/projectile type. Same for the bomb blast ring."
+      "title": "Perf: pool short-lived nodes (projectiles, damage numbers, blast rings) \u2014 reuse from a pool instead of instance/free per spawn. Reasonable hygiene, but NOT yet shown to be a bottleneck; confirm with the profiler before investing."
     },
     {
       "section": "debt",
       "status": "debt",
-      "title": "Perf: stop tween-flashing on the beam every frame \u2014 the beam calls take_damage() each frame, and enemy _flash() spawns a create_tween() per hit (td_enemy.gd ~110), so a beamed enemy makes ~60 tweens/sec. Tint the target directly for continuous damage instead of tweening."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "Perf: pool short-lived nodes (projectiles, damage numbers, blast rings) if still needed after the above \u2014 reuse from a pool rather than instance/free each spawn. Do this last; the targeting/material/tween fixes likely suffice."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "Perf (context): full profiling write-up \u2014 heavy wave (6 towers, 40 creeps) ran 70\u2013120ms/frame with spikes to 2.8\u20133.8s; orphans stayed 0 (no leak). Root causes: per-frame LOS raycasts (chronic baseline) + per-spawn material/tween/Label3D allocation (spikes). Conclusion: targeted fix, not a rewrite."
+      "title": "Perf (hygiene, done-ish but unmeasured): targeting search is throttled/simplified and enemy flash is timer-driven (no per-hit tween) and projectiles share a material per type. Test-clean, but headless couldn't confirm a frame-time win \u2014 revisit value once the profiler names the real hotspot."
     },
     {
       "section": "debt",

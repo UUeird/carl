@@ -76,6 +76,9 @@ var tower_type: int = Type.BASIC
 var level: int = 1
 var total_spent: int = 0
 var _cooldown: float = 0.0
+var _target: Node3D = null          ## cached current target
+var _retarget_timer: float = 0.0    ## time until the next full re-pick
+const RETARGET_INTERVAL := 0.15     ## seconds between full target searches
 var _head_material: StandardMaterial3D
 var _beam_material: StandardMaterial3D
 
@@ -193,23 +196,32 @@ func _set_beam(target: Node3D) -> void:
 
 func _physics_process(delta: float) -> void:
 	_cooldown = max(_cooldown - delta, 0.0)
-	var target := _pick_target()
-	if target == null:
+	_retarget_timer -= delta
+
+	# Re-pick only on the throttle, or when the cached target is gone/out of range
+	# (a cheap check — no raycast). The full search was the tower hotspot, so we
+	# keep it off the per-frame path.
+	if _retarget_timer <= 0.0 or not _target_valid(_stats()["range"]):
+		_target = _pick_target()
+		_retarget_timer = RETARGET_INTERVAL
+
+	if _target == null:
 		if _is_beam():
 			_set_beam(null)
 		return
-	var look := target.global_position
+
+	var look := _target.global_position
 	look.y = turret.global_position.y
 	if look.distance_to(turret.global_position) > 0.05:
 		turret.look_at(look, Vector3.UP)
 
 	if _is_beam():
 		# Continuous DPS to the locked target; redraw the beam each frame.
-		if target.has_method("take_damage"):
-			target.take_damage(_stats()["dps"] * delta)
-		_set_beam(target)
+		if _target.has_method("take_damage"):
+			_target.take_damage(_stats()["dps"] * delta)
+		_set_beam(_target)
 	elif _cooldown <= 0.0:
-		_fire(target)
+		_fire(_target)
 		_cooldown = _stats()["cooldown"]
 
 func _is_beam() -> bool:
@@ -218,24 +230,34 @@ func _is_beam() -> bool:
 ## Layer mask of geometry that blocks line of sight (environment/obstacles).
 const BLOCKER_MASK := 4
 
+# Cheap per-frame validity: target still exists and is in range. No raycast here
+# (LOS is only re-checked on the throttled full re-pick) — keeps the per-frame
+# path allocation- and raycast-free.
+func _target_valid(r: float) -> bool:
+	if _target == null or not is_instance_valid(_target):
+		return false
+	return global_position.distance_to(_target.global_position) <= r
+
+# Full target search: single pass tracking the most-progressed enemy that's in
+# range AND has line of sight. No array/sort/lambda (those dominated the cost);
+# this runs only on the retarget throttle, not every frame.
 func _pick_target() -> Node3D:
-	var best: Node3D = null
-	var best_progress := -1.0
 	var r: float = _stats()["range"]
 	var origin := muzzle.global_position if muzzle else global_position
+	var best: Node3D = null
+	var best_prog := -1.0
 	for e in get_tree().get_nodes_in_group("td_enemy"):
 		if not is_instance_valid(e):
 			continue
-		# Spherical range: true 3D distance (matters once maps have height).
+		var prog := float(e._target_idx) if "_target_idx" in e else 0.0
+		if prog <= best_prog:
+			continue   # can't beat current best; skip the distance/LOS work
 		if global_position.distance_to(e.global_position) > r:
 			continue
-		# Line of sight: skip enemies blocked by terrain/obstacles.
 		if not _has_los(origin, e):
 			continue
-		var prog := float(e._target_idx) if "_target_idx" in e else 0.0
-		if prog > best_progress:
-			best_progress = prog
-			best = e
+		best_prog = prog
+		best = e
 	return best
 
 func _has_los(origin: Vector3, enemy: Node3D) -> bool:
@@ -296,13 +318,22 @@ func _predict_landing(target: Node3D, origin: Vector3, speed: float) -> Vector3:
 	aim.y = target.global_position.y
 	return aim
 
-func _tint_projectile(proj: Node) -> void:
-	var m := proj.get_node_or_null("Mesh")
-	if m and m is MeshInstance3D:
+# One shared projectile material per tower type, built lazily and reused — so we
+# don't allocate a StandardMaterial3D on every shot.
+static var _proj_materials: Dictionary = {}
+
+static func _projectile_material(type: int) -> StandardMaterial3D:
+	if not _proj_materials.has(type):
 		var mat := StandardMaterial3D.new()
-		var c: Color = TYPES[tower_type]["color"]
+		var c: Color = TYPES[type]["color"]
 		mat.albedo_color = c
 		mat.emission_enabled = true
 		mat.emission = c
 		mat.emission_energy_multiplier = 0.8
-		m.material_override = mat
+		_proj_materials[type] = mat
+	return _proj_materials[type]
+
+func _tint_projectile(proj: Node) -> void:
+	var m := proj.get_node_or_null("Mesh")
+	if m and m is MeshInstance3D:
+		m.material_override = _projectile_material(tower_type)
