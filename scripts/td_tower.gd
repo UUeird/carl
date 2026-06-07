@@ -259,6 +259,7 @@ func _fire_projectile(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 		return
 	var proj := projectile_scene.instantiate()
 	get_tree().current_scene.add_child(proj)
+	proj.add_to_group("td_projectile")   # for the debug overlay's live count
 	if proj.has_method("launch"):
 		proj.launch(origin, target, s["damage"], s.get("proj_speed", -1.0))
 		if tower_type == Type.FROST and proj.has_method("set_slow"):
@@ -277,6 +278,7 @@ func _fire_bomb(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 	var lead := _predict_landing(target, origin, speed)
 	var bomb := bomb_scene.instantiate()
 	get_tree().current_scene.add_child(bomb)
+	bomb.add_to_group("td_projectile")   # for the debug overlay's live count
 	if bomb.has_method("launch_bomb"):
 		bomb.launch_bomb(origin, lead, speed, s["damage"], s["aoe"])
 

@@ -83,6 +83,17 @@
     {
       "section": "completed",
       "status": "done",
+      "title": "Debug/perf overlay (bottom-left, debug builds only)",
+      "note": "for diagnosing combat lag ahead of a bug-fix-or-rewrite decision",
+      "children": [
+        "FPS + CPU/physics frame time (ms), object/node/orphan counts, draw calls + primitives, live enemy/projectile counts",
+        "Visible only in debug builds (OS.is_debug_build); auto-hidden in release",
+        "Projectiles/bombs join a td_projectile group for the live count"
+      ]
+    },
+    {
+      "section": "completed",
+      "status": "done",
       "title": "Test suite (GUT) + visual checklist",
       "note": "a pre-PR gate; caught a real current_scene-null crash on first run",
       "children": [
@@ -261,6 +272,11 @@
       "title": "Maze / free-placement TD twist",
       "note": "We chose classic fixed-path for the first prototype. If that proves fun, revisit letting players build the path with tower placement (Desktop TD / GemCraft style) for deeper strategy.",
       "children": []
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Combat-time lag / frame hitches \u2014 investigate with the debug overlay. Suspects: many short-lived nodes spawned per frame (projectiles, damage numbers, blast rings, tweens) and transparent overdraw (range spheres, beams). Watch object count + CPU ms during a wave. Inform the bug-fix-vs-rewrite call."
     },
     {
       "section": "debt",
