@@ -83,14 +83,35 @@ func _process(delta: float) -> void:
 		return
 	if _timer < FADE_TIME:
 		_set_alpha(_timer / FADE_TIME)
-	# Billboard: face the active camera each frame.
-	var cam := get_viewport().get_camera_3d()
-	if cam:
-		var look := cam.global_position
-		look.y = global_position.y   # keep the bar upright, only yaw toward camera
-		if look.distance_to(global_position) > 0.01:
-			look_at(look, Vector3.UP)
-			rotate_object_local(Vector3.UP, PI)   # quads face +Z; flip to face the camera
+	_billboard()
+
+# Face the camera. The iso camera is fixed, so its facing basis is the same for
+# every bar — cache it statically and refresh only when the camera moves, instead
+# of doing a get_camera_3d() lookup + look_at() per bar per frame.
+static var _cam: Camera3D = null
+static var _cam_basis: Basis = Basis.IDENTITY
+static var _cam_xform_cache: Transform3D
+
+func _billboard() -> void:
+	if _cam == null or not is_instance_valid(_cam):
+		_cam = get_viewport().get_camera_3d()
+		if _cam == null:
+			return
+		_refresh_cam_basis()
+	elif _cam.global_transform != _cam_xform_cache:
+		_refresh_cam_basis()
+	global_basis = _cam_basis
+
+static func _set_cam_static(c: Camera3D) -> void:
+	_cam = c
+
+func _refresh_cam_basis() -> void:
+	_cam_xform_cache = _cam.global_transform
+	# Yaw-only billboard toward the camera (bars stay upright).
+	var to := _cam.global_position - global_position
+	to.y = 0.0
+	if to.length() > 0.01:
+		_cam_basis = Basis.looking_at(-to.normalized(), Vector3.UP)
 
 func _set_alpha(a: float) -> void:
 	if _fill_mat:

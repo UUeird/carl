@@ -44,6 +44,7 @@ func _physics_process(delta: float) -> void:
 	if _dead or _target_idx >= _path.size():
 		return
 	_tick_slow(delta)
+	_tick_flash(delta)
 	var target: Vector3 = _path[_target_idx]
 	var to: Vector3 = target - global_position
 	to.y = 0.0
@@ -105,17 +106,32 @@ func _tick_slow(delta: float) -> void:
 			_slow_factor = 1.0
 			_refresh_color()
 
+const FLASH_TIME := 0.15
+var _flash_timer: float = 0.0
+
+# Timer-driven flash (no per-hit tween): set white, then fade back in
+# _physics_process. Repeated hits just refresh the timer — so a beam hitting
+# every frame costs nothing extra instead of spawning ~60 tweens/sec.
 func _flash() -> void:
+	_flash_timer = FLASH_TIME
 	_material.albedo_color = Color.WHITE
-	var tw := create_tween()
-	tw.tween_property(_material, "albedo_color", _current_color(), 0.15)
+
+func _tick_flash(delta: float) -> void:
+	if _flash_timer <= 0.0:
+		return
+	_flash_timer -= delta
+	if _flash_timer <= 0.0:
+		_material.albedo_color = _current_color()
+	else:
+		_material.albedo_color = Color.WHITE.lerp(_current_color(), 1.0 - _flash_timer / FLASH_TIME)
 
 func _current_color() -> Color:
 	return SLOW_COLOR if _slow_timer > 0.0 else _base_color
 
 func _refresh_color() -> void:
-	# Don't stomp an in-progress flash tween mid-white; just set the resting color.
-	_material.albedo_color = _current_color()
+	# Don't stomp an in-progress flash; only set resting color when not flashing.
+	if _flash_timer <= 0.0:
+		_material.albedo_color = _current_color()
 
 func _leak() -> void:
 	if _dead:
