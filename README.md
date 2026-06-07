@@ -16,6 +16,27 @@ the end. Combat can flip between melee, ranged, and mixed from a single switch
 
 CLI: `godot --path .` (or `/Applications/Godot.app/Contents/MacOS/Godot --path .` on macOS).
 
+> Note: the project has pivoted to a **tower-defense** game (main scene `scenes/td_main.tscn`).
+> Some sections below still describe the earlier action prototype and need a refresh; the
+> current plan is in the [interactive roadmap](roadmap/index.html).
+
+## Testing
+
+Run the coded test suite before opening a PR:
+
+```
+./run_tests.sh
+```
+
+It runs the [GUT](https://github.com/bitwes/Gut) suite in `test/` headlessly and exits
+non-zero if anything fails (so it works as a gate). Covers the deterministic logic —
+economy (build/upgrade/sell), tower targeting + line-of-sight, AoE falloff, frost slow,
+beam DPS, lead prediction, and wave/lives flow.
+
+Visual/feel behavior that can't be asserted headlessly (range domes, health bars, beam,
+damage numbers, etc.) lives in [test/VISUAL_CHECKLIST.md](test/VISUAL_CHECKLIST.md) — a prose
+checklist run by launching the game and inspecting screenshots. Both should be green before a PR.
+
 ## Controls
 
 | Action | Key |

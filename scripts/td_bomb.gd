@@ -56,7 +56,11 @@ func _explode() -> void:
 	queue_free()
 
 func _spawn_blast() -> void:
-	# A quick expanding translucent ring so the AoE reads.
+	# A quick expanding translucent ring so the AoE reads. Cosmetic — skip if
+	# there's no scene to parent into (e.g. test harness).
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
 	var ring := MeshInstance3D.new()
 	var m := SphereMesh.new()
 	m.radius = 1.0
@@ -67,7 +71,7 @@ func _spawn_blast() -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = Color(1.0, 0.6, 0.2, 0.4)
 	ring.material_override = mat
-	get_tree().current_scene.add_child(ring)
+	scene.add_child(ring)
 	ring.global_position = _to
 	ring.scale = Vector3.ONE * 0.3
 	var tw := ring.create_tween()

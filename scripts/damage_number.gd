@@ -25,8 +25,12 @@ func _process(delta: float) -> void:
 	if _t >= LIFE:
 		queue_free()
 
-## Spawn a damage number at a world position, parented to the current scene.
+## Spawn a damage number at a world position, parented to the given node.
+## No-op if there's no valid parent (e.g. mid scene-transition or in a test
+## harness where current_scene is null) — feedback is cosmetic.
 static func popup(scene_root: Node, world_pos: Vector3, amount: int) -> void:
+	if scene_root == null or not scene_root.is_inside_tree():
+		return
 	var dn := DamageNumber.new()
 	dn.text = str(amount)
 	scene_root.add_child(dn)
