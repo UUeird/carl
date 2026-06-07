@@ -26,8 +26,8 @@ var _initialized: bool = false   ## skip Health's initial full-HP emit on _ready
 
 func _ready() -> void:
 	position.y = y_offset
-	_bg = _make_quad(Color(0.7, 0.12, 0.12), 0.0)
-	_fill = _make_quad(Color(0.25, 0.8, 0.3), 0.01)   # nudged forward to avoid z-fight
+	_bg = _make_quad(Color(0.7, 0.12, 0.12), 0.0, 0)
+	_fill = _make_quad(Color(0.25, 0.8, 0.3), 0.02, 1)   # in front + higher draw priority
 	add_child(_bg)
 	add_child(_fill)
 	_health = get_node_or_null(health_path)
@@ -35,7 +35,7 @@ func _ready() -> void:
 		_health.health_changed.connect(_on_health_changed)
 	visible = false
 
-func _make_quad(color: Color, z: float) -> MeshInstance3D:
+func _make_quad(color: Color, z: float, priority: int) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var q := QuadMesh.new()
 	q.size = Vector2(WIDTH, HEIGHT)
@@ -45,9 +45,11 @@ func _make_quad(color: Color, z: float) -> MeshInstance3D:
 	mat.albedo_color = color
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_DISABLED   # we billboard the whole node
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED     # visible from either side after billboard flip
+	mat.no_depth_test = true                          # don't let the bg/world occlude the fill
+	mat.render_priority = priority                    # fill (1) draws after bg (0)
 	mi.material_override = mat
-	if color.r > color.g:
+	if priority == 0:
 		_bg_mat = mat
 	else:
 		_fill_mat = mat
