@@ -1,10 +1,21 @@
-[gd_scene load_steps=18 format=3 uid="uid://td_main"]
+[gd_scene load_steps=22 format=3 uid="uid://td_main"]
 
 [ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://td_enemy" path="res://scenes/td_enemy.tscn" id="2_enemy"]
 [ext_resource type="PackedScene" uid="uid://td_tower" path="res://scenes/td_tower.tscn" id="3_tower"]
 [ext_resource type="PackedScene" uid="uid://td_tower_slot" path="res://scenes/tower_slot.tscn" id="4_slot"]
 [ext_resource type="Script" path="res://scripts/td_hud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/debug_overlay.gd" id="6_dbg"]
+
+[sub_resource type="BoxMesh" id="obstacle_mesh"]
+size = Vector3(10, 4, 1.2)
+
+[sub_resource type="BoxShape3D" id="obstacle_shape"]
+size = Vector3(10, 4, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="obstacle_mat"]
+albedo_color = Color(0.3, 0.32, 0.38, 1)
+roughness = 0.9
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.38, 0.45, 0.6, 1)
@@ -77,6 +88,18 @@ collision_mask = 0
 [node name="Mesh" type="MeshInstance3D" parent="Ground"]
 mesh = SubResource("ground_mesh")
 material_override = SubResource("ground_mat")
+
+[node name="Obstacle" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.5, 3.5)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Obstacle"]
+mesh = SubResource("obstacle_mesh")
+material_override = SubResource("obstacle_mat")
+
+[node name="Collision" type="CollisionShape3D" parent="Obstacle"]
+shape = SubResource("obstacle_shape")
 
 [node name="Path3D" type="Path3D" parent="."]
 curve = SubResource("path_curve")
@@ -168,3 +191,20 @@ offset_right = 300.0
 offset_bottom = -28.0
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 18
+
+[node name="DebugOverlay" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("6_dbg")
+
+[node name="Label" type="Label" parent="DebugOverlay"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = -96.0
+offset_right = 400.0
+offset_bottom = -8.0
+theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+vertical_alignment = 2

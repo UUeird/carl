@@ -6,6 +6,8 @@ class_name TowerSlot
 ## Highlights on hover; goes dim/occupied once built.
 
 signal clicked(slot: TowerSlot)
+signal hovered(slot: TowerSlot)
+signal unhovered(slot: TowerSlot)
 
 @onready var mesh: MeshInstance3D = $Mesh
 
@@ -27,14 +29,18 @@ func _ready() -> void:
 func _on_input_event(_cam, event: InputEvent, _pos, _normal, _idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		clicked.emit(self)
+		# Mark handled so the game controller's empty-click dismiss doesn't also fire.
+		get_viewport().set_input_as_handled()
 
 func _on_hover() -> void:
 	if not occupied:
 		_material.albedo_color = COLOR_HOVER
+	hovered.emit(self)
 
 func _on_unhover() -> void:
 	if not occupied:
 		_material.albedo_color = COLOR_FREE
+	unhovered.emit(self)
 
 func set_occupied() -> void:
 	occupied = true

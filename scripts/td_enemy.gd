@@ -62,11 +62,32 @@ func _physics_process(delta: float) -> void:
 	if to.length() > 0.05:
 		look_at(global_position + to.normalized(), Vector3.UP)
 
+## Current horizontal velocity (direction to the next waypoint × effective speed).
+## Bomb towers use this to lead the target — note it points straight along the
+## current segment, so it mispredicts through turns (by design).
+func current_velocity() -> Vector3:
+	if _dead or _target_idx >= _path.size():
+		return Vector3.ZERO
+	var to: Vector3 = _path[_target_idx] - global_position
+	to.y = 0.0
+	if to.length() < 0.001:
+		return Vector3.ZERO
+	return to.normalized() * (speed * _slow_factor)
+
+var _pending_dmg: float = 0.0   ## accumulates sub-1 hits (e.g. beam per-frame DPS)
+
 func take_damage(amount: float) -> void:
 	if _dead:
 		return
 	health.take_damage(amount)
 	_flash()
+	# Pop a floating number per whole point of damage; accumulate fractional
+	# (beam) damage so we show "9" once rather than a flicker of "0"s.
+	_pending_dmg += amount
+	if _pending_dmg >= 1.0:
+		var shown := int(round(_pending_dmg))
+		_pending_dmg -= shown
+		DamageNumber.popup(get_tree().current_scene, global_position + Vector3.UP * 1.4, shown)
 
 ## Apply a slow: factor in (0,1] multiplies speed; refreshes/keeps the stronger
 ## slow and the longer remaining duration.
