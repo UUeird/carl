@@ -276,7 +276,32 @@
     {
       "section": "debt",
       "status": "debt",
-      "title": "Combat-time lag / frame hitches \u2014 investigate with the debug overlay. Suspects: many short-lived nodes spawned per frame (projectiles, damage numbers, blast rings, tweens) and transparent overdraw (range spheres, beams). Watch object count + CPU ms during a wave. Inform the bug-fix-vs-rewrite call."
+      "title": "Perf: throttle + cache tower targeting (BIGGEST WIN) \u2014 _pick_target() runs every physics frame per tower and raycasts LOS for every in-range enemy. Re-pick every ~0.1\u20130.2s and cache the target while it stays valid/in range. Profiling showed combat at 70\u2013120ms/frame (~10 FPS) vs 2.3ms idle, dominated by hundreds of raycasts/frame."
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Perf: early-out line-of-sight checks \u2014 _has_los() raycasts every in-range enemy even though only one target is kept. Sort/scan by path-progress first and raycast just the best candidate(s) until one passes."
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Perf: share materials instead of allocating per spawn \u2014 _tint_projectile() makes a new StandardMaterial3D per shot (td_tower.gd ~302); use one static material per tower/projectile type. Same for the bomb blast ring."
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Perf: stop tween-flashing on the beam every frame \u2014 the beam calls take_damage() each frame, and enemy _flash() spawns a create_tween() per hit (td_enemy.gd ~110), so a beamed enemy makes ~60 tweens/sec. Tint the target directly for continuous damage instead of tweening."
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Perf: pool short-lived nodes (projectiles, damage numbers, blast rings) if still needed after the above \u2014 reuse from a pool rather than instance/free each spawn. Do this last; the targeting/material/tween fixes likely suffice."
+    },
+    {
+      "section": "debt",
+      "status": "debt",
+      "title": "Perf (context): full profiling write-up \u2014 heavy wave (6 towers, 40 creeps) ran 70\u2013120ms/frame with spikes to 2.8\u20133.8s; orphans stayed 0 (no leak). Root causes: per-frame LOS raycasts (chronic baseline) + per-spawn material/tween/Label3D allocation (spikes). Conclusion: targeted fix, not a rewrite."
     },
     {
       "section": "debt",
