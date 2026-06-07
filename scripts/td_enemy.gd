@@ -74,11 +74,20 @@ func current_velocity() -> Vector3:
 		return Vector3.ZERO
 	return to.normalized() * (speed * _slow_factor)
 
+var _pending_dmg: float = 0.0   ## accumulates sub-1 hits (e.g. beam per-frame DPS)
+
 func take_damage(amount: float) -> void:
 	if _dead:
 		return
 	health.take_damage(amount)
 	_flash()
+	# Pop a floating number per whole point of damage; accumulate fractional
+	# (beam) damage so we show "9" once rather than a flicker of "0"s.
+	_pending_dmg += amount
+	if _pending_dmg >= 1.0:
+		var shown := int(round(_pending_dmg))
+		_pending_dmg -= shown
+		DamageNumber.popup(get_tree().current_scene, global_position + Vector3.UP * 1.4, shown)
 
 ## Apply a slow: factor in (0,1] multiplies speed; refreshes/keeps the stronger
 ## slow and the longer remaining duration.

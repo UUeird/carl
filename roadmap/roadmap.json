@@ -27,6 +27,14 @@
   ],
   "items": [
     {
+      "section": "completed", "status": "done", "title": "Combat feedback: health bars, damage numbers, click-off dismiss",
+      "children": [
+        "Enemy health bars (green over red): appear on damage/heal, hold 2s, fade 0.5s; any change resets the timer; billboard to camera. Reusable component for anything with a Health node.",
+        "Floating damage numbers (white, rounded, drift up + fade); beam's fractional DPS accumulates so it pops whole numbers",
+        "Dismiss the tower upgrade panel by clicking empty space or pressing Esc; clicking another tower switches"
+      ]
+    },
+    {
       "section": "completed", "status": "done", "title": "Bomb tower (4th type) + projectile speed",
       "note": "predictive AoE mortar that can whiff on turns",
       "children": [
@@ -89,6 +97,7 @@
     { "section": "later", "status": "todo", "title": "Map verticality — multi-height terrain, elevated tower spots, paths that duck behind cover (LOS + spherical range groundwork is in)" },
     { "section": "later", "status": "todo", "title": "Multiple maps / levels with different path layouts" },
     { "section": "later", "status": "todo", "title": "More tower types (chain/lightning, support/buff aura)" },
+    { "section": "later", "status": "todo", "title": "More combat juice — hit particles, screen shake, death effects, SFX" },
     { "section": "later", "status": "todo", "title": "More enemy types (armored, flying, shielded, boss waves)" },
     { "section": "later", "status": "todo", "title": "Meta-progression between runs (unlocks, persistent upgrades)" },
     { "section": "later", "status": "todo", "title": "Main menu + pause + game-over/victory screens" },

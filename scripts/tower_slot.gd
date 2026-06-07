@@ -29,6 +29,8 @@ func _ready() -> void:
 func _on_input_event(_cam, event: InputEvent, _pos, _normal, _idx) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		clicked.emit(self)
+		# Mark handled so the game controller's empty-click dismiss doesn't also fire.
+		get_viewport().set_input_as_handled()
 
 func _on_hover() -> void:
 	if not occupied:

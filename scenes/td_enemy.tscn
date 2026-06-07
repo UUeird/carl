@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://td_enemy"]
+[gd_scene load_steps=6 format=3 uid="uid://td_enemy"]
 
 [ext_resource type="Script" path="res://scripts/td_enemy.gd" id="1_e"]
 [ext_resource type="Script" path="res://scripts/health.gd" id="2_h"]
+[ext_resource type="Script" path="res://scripts/health_bar.gd" id="3_hb"]
 
 [sub_resource type="CapsuleShape3D" id="s"]
 radius = 0.4
@@ -25,3 +26,8 @@ mesh = SubResource("m")
 [node name="Health" type="Node" parent="."]
 script = ExtResource("2_h")
 max_health = 30.0
+
+[node name="HealthBar" type="Node3D" parent="."]
+script = ExtResource("3_hb")
+health_path = NodePath("../Health")
+y_offset = 1.2

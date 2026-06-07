@@ -234,3 +234,10 @@ func can_start_wave() -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):
 		get_tree().reload_current_scene()
+		return
+	# Esc, or a left-click that no tower/slot consumed, dismisses the panel.
+	if event.is_action_pressed("ui_cancel"):
+		_clear_selection()
+	elif event is InputEventMouseButton and event.pressed \
+			and event.button_index == MOUSE_BUTTON_LEFT and _selected_slot != null:
+		_clear_selection()
