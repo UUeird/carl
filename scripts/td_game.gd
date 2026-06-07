@@ -32,6 +32,7 @@ var _over: bool = false
 var _waypoints: PackedVector3Array = PackedVector3Array()
 var _slot_tower: Dictionary = {}      ## slot -> tower built on it
 var _selected_slot = null             ## currently selected (for the panel)
+var _preview: MeshInstance3D = null   ## range sphere shown while hovering a free slot
 
 func _ready() -> void:
 	currency = starting_currency
@@ -41,8 +42,42 @@ func _ready() -> void:
 	for slot in get_tree().get_nodes_in_group("tower_slot"):
 		if slot.has_signal("clicked"):
 			slot.clicked.connect(_on_slot_clicked)
+		if slot.has_signal("hovered"):
+			slot.hovered.connect(_on_slot_hovered)
+			slot.unhovered.connect(_on_slot_unhovered)
+	_make_preview()
 	state_changed.emit.call_deferred()
 	message.emit.call_deferred("Build towers, then start the wave.")
+
+func _make_preview() -> void:
+	_preview = MeshInstance3D.new()
+	var m := SphereMesh.new()
+	m.radius = 1.0
+	m.height = 2.0
+	_preview.mesh = m
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	_preview.material_override = mat
+	_preview.visible = false
+	add_child(_preview)
+
+func _on_slot_hovered(slot) -> void:
+	if _over or slot.occupied or _preview == null:
+		return
+	var info: Dictionary = TDTower.TYPES[build_type]
+	var r: float = info["tiers"][0]["range"]
+	var c: Color = info["color"]
+	_preview.global_position = slot.global_position + Vector3.UP * 0.85
+	_preview.scale = Vector3.ONE * r
+	var mat := _preview.material_override
+	mat.albedo_color = Color(c.r, c.g, c.b, 0.14)
+	_preview.visible = true
+
+func _on_slot_unhovered(_slot) -> void:
+	if _preview:
+		_preview.visible = false
 
 func _read_path() -> PackedVector3Array:
 	var pts := PackedVector3Array()
@@ -135,14 +170,24 @@ func set_build_type(type: int) -> void:
 	_clear_selection()
 
 func _select_slot(slot) -> void:
+	# Hide any previously-selected tower's range ring.
+	_hide_selected_range()
 	_selected_slot = slot
 	var tower = _slot_tower.get(slot)
 	if tower:
+		if tower.has_method("show_range"):
+			tower.show_range()
 		tower_selected.emit(tower)
 
 func _clear_selection() -> void:
+	_hide_selected_range()
 	_selected_slot = null
 	selection_cleared.emit()
+
+func _hide_selected_range() -> void:
+	var prev = _slot_tower.get(_selected_slot)
+	if prev and prev.has_method("hide_range"):
+		prev.hide_range()
 
 func upgrade_selected() -> void:
 	var tower = _slot_tower.get(_selected_slot)

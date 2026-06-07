@@ -40,6 +40,7 @@ const MAX_LEVEL := 3
 @onready var turret: Node3D = $Turret
 @onready var muzzle: Node3D = $Turret/Muzzle
 @onready var _head: MeshInstance3D = $Turret/Head
+@onready var _range_sphere: MeshInstance3D = $RangeSphere
 
 var tower_type: int = Type.BASIC
 var level: int = 1
@@ -86,6 +87,39 @@ func _apply_visual() -> void:
 	_head_material.albedo_color = base.lightened((level - 1) * 0.18)
 	if _head:
 		_head.scale = Vector3.ONE * (1.0 + (level - 1) * 0.12)
+	if _range_sphere and _range_sphere.visible:
+		_update_range_sphere()
+
+## Show the spherical range. Call with no args for this tower's current range, or
+## pass a type to preview that type's level-1 range (used while placing).
+func show_range(preview_type: int = -1) -> void:
+	if _range_sphere == null:
+		return
+	var r: float
+	var col: Color
+	if preview_type >= 0:
+		r = TYPES[preview_type]["tiers"][0]["range"]
+		col = TYPES[preview_type]["color"]
+	else:
+		r = _stats()["range"]
+		col = TYPES[tower_type]["color"]
+	_range_sphere.visible = true
+	_range_sphere.scale = Vector3.ONE * r        # base SphereMesh has radius 1
+	var mat := _range_sphere.material_override
+	if mat == null or not (mat is StandardMaterial3D):
+		mat = StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.cull_mode = BaseMaterial3D.CULL_DISABLED   # see the dome from inside too
+		_range_sphere.material_override = mat
+	mat.albedo_color = Color(col.r, col.g, col.b, 0.16)
+
+func _update_range_sphere() -> void:
+	_range_sphere.scale = Vector3.ONE * _stats()["range"]
+
+func hide_range() -> void:
+	if _range_sphere:
+		_range_sphere.visible = false
 
 func _physics_process(delta: float) -> void:
 	_cooldown = max(_cooldown - delta, 0.0)
@@ -100,20 +134,36 @@ func _physics_process(delta: float) -> void:
 		_fire(target)
 		_cooldown = _stats()["cooldown"]
 
+## Layer mask of geometry that blocks line of sight (environment/obstacles).
+const BLOCKER_MASK := 4
+
 func _pick_target() -> Node3D:
 	var best: Node3D = null
 	var best_progress := -1.0
 	var r: float = _stats()["range"]
+	var origin := muzzle.global_position if muzzle else global_position
 	for e in get_tree().get_nodes_in_group("td_enemy"):
 		if not is_instance_valid(e):
 			continue
+		# Spherical range: true 3D distance (matters once maps have height).
 		if global_position.distance_to(e.global_position) > r:
+			continue
+		# Line of sight: skip enemies blocked by terrain/obstacles.
+		if not _has_los(origin, e):
 			continue
 		var prog := float(e._target_idx) if "_target_idx" in e else 0.0
 		if prog > best_progress:
 			best_progress = prog
 			best = e
 	return best
+
+func _has_los(origin: Vector3, enemy: Node3D) -> bool:
+	var space := get_world_3d().direct_space_state
+	var params := PhysicsRayQueryParameters3D.create(origin, enemy.global_position, BLOCKER_MASK)
+	params.hit_from_inside = false
+	var hit := space.intersect_ray(params)
+	# Clear LOS if nothing blocked the ray before reaching the enemy.
+	return hit.is_empty()
 
 func _fire(target: Node3D) -> void:
 	if projectile_scene == null:

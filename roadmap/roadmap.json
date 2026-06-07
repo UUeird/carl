@@ -27,6 +27,17 @@
   ],
   "items": [
     {
+      "section": "completed", "status": "done", "title": "Spherical range + line-of-sight + range preview",
+      "note": "first step toward maps with verticality",
+      "children": [
+        "Towers target within a true 3D (spherical) radius",
+        "Line-of-sight: a tower only fires at enemies it can see — raycast from the muzzle vs. blocker geometry (layer 4)",
+        "Demo obstacle (a raised wall) added to the map to show LOS blocking in action",
+        "Translucent range sphere/dome preview: shown while hovering a free slot (for the chosen type) and on a selected tower",
+        "Reusable hover-preview sphere in the controller; per-tower sphere shown on select"
+      ]
+    },
+    {
       "section": "completed", "status": "done", "title": "First playable TD prototype (core loop)",
       "note": "3D iso, fixed path, fixed buildable slots — the full minimal loop is playable",
       "children": [
@@ -55,6 +66,7 @@
       "children": []
     },
 
+    { "section": "later", "status": "todo", "title": "Map verticality — multi-height terrain, elevated tower spots, paths that duck behind cover (LOS + spherical range groundwork is in)" },
     { "section": "later", "status": "todo", "title": "Multiple maps / levels with different path layouts" },
     { "section": "later", "status": "todo", "title": "More tower types (splash, slow, chain, support/buff)" },
     { "section": "later", "status": "todo", "title": "More enemy types (armored, flying, shielded, boss waves)" },
