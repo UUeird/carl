@@ -40,8 +40,12 @@
   .stat .lbl { color: var(--faint); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
   .stat.done .num { color: var(--done); } .stat.todo .num { color: var(--todo); }
   .stat.idea .num { color: var(--idea); } .stat.debt .num { color: var(--debt); }
-  .progress { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin: 16px 0 22px; border: 1px solid var(--line); }
-  .progress > div { height: 100%; background: linear-gradient(90deg, var(--done), #6fe0a8); transition: width .4s ease; }
+  .progress { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin: 16px 0 22px; border: 1px solid var(--line); display: flex; }
+  .progress > div { height: 100%; transition: width .4s ease; }
+  .progress > .p-done { background: var(--done); }
+  .progress > .p-todo { background: var(--todo); }
+  .progress > .p-idea { background: var(--idea); }
+  .progress > .p-debt { background: var(--debt); }
 
   /* controls */
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 5; }
@@ -238,8 +242,8 @@ function render() {
 
   const counts = { done: 0, todo: 0, idea: 0, debt: 0 };
   DATA.items.forEach(i => counts[i.status] !== undefined && counts[i.status]++);
-  const shipped = counts.done, planned = counts.todo;
-  const pct = (shipped + planned) ? Math.round(shipped / (shipped + planned) * 100) : 0;
+  const total = counts.done + counts.todo + counts.idea + counts.debt || 1;
+  const pct = s => (counts[s] / total * 100).toFixed(1);
 
   let html = `
     <div class="dash">
@@ -248,7 +252,12 @@ function render() {
       <div class="stat idea"><div class="num">${counts.idea}</div><div class="lbl">Ideas</div></div>
       <div class="stat debt"><div class="num">${counts.debt}</div><div class="lbl">Debt</div></div>
     </div>
-    <div title="${pct}% of shipped+planned work done" class="progress"><div style="width:${pct}%"></div></div>
+    <div title="${counts.done} shipped · ${counts.todo} planned · ${counts.idea} ideas · ${counts.debt} debt" class="progress">
+      <div class="p-done" style="width:${pct('done')}%"></div>
+      <div class="p-todo" style="width:${pct('todo')}%"></div>
+      <div class="p-idea" style="width:${pct('idea')}%"></div>
+      <div class="p-debt" style="width:${pct('debt')}%"></div>
+    </div>
 
     <div class="controls">
       <input id="search" type="search" placeholder="Search the roadmap…" value="${escapeAttr(query)}">
