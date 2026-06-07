@@ -27,6 +27,17 @@
   ],
   "items": [
     {
+      "section": "completed", "status": "done", "title": "Bomb tower (4th type) + projectile speed",
+      "note": "predictive AoE mortar that can whiff on turns",
+      "children": [
+        "Lobs a bomb in an arc to a FIXED ground point = target pos + velocity × flight-time (lead prediction)",
+        "Landing point locks at fire time, so enemies that turn off their line get missed — intended weakness",
+        "AoE on landing with linear falloff (full at center → 40% at the edge → nothing outside); expanding blast visual",
+        "Projectile speed is now a per-tier stat on all towers and rises with upgrades; cannon/frost shots travel faster, and bomb speed tightens the lead",
+        "Data-driven via TYPES (bomb flag + aoe); HUD button/panel handle it automatically"
+      ]
+    },
+    {
       "section": "completed", "status": "done", "title": "Beam tower (3rd type)",
       "note": "continuous-DPS contrast to cannon burst / frost slow",
       "children": [
@@ -77,7 +88,7 @@
 
     { "section": "later", "status": "todo", "title": "Map verticality — multi-height terrain, elevated tower spots, paths that duck behind cover (LOS + spherical range groundwork is in)" },
     { "section": "later", "status": "todo", "title": "Multiple maps / levels with different path layouts" },
-    { "section": "later", "status": "todo", "title": "More tower types (splash, slow, chain, support/buff)" },
+    { "section": "later", "status": "todo", "title": "More tower types (chain/lightning, support/buff aura)" },
     { "section": "later", "status": "todo", "title": "More enemy types (armored, flying, shielded, boss waves)" },
     { "section": "later", "status": "todo", "title": "Meta-progression between runs (unlocks, persistent upgrades)" },
     { "section": "later", "status": "todo", "title": "Main menu + pause + game-over/victory screens" },

@@ -62,6 +62,18 @@ func _physics_process(delta: float) -> void:
 	if to.length() > 0.05:
 		look_at(global_position + to.normalized(), Vector3.UP)
 
+## Current horizontal velocity (direction to the next waypoint × effective speed).
+## Bomb towers use this to lead the target — note it points straight along the
+## current segment, so it mispredicts through turns (by design).
+func current_velocity() -> Vector3:
+	if _dead or _target_idx >= _path.size():
+		return Vector3.ZERO
+	var to: Vector3 = _path[_target_idx] - global_position
+	to.y = 0.0
+	if to.length() < 0.001:
+		return Vector3.ZERO
+	return to.normalized() * (speed * _slow_factor)
+
 func take_damage(amount: float) -> void:
 	if _dead:
 		return

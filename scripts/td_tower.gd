@@ -7,10 +7,14 @@ class_name TDTower
 ## target and draws a solid beam. Stats come from TYPES so balancing and adding
 ## tiers/types is a one-place edit.
 
-enum Type { BASIC, FROST, BEAM }
+enum Type { BASIC, FROST, BEAM, BOMB }
 
 # Per-type, per-level stats. Index 0 = level 1.
-# Beam towers use "dps" (damage/second) + "beam": true instead of "damage"+"cooldown".
+#  - Beam towers use "dps" + "beam": true instead of "damage"/"cooldown".
+#  - Bomb towers use "aoe" (blast radius) + "bomb": true; they lob to a predicted
+#    ground point, so upgrading "proj_speed" both speeds the lob AND tightens the
+#    lead prediction (shorter flight time = less chance the target has turned).
+#  - "proj_speed" applies to all projectile towers (cannon/frost shot speed too).
 const TYPES := {
 	Type.BASIC: {
 		"name": "Cannon",
@@ -18,9 +22,9 @@ const TYPES := {
 		"base_cost": 50,
 		"upgrade_costs": [40, 70],            # cost L1->L2, L2->L3
 		"tiers": [
-			{ "range": 6.0, "damage": 10.0, "cooldown": 0.7 },
-			{ "range": 6.8, "damage": 16.0, "cooldown": 0.6 },
-			{ "range": 7.6, "damage": 24.0, "cooldown": 0.5 },
+			{ "range": 6.0, "damage": 10.0, "cooldown": 0.7, "proj_speed": 14.0 },
+			{ "range": 6.8, "damage": 16.0, "cooldown": 0.6, "proj_speed": 18.0 },
+			{ "range": 7.6, "damage": 24.0, "cooldown": 0.5, "proj_speed": 22.0 },
 		],
 	},
 	Type.FROST: {
@@ -29,9 +33,9 @@ const TYPES := {
 		"base_cost": 65,
 		"upgrade_costs": [50, 80],
 		"tiers": [
-			{ "range": 5.5, "damage": 4.0, "cooldown": 0.9, "slow": 0.6, "slow_dur": 1.2 },
-			{ "range": 6.0, "damage": 6.0, "cooldown": 0.8, "slow": 0.5, "slow_dur": 1.5 },
-			{ "range": 6.5, "damage": 9.0, "cooldown": 0.7, "slow": 0.4, "slow_dur": 1.8 },
+			{ "range": 5.5, "damage": 4.0, "cooldown": 0.9, "proj_speed": 13.0, "slow": 0.6, "slow_dur": 1.2 },
+			{ "range": 6.0, "damage": 6.0, "cooldown": 0.8, "proj_speed": 16.0, "slow": 0.5, "slow_dur": 1.5 },
+			{ "range": 6.5, "damage": 9.0, "cooldown": 0.7, "proj_speed": 20.0, "slow": 0.4, "slow_dur": 1.8 },
 		],
 	},
 	Type.BEAM: {
@@ -45,10 +49,22 @@ const TYPES := {
 			{ "range": 8.0, "dps": 24.0, "beam": true },
 		],
 	},
+	Type.BOMB: {
+		"name": "Bomb",
+		"color": Color(0.95, 0.6, 0.25),
+		"base_cost": 80,
+		"upgrade_costs": [65, 100],
+		"tiers": [
+			{ "range": 7.0, "damage": 18.0, "cooldown": 1.6, "proj_speed": 10.0, "aoe": 2.2, "bomb": true },
+			{ "range": 7.8, "damage": 28.0, "cooldown": 1.4, "proj_speed": 13.0, "aoe": 2.6, "bomb": true },
+			{ "range": 8.6, "damage": 42.0, "cooldown": 1.2, "proj_speed": 17.0, "aoe": 3.2, "bomb": true },
+		],
+	},
 }
 const MAX_LEVEL := 3
 
 @export var projectile_scene: PackedScene
+@export var bomb_scene: PackedScene
 
 @onready var turret: Node3D = $Turret
 @onready var muzzle: Node3D = $Turret/Muzzle
@@ -231,22 +247,52 @@ func _has_los(origin: Vector3, enemy: Node3D) -> bool:
 	return hit.is_empty()
 
 func _fire(target: Node3D) -> void:
+	var s := _stats()
+	var origin := muzzle.global_position if muzzle else global_position
+	if s.get("bomb", false):
+		_fire_bomb(target, s, origin)
+	else:
+		_fire_projectile(target, s, origin)
+
+func _fire_projectile(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 	if projectile_scene == null:
 		return
-	var s := _stats()
 	var proj := projectile_scene.instantiate()
 	get_tree().current_scene.add_child(proj)
-	var origin := muzzle.global_position if muzzle else global_position
 	if proj.has_method("launch"):
-		proj.launch(origin, target, s["damage"])
-		# Frost towers tell the projectile to also slow on hit.
+		proj.launch(origin, target, s["damage"], s.get("proj_speed", -1.0))
 		if tower_type == Type.FROST and proj.has_method("set_slow"):
 			proj.set_slow(s["slow"], s["slow_dur"])
-			if "color" in proj:
-				pass
 		_tint_projectile(proj)
 	else:
 		proj.global_position = origin
+
+func _fire_bomb(target: Node3D, s: Dictionary, origin: Vector3) -> void:
+	if bomb_scene == null:
+		return
+	# Predict where the target *would* be, assuming it keeps its current velocity.
+	# Because the lead point is locked at fire time, a turn in the path makes the
+	# bomb miss — exactly the intended fallibility.
+	var speed: float = s.get("proj_speed", 10.0)
+	var lead := _predict_landing(target, origin, speed)
+	var bomb := bomb_scene.instantiate()
+	get_tree().current_scene.add_child(bomb)
+	if bomb.has_method("launch_bomb"):
+		bomb.launch_bomb(origin, lead, speed, s["damage"], s["aoe"])
+
+## Solve (roughly) for the lead point: horizontal flight time ≈ ground distance /
+## speed, iterated a couple of times since moving the aim point changes the time.
+func _predict_landing(target: Node3D, origin: Vector3, speed: float) -> Vector3:
+	var vel := Vector3.ZERO
+	if target.has_method("current_velocity"):
+		vel = target.current_velocity()
+	var aim: Vector3 = target.global_position
+	for _i in 3:
+		var ground: float = Vector2(aim.x - origin.x, aim.z - origin.z).length()
+		var t: float = ground / maxf(speed, 0.01)
+		aim = target.global_position + vel * t
+	aim.y = target.global_position.y
+	return aim
 
 func _tint_projectile(proj: Node) -> void:
 	var m := proj.get_node_or_null("Mesh")

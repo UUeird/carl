@@ -107,6 +107,8 @@ func _refresh_panel() -> void:
 		line = "DMG %s   RNG %s   CD %ss" % [str(s["damage"]), str(s["range"]), str(s["cooldown"])]
 	if "slow" in s:
 		line += "\nSlow ×%s for %ss" % [str(s["slow"]), str(s["slow_dur"])]
+	if "aoe" in s:
+		line += "\nAoE radius %s" % str(s["aoe"])
 	_panel_stats.text = line
 	if t.is_max_level():
 		_upgrade_btn.text = "Max level"
