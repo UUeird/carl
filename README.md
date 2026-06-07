@@ -1,24 +1,43 @@
 # carl
 
-A 3D action **prototype** built with [Godot 4](https://godotengine.org/), playable in both
-isometric and first-person (toggle with **V**).
+A classic **tower-defense** prototype built with [Godot 4](https://godotengine.org/):
+enemies advance along a fixed path in waves, and you place & upgrade towers to stop them
+before they reach the goal. 3D, viewed from an isometric camera.
 
-This is a vertical slice, not a finished game. It's a single explorable **level**: fight
-through arenas of small enemies, cross a platforming gap over a pit, and face a boss gated at
-the end. Combat can flip between melee, ranged, and mixed from a single switch
-([scripts/combat.gd](scripts/combat.gd)) so combat feel can be decided by playing.
+> Pivoted from an earlier 3D action/FPS prototype — same engine, rebuilt gameplay. That
+> earlier work is preserved in git history and noted in the roadmap's archive.
 
-## Getting Started
+Everything is placeholder primitives (capsules/boxes) — no art is committed yet.
+
+## Getting started
 
 1. Install [Godot 4](https://godotengine.org/download/) (built/tested on 4.6).
-2. Open Godot, import this project (`project.godot`).
-3. Press **F5** to run.
+2. Open Godot and import this project (`project.godot`), then press **F5**.
 
 CLI: `godot --path .` (or `/Applications/Godot.app/Contents/MacOS/Godot --path .` on macOS).
+The main scene is `scenes/td_main.tscn`.
 
-> Note: the project has pivoted to a **tower-defense** game (main scene `scenes/td_main.tscn`).
-> Some sections below still describe the earlier action prototype and need a refresh; the
-> current plan is in the [interactive roadmap](roadmap/index.html).
+## How to play
+
+1. Pick a tower type from the build buttons (top-left), then click a green **slot** to place it.
+2. Press **Start wave** to send a wave; towers auto-fire at enemies in range and line of sight.
+3. Kills earn currency; an enemy reaching the goal costs a life. Survive all waves to win;
+   reach 0 lives and you lose. **R** restarts.
+4. Click a placed tower to **upgrade** it (Lv 1→3) or **sell** it (50% refund). Click empty
+   ground or press **Esc** to close the panel.
+
+### Tower types
+
+| Tower  | Role |
+|--------|------|
+| **Cannon** | Burst single-target projectile. |
+| **Frost**  | Low damage, **slows** enemies it hits. |
+| **Beam**   | Continuous low **DPS** beam locked on one target. |
+| **Bomb**   | Lobs an arcing AoE shell to a *predicted* landing point — leads the target, so it can miss on turns. |
+
+Towers target the enemy **furthest along the path** within a spherical range, and only fire
+with clear **line of sight** (terrain/obstacles block shots). Upgrades raise range, damage,
+fire rate, and projectile speed.
 
 ## Testing
 
@@ -29,107 +48,57 @@ Run the coded test suite before opening a PR:
 ```
 
 It runs the [GUT](https://github.com/bitwes/Gut) suite in `test/` headlessly and exits
-non-zero if anything fails (so it works as a gate). Covers the deterministic logic —
-economy (build/upgrade/sell), tower targeting + line-of-sight, AoE falloff, frost slow,
-beam DPS, lead prediction, and wave/lives flow.
+non-zero if anything fails (so it works as a gate). Covers the deterministic logic: economy
+(build/upgrade/sell), tower targeting + line-of-sight, AoE falloff, frost slow, beam DPS,
+bomb lead-prediction, and wave/lives flow.
 
-Visual/feel behavior that can't be asserted headlessly (range domes, health bars, beam,
+Visual/feel behavior that can't be asserted headlessly (range domes, health bars, the beam,
 damage numbers, etc.) lives in [test/VISUAL_CHECKLIST.md](test/VISUAL_CHECKLIST.md) — a prose
 checklist run by launching the game and inspecting screenshots. Both should be green before a PR.
 
-## Controls
-
-| Action | Key |
-|--------|-----|
-| Move   | **WASD** / arrow keys |
-| Aim    | **Mouse** |
-| Jump   | **Space** (with coyote time — works briefly after leaving a ledge) |
-| Attack | **Left mouse** |
-| Toggle view | **V** — switch between isometric and first-person |
-| Free mouse (in FP) | **Esc** (click to re-capture) |
-| Restart | **R** |
-
-When airborne, a **cyan landing marker** projects straight down to show where you'll touch
-down — it grows brighter mid-jump and disappears when you're over a pit.
-
-### View modes
-
-Press **V** to toggle between two cameras (an experiment — both share the same combat,
-jump, and enemy logic):
-
-- **Isometric** (default) — screen-aligned WASD, mouse-cursor aim, follow camera with
-  look-ahead. Aim by moving the mouse; the character faces the cursor.
-- **First-person** — mouse-look (the body yaws, the camera pitches), camera-relative WASD,
-  and aim straight down the camera via a center **crosshair**. The mouse is captured; press
-  **Esc** to free it.
-
-Planning and the longer-term direction live in the interactive roadmap
-([roadmap/index.html](roadmap/index.html), data in [roadmap/roadmap.json](roadmap/roadmap.json)).
-
-## The core experiment: combat feel
-
-All combat lives in [scripts/combat.gd](scripts/combat.gd) so you can decide melee vs ranged
-vs mixed *by playing*, not by guessing. Open the **Player → Combat** node in the inspector and
-change **Combat Mode**:
-
-- `MELEE` — short forward hit arc (tunables: damage, range, arc, cooldown).
-- `RANGED` — fires a projectile toward the cursor (tunables: damage, speed, cooldown).
-- `MIXED` — both on each attack.
-
-Every tuning number is an export on that node, editable live — no code changes needed to
-compare feels. This is the whole point of the prototype.
-
-## The level
-
-A single linear level you traverse from start to boss ([scenes/main.tscn](scenes/main.tscn)):
-
-1. **Start platform** → a path leading into the level.
-2. **Arena 1** — a few small chaser enemies.
-3. **Platforming gap** — raised platforms at varying heights over a **pit**. Fall in and you
-   respawn at the last checkpoint (with fall damage). The landing marker helps you judge jumps.
-4. **Arena 2** — more enemies, on raised ground.
-5. **Boss arena** — crossing the entrance **seals the door behind you** and **wakes the boss**;
-   it's dormant until then.
-
-**Checkpoints** sit at the start of each arena, so a pit fall doesn't send you far back.
+> **Why GUT is committed to the repo (vendored), not installed per-developer:** Godot has no
+> package manager — addons are downloaded through the editor's Asset Library GUI, which can't
+> be scripted or version-pinned. Vendoring `addons/gut/` is the idiomatic Godot approach: a
+> fresh clone runs `./run_tests.sh` with zero setup, the version is pinned, and CI needs nothing
+> extra. The cost is a larger repo. To update GUT, re-vendor a newer release.
 
 ## What's here
 
-- **Player** — iso movement, mouse-aim, jump/coyote-time, fall-respawn, landing marker
-  ([scripts/player.gd](scripts/player.gd)).
-- **Follow camera** — tracks the player with look-ahead toward movement
-  ([scripts/follow_camera.gd](scripts/follow_camera.gd)).
-- **Small enemy** — detects, chases, and deals contact damage; a trimmed cousin of the boss
-  ([scripts/enemy.gd](scripts/enemy.gd)).
-- **Boss** — `IDLE → CHASE → TELEGRAPH → ATTACK → COOLDOWN` state machine; yellow wind-up,
-  lunge attack, `start_dormant` until activated ([scripts/boss.gd](scripts/boss.gd)).
-- **Gating** — boss trigger seals the arena + wakes the boss
-  ([scripts/boss_trigger.gd](scripts/boss_trigger.gd)); checkpoints update respawn
-  ([scripts/checkpoint.gd](scripts/checkpoint.gd)).
-- **HUD** — player + boss HP bars, win/lose message ([scripts/hud.gd](scripts/hud.gd)).
-- **Health** — one reusable component shared by player/enemies/boss ([scripts/health.gd](scripts/health.gd)).
-- **Puzzle probe** — a pressure-plate/door script kept for later use
-  ([scripts/pressure_plate.gd](scripts/pressure_plate.gd)).
-
-Everything is placeholder primitives (capsules/boxes) — no art is committed yet.
+- **Game controller** — economy, waves, lives, win/lose, build/upgrade/sell ([scripts/td_game.gd](scripts/td_game.gd)).
+- **Tower** — targeting (range + LOS), firing, tiered upgrades; all types are data-driven from one
+  `TYPES` table ([scripts/td_tower.gd](scripts/td_tower.gd)).
+- **Enemy** — walks the path, has Health, slowable; exposes velocity for bomb lead-prediction
+  ([scripts/td_enemy.gd](scripts/td_enemy.gd)).
+- **Projectiles** — homing shot ([scripts/td_projectile.gd](scripts/td_projectile.gd)) and lobbed
+  AoE bomb ([scripts/td_bomb.gd](scripts/td_bomb.gd)).
+- **Slots** — clickable buildable spots ([scripts/tower_slot.gd](scripts/tower_slot.gd)).
+- **HUD** — lives/currency/wave, build buttons, the tower panel ([scripts/td_hud.gd](scripts/td_hud.gd)).
+- **Feedback** — billboarded enemy health bars ([scripts/health_bar.gd](scripts/health_bar.gd)) and
+  floating damage numbers ([scripts/damage_number.gd](scripts/damage_number.gd)).
+- **Health** — one reusable component for anything damageable ([scripts/health.gd](scripts/health.gd)).
 
 ## Project structure
 
 ```
 carl/
-├── project.godot        # config + input map (move/jump/attack/toggle_view/restart)
-├── scenes/
-│   ├── main.tscn         # the level: path, arenas, platforming, boss gate, camera, HUD
-│   ├── player.tscn       # CharacterBody3D + Health + Combat + landing marker
-│   ├── enemy.tscn        # small chaser (CharacterBody3D + Health)
-│   ├── boss.tscn         # CharacterBody3D + Health + state machine
-│   └── projectile.tscn   # Area3D used in RANGED/MIXED mode
-└── scripts/              # one .gd per system (see links above)
+├── project.godot          # config + input map; main scene = scenes/td_main.tscn
+├── scenes/                # td_main, td_tower, td_enemy, td_projectile, td_bomb, tower_slot
+├── scripts/               # one .gd per system (see links above)
+├── test/                  # GUT tests (test_*.gd) + VISUAL_CHECKLIST.md
+├── addons/gut/            # vendored test framework
+├── roadmap/               # interactive roadmap app (index.html + roadmap.json + server.py)
+└── run_tests.sh           # headless test gate
 ```
 
-Collision layers: `1` = player, `2` = hittable (enemies/boss), `4` = environment.
+Collision layers: `2` = enemies (hittable), `4` = environment (blocks line of sight),
+`8` = tower slots.
 
----
+> Note: the repo still contains the earlier action-prototype scenes/scripts (player, boss,
+> combat, level). They're not part of the TD game and are slated for cleanup — see the
+> roadmap's debt list.
 
-What's decided, what's open, and what's next lives in the interactive roadmap —
-see [ROADMAP.md](ROADMAP.md) for how to open it.
+## Roadmap
+
+What's done, open, and next lives in the interactive roadmap — run `python3 roadmap/server.py`
+and open <http://localhost:8770/> (see [ROADMAP.md](ROADMAP.md) for details). Shipped changes
+are recorded in [CHANGELOG.md](CHANGELOG.md).
