@@ -1,14 +1,16 @@
 extends Node3D
 class_name TDTower
 
-## A stationary auto-shooter. Each frame it targets the enemy furthest along the
-## path within range and fires on a cooldown. Two types (basic damage, frost
-## slow), each with three upgrade tiers. Stats come from TYPES below so balancing
-## and adding tiers is a one-place edit.
+## A stationary auto-tower. Each frame it targets the enemy furthest along the
+## path within range (and line of sight). Cannon/Frost fire discrete projectiles
+## on a cooldown; the Beam tower instead applies continuous DPS to a locked
+## target and draws a solid beam. Stats come from TYPES so balancing and adding
+## tiers/types is a one-place edit.
 
-enum Type { BASIC, FROST }
+enum Type { BASIC, FROST, BEAM }
 
 # Per-type, per-level stats. Index 0 = level 1.
+# Beam towers use "dps" (damage/second) + "beam": true instead of "damage"+"cooldown".
 const TYPES := {
 	Type.BASIC: {
 		"name": "Cannon",
@@ -32,6 +34,17 @@ const TYPES := {
 			{ "range": 6.5, "damage": 9.0, "cooldown": 0.7, "slow": 0.4, "slow_dur": 1.8 },
 		],
 	},
+	Type.BEAM: {
+		"name": "Beam",
+		"color": Color(0.95, 0.4, 0.85),
+		"base_cost": 70,
+		"upgrade_costs": [55, 85],
+		"tiers": [
+			{ "range": 6.5, "dps": 9.0, "beam": true },
+			{ "range": 7.2, "dps": 15.0, "beam": true },
+			{ "range": 8.0, "dps": 24.0, "beam": true },
+		],
+	},
 }
 const MAX_LEVEL := 3
 
@@ -41,18 +54,28 @@ const MAX_LEVEL := 3
 @onready var muzzle: Node3D = $Turret/Muzzle
 @onready var _head: MeshInstance3D = $Turret/Head
 @onready var _range_sphere: MeshInstance3D = $RangeSphere
+@onready var _beam: MeshInstance3D = $Beam
 
 var tower_type: int = Type.BASIC
 var level: int = 1
 var total_spent: int = 0
 var _cooldown: float = 0.0
 var _head_material: StandardMaterial3D
+var _beam_material: StandardMaterial3D
 
 func _ready() -> void:
 	_head_material = StandardMaterial3D.new()
 	_head_material.metallic = 0.4
 	if _head:
 		_head.material_override = _head_material
+	if _beam:
+		_beam.top_level = true     # position in world space, not relative to the tower
+		_beam.visible = false
+		_beam_material = StandardMaterial3D.new()
+		_beam_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_beam_material.emission_enabled = true
+		_beam_material.emission_energy_multiplier = 1.4
+		_beam.material_override = _beam_material
 	_apply_visual()
 
 ## Called by the game controller right after instantiation.
@@ -121,18 +144,60 @@ func hide_range() -> void:
 	if _range_sphere:
 		_range_sphere.visible = false
 
+## Draw the beam from the muzzle to the target (or hide it when target is null).
+## The beam mesh is a unit-tall cylinder along +Y; we orient and stretch it to
+## span muzzle→target.
+func _set_beam(target: Node3D) -> void:
+	if _beam == null:
+		return
+	if target == null or not is_instance_valid(target):
+		_beam.visible = false
+		return
+	var a := muzzle.global_position if muzzle else global_position
+	var b: Vector3 = target.global_position
+	var dir := b - a
+	var dist := dir.length()
+	if dist < 0.01:
+		_beam.visible = false
+		return
+	_beam.visible = true
+	var up := dir.normalized()
+	# Build an orthonormal basis whose Y axis points along the beam.
+	var arbitrary := Vector3.RIGHT if absf(up.dot(Vector3.RIGHT)) < 0.9 else Vector3.FORWARD
+	var x := arbitrary.cross(up).normalized()
+	var z := x.cross(up).normalized()
+	var basis := Basis(x, up, z)
+	_beam.global_transform = Transform3D(basis, (a + b) * 0.5)
+	# Cylinder base height is 1.0; scale Y to the span, keep it thin.
+	_beam.scale = Vector3(1.0, dist, 1.0)
+	if _beam_material:
+		var c: Color = TYPES[tower_type]["color"]
+		_beam_material.albedo_color = c
+		_beam_material.emission = c
+
 func _physics_process(delta: float) -> void:
 	_cooldown = max(_cooldown - delta, 0.0)
 	var target := _pick_target()
 	if target == null:
+		if _is_beam():
+			_set_beam(null)
 		return
 	var look := target.global_position
 	look.y = turret.global_position.y
 	if look.distance_to(turret.global_position) > 0.05:
 		turret.look_at(look, Vector3.UP)
-	if _cooldown <= 0.0:
+
+	if _is_beam():
+		# Continuous DPS to the locked target; redraw the beam each frame.
+		if target.has_method("take_damage"):
+			target.take_damage(_stats()["dps"] * delta)
+		_set_beam(target)
+	elif _cooldown <= 0.0:
 		_fire(target)
 		_cooldown = _stats()["cooldown"]
+
+func _is_beam() -> bool:
+	return _stats().get("beam", false)
 
 ## Layer mask of geometry that blocks line of sight (environment/obstacles).
 const BLOCKER_MASK := 4

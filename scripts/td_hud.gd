@@ -100,7 +100,11 @@ func _refresh_panel() -> void:
 		return
 	var s: Dictionary = t._stats()
 	_panel_title.text = "%s  ·  Lv %d/%d" % [t.type_name(), t.level, TDTower.MAX_LEVEL]
-	var line := "DMG %s   RNG %s   CD %ss" % [str(s["damage"]), str(s["range"]), str(s["cooldown"])]
+	var line: String
+	if s.get("beam", false):
+		line = "DPS %s   RNG %s" % [str(s["dps"]), str(s["range"])]
+	else:
+		line = "DMG %s   RNG %s   CD %ss" % [str(s["damage"]), str(s["range"]), str(s["cooldown"])]
 	if "slow" in s:
 		line += "\nSlow ×%s for %ss" % [str(s["slow"]), str(s["slow_dur"])]
 	_panel_stats.text = line

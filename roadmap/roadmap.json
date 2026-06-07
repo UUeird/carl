@@ -27,6 +27,15 @@
   ],
   "items": [
     {
+      "section": "completed", "status": "done", "title": "Beam tower (3rd type)",
+      "note": "continuous-DPS contrast to cannon burst / frost slow",
+      "children": [
+        "Fires a solid beam at one in-range, in-LOS target; applies low damage continuously (DPS)",
+        "Instant retarget to the next valid enemy; single-target",
+        "Data-driven via TYPES (beam flag + dps tiers); HUD build button + upgrade panel pick it up automatically"
+      ]
+    },
+    {
       "section": "completed", "status": "done", "title": "Spherical range + line-of-sight + range preview",
       "note": "first step toward maps with verticality",
       "children": [
