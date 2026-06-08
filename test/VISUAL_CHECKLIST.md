@@ -15,13 +15,36 @@ which a human (or an agent reading a screenshot) judges better than a pixel asse
    helper that builds towers / spawns enemies), capture a screenshot, and inspect.
 3. Record pass/fail (a screenshot per item is ideal) in the PR.
 
+### Screenshot test map (preferred for tower/enemy visuals)
+For *looking at towers and enemies* — shapes, emitters, health bars, damage
+numbers — use the dedicated **straight test map** instead of `td_main`: a flat
+spawn→goal lane with 8 tower pads (4 per side) and **no walls**, so nothing
+occludes the view and the head-on camera frames everything cleanly. The main map's
+isometric camera + walls made offscreen screenshots fiddly and prone to empty
+frames; the test map removes that.
+
+Render it (use the **headed** Godot binary, not `--headless`, so it actually draws):
+
+```
+/Applications/Godot.app/Contents/MacOS/Godot --path . \
+	--script test/shot_test_map.gd -- /tmp/shot.png
+```
+
+`test/shot_test_map.gd` builds one of each tower type on the pads, spawns an enemy
+ahead so turrets aim *across* the view (showing barrels/emitters in profile), and
+saves the PNG. Scene: `scenes/td_test_map.tscn` (it reuses `td_game.gd` + the HUD,
+so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
+
 ## Checks
 
 ### Towers & build
 - [ ] Four build buttons appear — **Cannon, Frost, Beam, Bomb** — each showing its cost.
 - [ ] The **active** build type is unmistakable: its button is filled in that tower's color with a bright border; the others are muted with a thin colored accent. Selecting another type moves the highlight.
 - [ ] Building a tower places a visible turret on the chosen slot; the slot turns occupied (dim).
-- [ ] Each tower type is visually distinguishable (color/shape), and upgraded towers look bigger/brighter.
+- [ ] Each tower type is visually distinguishable by **both color and head shape** — Cannon: boxy head + barrel; Frost: crystalline prism; Beam: a **tesla-coil/ray-gun emitter** (a coil post lifting a horizontal barrel that extends forward to glowing prongs + a bright tip at the muzzle, where the beam begins); Bomb: squat mortar dome + stubby tube — and upgraded towers look bigger/brighter.
+- [ ] The Beam tower's emitter **barrel and tip line up with the start of its beam** — when it fires, the beam emerges from the glowing tip at the end of the barrel, and the whole emitter swings with the turret as it tracks targets.
+- [ ] When a tower acquires a target, its turret **swings around to aim** (a visible rotation) rather than snapping instantly; projectile towers hold fire until the barrel is on target.
+- [ ] A tower taking Gunner/blast damage shows a **floating green-over-red health bar** above it (same style as enemies) that shrinks as HP drops and fades after a couple seconds; the head keeps its **true type color** (no scorch tint), so a hurt tower never gets confused for a different type.
 
 ### Range & line of sight
 - [ ] Hovering a free slot (with a type selected) shows a translucent **range dome** sized to that type.
@@ -36,7 +59,7 @@ which a human (or an agent reading a screenshot) judges better than a pixel asse
 
 ### Combat feedback
 - [ ] Enemy **health bars** appear on damage, show **green over red** (green shrinks left→right as HP drops), and **fade out** after ~2s; further damage resets the timer.
-- [ ] Floating **damage numbers** pop white at each hit, drift up, and fade; numbers read as whole integers.
+- [ ] Floating **damage numbers** pop white at each hit, drift up, and fade; numbers read as whole integers, and stay a **constant on-screen size when you zoom the camera in/out** (they don't shrink with the map).
 
 ### Enemy types
 - [ ] **Grunt** (red) is the common creep; on death it shows a small orange **blast ring**, and a tower next to it loses HP (flashes white).

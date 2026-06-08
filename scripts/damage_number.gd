@@ -12,11 +12,14 @@ var _t: float = 0.0
 func _ready() -> void:
 	billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	no_depth_test = true                 # always readable, even behind geometry
+	# fixed_size keeps the label a constant on-screen size regardless of camera
+	# distance/zoom, so damage numbers don't shrink when you zoom the map out.
+	fixed_size = true
 	modulate = Color.WHITE
 	outline_modulate = Color(0, 0, 0, 0.8)
 	outline_size = 6
 	font_size = 48
-	pixel_size = 0.012
+	pixel_size = 0.00045
 
 func _process(delta: float) -> void:
 	_t += delta

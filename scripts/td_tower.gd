@@ -10,6 +10,8 @@ class_name TDTower
 enum Type { BASIC, FROST, BEAM, BOMB }
 
 signal destroyed(tower)        ## fired when a tower's health hits 0 (e.g. shot by a Gunner)
+signal health_changed(current: float, maximum: float)  ## drives the floating HealthBar
+signal died                                            ## HealthBar listens to hide on death
 
 ## Shared live-tower list so Gunner enemies can find towers without scanning the
 ## scene tree every frame. Towers self-register in _ready, deregister in _exit_tree.
@@ -28,6 +30,7 @@ const TYPES := {
 	Type.BASIC: {
 		"name": "Cannon",
 		"color": Color(0.5, 0.55, 0.65),
+		"shape": "cannon",
 		"base_cost": 50,
 		"upgrade_costs": [40, 70],            # cost L1->L2, L2->L3
 		"tiers": [
@@ -39,6 +42,7 @@ const TYPES := {
 	Type.FROST: {
 		"name": "Frost",
 		"color": Color(0.45, 0.7, 0.95),
+		"shape": "frost",
 		"base_cost": 65,
 		"upgrade_costs": [50, 80],
 		"tiers": [
@@ -50,6 +54,7 @@ const TYPES := {
 	Type.BEAM: {
 		"name": "Beam",
 		"color": Color(0.95, 0.4, 0.85),
+		"shape": "beam",
 		"base_cost": 70,
 		"upgrade_costs": [55, 85],
 		"tiers": [
@@ -61,6 +66,7 @@ const TYPES := {
 	Type.BOMB: {
 		"name": "Bomb",
 		"color": Color(0.95, 0.6, 0.25),
+		"shape": "bomb",
 		"base_cost": 80,
 		"upgrade_costs": [65, 100],
 		"tiers": [
@@ -78,8 +84,13 @@ const MAX_LEVEL := 3
 @onready var turret: Node3D = $Turret
 @onready var muzzle: Node3D = $Turret/Muzzle
 @onready var _head: MeshInstance3D = $Turret/Head
+@onready var _barrel: MeshInstance3D = $Turret/Barrel
 @onready var _range_sphere: MeshInstance3D = $RangeSphere
 @onready var _beam: MeshInstance3D = $Beam
+
+## Built lazily for the Beam tower: a tesla-coil/ray-gun emitter that extends out
+## along the barrel to the muzzle, where the beam begins. Null for other types.
+var _emitter: Node3D = null
 
 var tower_type: int = Type.BASIC
 var level: int = 1
@@ -98,7 +109,13 @@ var _flash_timer: float = 0.0
 
 func _ready() -> void:
 	_head_material = StandardMaterial3D.new()
-	_head_material.metallic = 0.4
+	# Low metallic + a faint self-emission so the head reads as its true type color
+	# whether it's in direct light or a wall's shadow (a high-metallic head looked
+	# very different lit vs. shadowed — a lit bomb looked yellow, a shadowed one brown).
+	_head_material.metallic = 0.1
+	_head_material.roughness = 0.7
+	_head_material.emission_enabled = true
+	_head_material.emission_energy_multiplier = 0.6
 	if _head:
 		_head.material_override = _head_material
 	TDTower.all_towers.append(self)
@@ -111,6 +128,9 @@ func _ready() -> void:
 		_beam_material.emission_energy_multiplier = 1.4
 		_beam.material_override = _beam_material
 	_apply_visual()
+	# Initial full-HP broadcast for the HealthBar (deferred so the bar's _ready has
+	# connected first). The bar treats this first emit as "full health, stay hidden".
+	health_changed.emit.call_deferred(health, MAX_HEALTH)
 
 func _exit_tree() -> void:
 	TDTower.all_towers.erase(self)
@@ -122,9 +142,9 @@ func take_damage(amount: float) -> void:
 	if _destroyed:
 		return
 	health = max(health - amount, 0.0)
+	health_changed.emit(health, MAX_HEALTH)
 	_flash_timer = FLASH_TIME
-	if _head_material:
-		_head_material.albedo_color = Color.WHITE
+	_set_head_color(Color.WHITE)
 	if health <= 0.0:
 		_die()
 
@@ -132,6 +152,7 @@ func _die() -> void:
 	if _destroyed:
 		return
 	_destroyed = true
+	died.emit()
 	destroyed.emit(self)
 	var tw := create_tween()
 	tw.tween_property(self, "scale", Vector3.ZERO, 0.2).set_trans(Tween.TRANS_BACK)
@@ -165,9 +186,19 @@ func upgrade() -> bool:
 	_apply_visual()
 	return true
 
-## Resting head color for the current type/level (brightens per level).
+## Resting head color for the current type/level (brightens per level). Damage is
+## shown by the floating HealthBar, not by tinting the head, so a tower's type
+## always reads from its color regardless of how hurt it is.
 func _head_color() -> Color:
 	return TYPES[tower_type]["color"].lightened((level - 1) * 0.18)
+
+# Set both albedo and the faint emission to the same color, so a head in shadow
+# still glows toward its true type hue instead of going muddy/brown.
+func _set_head_color(c: Color) -> void:
+	if _head_material == null:
+		return
+	_head_material.albedo_color = c
+	_head_material.emission = c
 
 # Timer-driven white flash on hit; fades back to the resting head color. Mirrors
 # the enemy's flash so repeated Gunner hits just refresh the timer (no tweens).
@@ -176,18 +207,166 @@ func _tick_flash(delta: float) -> void:
 	if _head_material == null:
 		return
 	if _flash_timer <= 0.0:
-		_head_material.albedo_color = _head_color()
+		_set_head_color(_head_color())
 	else:
-		_head_material.albedo_color = Color.WHITE.lerp(_head_color(), 1.0 - _flash_timer / FLASH_TIME)
+		_set_head_color(Color.WHITE.lerp(_head_color(), 1.0 - _flash_timer / FLASH_TIME))
 
 func _apply_visual() -> void:
 	if _head_material == null: return
 	# Brighten slightly per level so upgrades read at a glance.
-	_head_material.albedo_color = _head_color()
+	_set_head_color(_head_color())
 	if _head:
 		_head.scale = Vector3.ONE * (1.0 + (level - 1) * 0.12)
+	_apply_shape()
 	if _range_sphere and _range_sphere.visible:
 		_update_range_sphere()
+
+# Per-type head silhouette so towers are identifiable by shape, not just color.
+# The Head mesh is swapped and the Barrel shown/hidden to match the damage type:
+#   cannon — broad box head + barrel (heavy direct fire)
+#   frost  — crystalline prism, no barrel (icy bolt)
+#   beam   — tall slim emitter cylinder, no barrel (continuous beam)
+#   bomb   — squat mortar dome, short wide barrel (lobbed ordnance)
+func _apply_shape() -> void:
+	if _head == null:
+		return
+	var shape: String = TYPES[tower_type].get("shape", "cannon")
+	if _emitter and shape != "beam":
+		_emitter.visible = false
+	match shape:
+		"frost":
+			var prism := PrismMesh.new()
+			prism.size = Vector3(0.55, 0.6, 0.55)
+			_head.mesh = prism
+			if _barrel: _barrel.visible = false
+		"beam":
+			# Compact coil base on the head; the tesla-coil/ray-gun emitter (a forward
+			# rod + glowing tip) is a separate assembly reaching out to the muzzle.
+			var base := CylinderMesh.new()
+			base.top_radius = 0.22
+			base.bottom_radius = 0.3
+			base.height = 0.34
+			_head.mesh = base
+			if _barrel: _barrel.visible = false
+			_build_beam_emitter()
+		"bomb":
+			var dome := SphereMesh.new()
+			dome.radius = 0.32
+			dome.height = 0.44
+			_head.mesh = dome
+			if _barrel:
+				_barrel.visible = true
+				_barrel.mesh = _bomb_barrel_mesh()
+		_:  # cannon / default
+			var box := BoxMesh.new()
+			box.size = Vector3(0.5, 0.4, 0.5)
+			_head.mesh = box
+			if _barrel:
+				_barrel.visible = true
+				_barrel.mesh = _cannon_barrel_mesh()
+	if _barrel and _barrel.visible:
+		_barrel.material_override = _head_material
+
+# Build (once) the Beam tower's tesla-coil / ray-gun emitter under the Turret. It
+# reads as a ray gun: a short vertical coil post on the head lifts a prominent
+# horizontal barrel that extends forward along -Z out to the muzzle, capped by a
+# pair of glowing prongs and a bright tip exactly at the beam's start point.
+# Parented to the Turret so it swings with the aim. Re-shown on later calls.
+func _build_beam_emitter() -> void:
+	if _emitter != null:
+		_emitter.visible = true
+		return
+	if turret == null:
+		return
+	# Muzzle local position relative to the turret = the beam's start point.
+	var muzzle_z: float = -0.85
+	if muzzle:
+		muzzle_z = turret.to_local(muzzle.global_position).z
+
+	_emitter = Node3D.new()
+	turret.add_child(_emitter)
+
+	var emat := _head_material if _head_material else StandardMaterial3D.new()
+	var c: Color = TYPES[Type.BEAM]["color"]
+	var glow := StandardMaterial3D.new()
+	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	glow.emission_enabled = true
+	glow.emission_energy_multiplier = 2.0
+	glow.albedo_color = c
+	glow.emission = c
+
+	# The barrel runs at this height, lifted above the head so it reads as a gun.
+	var by := 0.24
+
+	# Coil post: a narrow ribbed pillar rising from the head — kept slim so the fat
+	# horizontal barrel reads as a distinct element, not one continuous spike.
+	var post := MeshInstance3D.new()
+	var pm := CylinderMesh.new()
+	pm.top_radius = 0.07; pm.bottom_radius = 0.13; pm.height = by
+	pm.rings = 6                      # ribbed, coil-like
+	post.mesh = pm
+	post.position = Vector3(0, by * 0.5, 0.1)
+	post.material_override = emat
+	_emitter.add_child(post)
+
+	# Main ray-gun barrel: a chunky box housing that's clearly WIDER than the post,
+	# running horizontally from behind the post forward to the muzzle. A box reads
+	# as a gun even when foreshortened (pointing toward/away from the camera).
+	var barrel_back := 0.16
+	var barrel_len: float = absf(muzzle_z - barrel_back)
+	var barrel := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.26, 0.22, barrel_len)
+	barrel.mesh = bm
+	barrel.position = Vector3(0, by, (barrel_back + muzzle_z) * 0.5)
+	barrel.material_override = emat
+	_emitter.add_child(barrel)
+
+	# Tapered glowing nozzle at the front of the barrel — the focusing emitter.
+	var nozzle := MeshInstance3D.new()
+	var nm := CylinderMesh.new()
+	nm.top_radius = 0.05; nm.bottom_radius = 0.13; nm.height = 0.18
+	nozzle.mesh = nm
+	nozzle.rotation = Vector3(-PI / 2.0, 0, 0)   # point along -Z
+	nozzle.position = Vector3(0, by, muzzle_z + 0.06)
+	nozzle.material_override = glow
+	_emitter.add_child(nozzle)
+
+	# Two emitter prongs flanking the muzzle (the tesla "horns"), glowing.
+	for sx in [-1.0, 1.0]:
+		var prong := MeshInstance3D.new()
+		var prm := CylinderMesh.new()
+		prm.top_radius = 0.02; prm.bottom_radius = 0.035; prm.height = 0.3
+		prong.mesh = prm
+		prong.rotation = Vector3(-PI / 2.0, 0, 0)
+		prong.position = Vector3(sx * 0.11, by, muzzle_z + 0.1)
+		prong.material_override = glow
+		_emitter.add_child(prong)
+
+	# Glowing emitter tip at the muzzle — the bright orb the beam shoots from.
+	var tip := MeshInstance3D.new()
+	var tm := SphereMesh.new()
+	tm.radius = 0.11; tm.height = 0.22
+	tip.mesh = tm
+	tip.position = Vector3(0, by, muzzle_z)
+	tip.material_override = glow
+	_emitter.add_child(tip)
+
+static var _cannon_barrel: BoxMesh = null
+static func _cannon_barrel_mesh() -> BoxMesh:
+	if _cannon_barrel == null:
+		_cannon_barrel = BoxMesh.new()
+		_cannon_barrel.size = Vector3(0.16, 0.16, 0.7)
+	return _cannon_barrel
+
+static var _bomb_barrel: CylinderMesh = null
+static func _bomb_barrel_mesh() -> CylinderMesh:
+	if _bomb_barrel == null:
+		_bomb_barrel = CylinderMesh.new()
+		_bomb_barrel.top_radius = 0.18
+		_bomb_barrel.bottom_radius = 0.18
+		_bomb_barrel.height = 0.4
+	return _bomb_barrel
 
 ## Show the spherical range. Call with no args for this tower's current range, or
 ## pass a type to preview that type's level-1 range (used while placing).
@@ -270,16 +449,39 @@ func _process(delta: float) -> void:
 
 	var look := _target.global_position
 	look.y = turret.global_position.y
+	var aimed := true
 	if look.distance_to(turret.global_position) > 0.05:
-		turret.look_at(look, Vector3.UP)
+		aimed = _rotate_turret_toward(look, delta)
 
 	if _is_beam():
 		if _target.has_method("take_damage"):
 			_target.take_damage(_stats()["dps"] * delta)
 		_set_beam(_target)
-	elif _cooldown <= 0.0:
+	elif _cooldown <= 0.0 and aimed:
+		# Only fire once the barrel has actually swung onto the target, so shots
+		# leave the muzzle pointed the right way instead of snapping mid-turn.
 		_fire(_target)
 		_cooldown = _stats()["cooldown"]
+
+## Max turret yaw speed (radians/sec). Turrets swing toward their target rather
+## than snapping, so re-targeting reads as a visible rotation. Returns true once
+## the turret is aimed within AIM_TOLERANCE of the target (the gate for firing).
+const TURN_SPEED := 5.0
+const AIM_TOLERANCE := 0.12   # radians (~7°)
+
+func _rotate_turret_toward(look: Vector3, delta: float) -> bool:
+	var to_target := look - turret.global_position
+	# Barrel/muzzle point along the turret's local -Z, so the yaw that aims -Z at
+	# the target is atan2(-x, -z) of the to-target vector.
+	var desired := atan2(-to_target.x, -to_target.z)
+	var current := turret.rotation.y
+	var diff := wrapf(desired - current, -PI, PI)
+	var step := TURN_SPEED * delta
+	if absf(diff) <= step:
+		turret.rotation.y = desired
+		return true
+	turret.rotation.y = current + signf(diff) * step
+	return absf(diff) <= AIM_TOLERANCE
 
 func _is_beam() -> bool:
 	return _stats().get("beam", false)

@@ -1,8 +1,9 @@
-[gd_scene load_steps=11 format=3 uid="uid://td_tower"]
+[gd_scene load_steps=12 format=3 uid="uid://td_tower"]
 
 [ext_resource type="Script" path="res://scripts/td_tower.gd" id="1_t"]
 [ext_resource type="PackedScene" uid="uid://td_projectile" path="res://scenes/td_projectile.tscn" id="2_p"]
 [ext_resource type="PackedScene" uid="uid://td_bomb" path="res://scenes/td_bomb.tscn" id="3_b"]
+[ext_resource type="Script" path="res://scripts/health_bar.gd" id="4_hb"]
 
 [sub_resource type="SphereMesh" id="range_sphere"]
 radius = 1.0
@@ -67,3 +68,8 @@ material_override = SubResource("mat_head")
 
 [node name="Muzzle" type="Node3D" parent="Turret"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.85)
+
+[node name="HealthBar" type="Node3D" parent="."]
+script = ExtResource("4_hb")
+health_path = NodePath("..")
+y_offset = 1.7

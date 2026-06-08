@@ -21,7 +21,8 @@ signal selection_cleared
 @export var tower_scene: PackedScene
 @export var projectile_scene: PackedScene   ## used only for shader pre-warm at startup
 @export var bomb_scene: PackedScene         ## used only for shader pre-warm at startup
-@export var path_node: NodePath        ## a Path3D defining the route
+@export var path_node: NodePath        ## primary Path3D route
+@export var path_node_b: NodePath      ## secondary (branch) Path3D route; if set, enemies randomly take either
 @export var enemy_y: float = 1.0       ## height creeps walk at
 
 var currency: int
@@ -34,6 +35,7 @@ var _wave_cooldown: float = 0.0
 const WAVE_COOLDOWN := 2.0
 var _over: bool = false
 var _waypoints: PackedVector3Array = PackedVector3Array()
+var _waypoints_b: PackedVector3Array = PackedVector3Array()
 var _slot_tower: Dictionary = {}      ## slot -> tower built on it
 var _selected_slot = null             ## currently selected (for the panel)
 var _preview: MeshInstance3D = null   ## range sphere shown while hovering a free slot
@@ -42,7 +44,8 @@ var _demo = null                      ## TDDemo autoplay driver (debug builds on
 func _ready() -> void:
 	currency = starting_currency
 	lives = starting_lives
-	_waypoints = _read_path()
+	_waypoints = _read_path(path_node)
+	_waypoints_b = _read_path(path_node_b)
 	# Wire up every tower slot in the scene.
 	for slot in get_tree().get_nodes_in_group("tower_slot"):
 		if slot.has_signal("clicked"):
@@ -133,9 +136,9 @@ func _on_slot_unhovered(_slot) -> void:
 	if _preview:
 		_preview.visible = false
 
-func _read_path() -> PackedVector3Array:
+func _read_path(node_path: NodePath) -> PackedVector3Array:
 	var pts := PackedVector3Array()
-	var p := get_node_or_null(path_node)
+	var p := get_node_or_null(node_path)
 	if p and p is Path3D and p.curve:
 		for i in p.curve.point_count:
 			var local: Vector3 = p.curve.get_point_position(i)
@@ -171,9 +174,12 @@ func _spawn_one(type: int = -1) -> void:
 	if enemy_scene == null or _waypoints.size() < 2:
 		return
 	var e := enemy_scene.instantiate() as TDEnemy
-	# Walk at a fixed height regardless of the path's authored Y.
+	# Pick branch randomly when a second path is configured.
+	var src := _waypoints
+	if _waypoints_b.size() >= 2 and randf() < 0.5:
+		src = _waypoints_b
 	var pts := PackedVector3Array()
-	for w in _waypoints:
+	for w in src:
 		pts.append(Vector3(w.x, enemy_y, w.z))
 	add_child(e)
 	e.add_to_group("td_enemy")
@@ -216,11 +222,13 @@ func _dec_enemies() -> void:
 			message.emit("All clear! Start wave %d when ready." % [wave + 1])
 
 func _on_slot_clicked(slot) -> void:
-	if _over:
-		return
-	# Occupied slot → select its tower (open the panel).
+	# Occupied slot → select its tower (open the panel). Still allowed after the
+	# game is over so players can inspect tower stats/health; building, upgrading,
+	# and selling stay blocked (guarded in try_build / try_upgrade / sell_selected).
 	if slot.occupied:
 		_select_slot(slot)
+		return
+	if _over:
 		return
 	# Free slot → build the currently selected tower type.
 	var cost: int = TDTower.TYPES[build_type]["base_cost"]

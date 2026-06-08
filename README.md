@@ -95,7 +95,7 @@ checklist run by launching the game and inspecting screenshots. Both should be g
 ```
 carl/
 ├── project.godot          # config + input map; main scene = scenes/td_main.tscn
-├── scenes/                # td_main, td_tower, td_enemy, td_projectile, td_bomb, tower_slot
+├── scenes/                # td_main, td_test_map (straight lane for screenshot tests), td_tower, td_enemy, td_projectile, td_bomb, tower_slot
 ├── scripts/               # one .gd per system (see links above)
 ├── test/                  # GUT tests (test_*.gd) + VISUAL_CHECKLIST.md
 ├── addons/gut/            # vendored test framework
