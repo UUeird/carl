@@ -36,7 +36,29 @@ func _ready() -> void:
 	# which touches the panel.
 	_build_panel()
 	_build_type_buttons()
+	_build_demo_button()
 	_refresh()
+
+# Debug-only "Demo" button: kicks off the autoplay driver. Hidden in release
+# builds (where _game.demo_available() is false), so players never see it.
+func _build_demo_button() -> void:
+	if not _game.demo_available():
+		return
+	var b := Button.new()
+	b.text = "Demo ▶"
+	# Right-anchored, on the same row as Start-wave but to its left, so it clears
+	# the tower details panel (which opens at the top-right, under Start-wave).
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = -300.0
+	b.offset_right = -200.0
+	b.offset_top = 16.0
+	b.offset_bottom = 54.0
+	b.pressed.connect(func():
+		_game.start_demo()
+		b.disabled = true
+		b.text = "Demo running…")
+	root.add_child(b)
 
 func _build_type_buttons() -> void:
 	var box := HBoxContainer.new()
@@ -49,15 +71,52 @@ func _build_type_buttons() -> void:
 		var b := Button.new()
 		b.toggle_mode = true
 		b.text = "%s — %d" % [info["name"], info["base_cost"]]
+		b.focus_mode = Control.FOCUS_NONE   # don't let focus outline muddy the selected look
+		_style_type_button(b, info["color"])
 		b.pressed.connect(func(): _select_build_type(type))
 		box.add_child(b)
 		_build_buttons.append({ "btn": b, "type": type })
 	_select_build_type(TDTower.TYPES.keys()[0])
 
+# Theme one build button in its tower's identity color. We override every state's
+# StyleBox so the SELECTED (pressed) look is unmistakable — a bright fill in the
+# tower color with a thick light border — while the idle/hover looks stay muted
+# with just a thin colored accent. _refresh_type_button_text() adds a ► marker.
+func _style_type_button(b: Button, color: Color) -> void:
+	var idle := StyleBoxFlat.new()
+	idle.bg_color = Color(0.13, 0.14, 0.17, 0.92)
+	idle.set_border_width_all(2)
+	idle.border_color = Color(color.r, color.g, color.b, 0.55)
+	idle.set_corner_radius_all(5)
+	idle.content_margin_left = 12
+	idle.content_margin_right = 12
+	idle.content_margin_top = 6
+	idle.content_margin_bottom = 6
+
+	var hover := idle.duplicate()
+	hover.bg_color = Color(0.2, 0.21, 0.25, 0.95)
+	hover.border_color = Color(color.r, color.g, color.b, 0.85)
+
+	# Selected = pressed state: fill with the tower color, bright thick border.
+	var selected := idle.duplicate()
+	selected.bg_color = Color(color.r, color.g, color.b, 0.92)
+	selected.set_border_width_all(3)
+	selected.border_color = Color(1, 1, 1, 0.9)
+
+	b.add_theme_stylebox_override("normal", idle)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("focus", idle)
+	b.add_theme_stylebox_override("pressed", selected)
+	# Toggled-on uses the same styleboxes as pressed/hover-pressed.
+	b.add_theme_stylebox_override("hover_pressed", selected)
+	# Dark text reads better on the bright selected fill; light text otherwise.
+	b.add_theme_color_override("font_pressed_color", Color(0.05, 0.05, 0.07))
+	b.add_theme_color_override("font_hover_pressed_color", Color(0.05, 0.05, 0.07))
+
 func _select_build_type(type) -> void:
 	_game.set_build_type(type)
 	for entry in _build_buttons:
-		entry["btn"].button_pressed = (entry["type"] == type)
+		entry["btn"].button_pressed = entry["type"] == type
 
 func _build_panel() -> void:
 	_panel = PanelContainer.new()

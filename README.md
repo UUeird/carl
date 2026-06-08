@@ -37,7 +37,19 @@ The main scene is `scenes/td_main.tscn`.
 
 Towers target the enemy **furthest along the path** within a spherical range, and only fire
 with clear **line of sight** (terrain/obstacles block shots). Upgrades raise range, damage,
-fire rate, and projectile speed.
+fire rate, and projectile speed. Towers are **destructible** — a Gunner's fire or an exploding
+Grunt can destroy one, freeing its slot.
+
+### Enemy types
+
+Enemies are data-driven from a `TYPES` table the same way towers are; the spawner mixes them
+by wave (Healers from wave 2, Gunners from wave 3).
+
+| Enemy  | Behavior |
+|--------|----------|
+| **Grunt** (red)   | Common creep. **Explosive**: a blast when it reaches the goal, and on death a small AoE that damages nearby towers. |
+| **Healer** (green) | Periodically pulses a **heal aura** that restores HP to nearby living allies. |
+| **Gunner** (purple) | Carries a turret that **shoots the nearest tower** in range, damaging and eventually destroying it. |
 
 ## Testing
 
@@ -66,8 +78,9 @@ checklist run by launching the game and inspecting screenshots. Both should be g
 
 - **Game controller** — economy, waves, lives, win/lose, build/upgrade/sell ([scripts/td_game.gd](scripts/td_game.gd)).
 - **Tower** — targeting (range + LOS), firing, tiered upgrades; all types are data-driven from one
-  `TYPES` table ([scripts/td_tower.gd](scripts/td_tower.gd)).
-- **Enemy** — walks the path, has Health, slowable; exposes velocity for bomb lead-prediction
+  `TYPES` table; **destructible** (Health + on-death slot cleanup) ([scripts/td_tower.gd](scripts/td_tower.gd)).
+- **Enemy** — walks the path, has Health, slowable; exposes velocity for bomb lead-prediction.
+  Multiple types (Grunt/Healer/Gunner) from a data-driven `TYPES` table
   ([scripts/td_enemy.gd](scripts/td_enemy.gd)).
 - **Projectiles** — homing shot ([scripts/td_projectile.gd](scripts/td_projectile.gd)) and lobbed
   AoE bomb ([scripts/td_bomb.gd](scripts/td_bomb.gd)).

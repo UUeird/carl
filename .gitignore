@@ -4,6 +4,7 @@
 
 # Godot-specific ignores
 .import/
+**/*.import
 export.cfg
 export_credentials.cfg
 *.tmp
@@ -18,3 +19,6 @@ mono_crash.*.json
 
 # Local editor / agent settings
 .claude/
+
+# Editor-local settings
+.vscode/

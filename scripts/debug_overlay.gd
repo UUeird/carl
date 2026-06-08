@@ -9,14 +9,13 @@ extends CanvasLayer
 @onready var label: Label = $Label
 
 var _accum := 0.0
-const UPDATE_INTERVAL := 0.25   # refresh 4x/sec so the text is readable, not a blur
+const UPDATE_INTERVAL := 0.25
 
 func _ready() -> void:
-	# Hide entirely outside debug builds so it never ships in a release.
 	if not OS.is_debug_build():
 		queue_free()
 		return
-	process_mode = Node.PROCESS_MODE_ALWAYS   # keep updating even if the game pauses
+	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _process(delta: float) -> void:
 	_accum += delta

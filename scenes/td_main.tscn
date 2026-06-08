@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://td_main"]
+[gd_scene load_steps=24 format=3 uid="uid://td_main"]
 
 [ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://td_enemy" path="res://scenes/td_enemy.tscn" id="2_enemy"]
@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" uid="uid://td_tower_slot" path="res://scenes/tower_slot.tscn" id="4_slot"]
 [ext_resource type="Script" path="res://scripts/td_hud.gd" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/debug_overlay.gd" id="6_dbg"]
+[ext_resource type="PackedScene" uid="uid://td_projectile" path="res://scenes/td_projectile.tscn" id="7_proj"]
+[ext_resource type="PackedScene" uid="uid://td_bomb" path="res://scenes/td_bomb.tscn" id="8_bomb"]
 
 [sub_resource type="BoxMesh" id="obstacle_mesh"]
 size = Vector3(10, 4, 1.2)
@@ -64,6 +66,8 @@ emission_energy_multiplier = 0.5
 script = ExtResource("1_game")
 enemy_scene = ExtResource("2_enemy")
 tower_scene = ExtResource("3_tower")
+projectile_scene = ExtResource("7_proj")
+bomb_scene = ExtResource("8_bomb")
 path_node = NodePath("Path3D")
 starting_currency = 150
 

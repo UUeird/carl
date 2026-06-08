@@ -44,9 +44,9 @@ func test_defeat_when_lives_reach_zero():
 	assert_eq(game.lives, 0, "lives hit zero")
 	assert_eq(result[0], false, "defeat fires game_over(false)")
 
-func test_cannot_start_wave_while_enemies_alive():
-	game._alive_enemies = 3
-	assert_false(game.can_start_wave(), "cannot start the next wave mid-combat")
+func test_cannot_start_wave_during_cooldown():
+	game._wave_cooldown = 1.5
+	assert_false(game.can_start_wave(), "cannot start a wave during the post-wave cooldown")
 
 func test_victory_after_final_wave_cleared():
 	var result = [null]
