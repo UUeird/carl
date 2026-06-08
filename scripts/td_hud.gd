@@ -46,13 +46,14 @@ func _build_demo_button() -> void:
 		return
 	var b := Button.new()
 	b.text = "Demo ▶"
-	# Right-anchored, tucked just under the Start-wave button.
+	# Right-anchored, on the same row as Start-wave but to its left, so it clears
+	# the tower details panel (which opens at the top-right, under Start-wave).
 	b.anchor_left = 1.0
 	b.anchor_right = 1.0
-	b.offset_left = -190.0
-	b.offset_right = -20.0
-	b.offset_top = 60.0
-	b.offset_bottom = 90.0
+	b.offset_left = -300.0
+	b.offset_right = -200.0
+	b.offset_top = 16.0
+	b.offset_bottom = 54.0
 	b.pressed.connect(func():
 		_game.start_demo()
 		b.disabled = true
