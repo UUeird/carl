@@ -19,19 +19,14 @@
   .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 80px; }
   button { font: inherit; }
 
-  header h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -0.01em; }
-  header .blurb { color: var(--dim); margin: 0 0 16px; max-width: 70ch; }
-  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .chip {
     background: var(--panel-2); border: 1px solid var(--line); color: var(--dim);
     padding: 4px 10px; border-radius: 999px; font-size: 12.5px;
   }
   .chip b { color: var(--text); font-weight: 600; }
-  .vision {
-    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
-    padding: 12px 16px; border-radius: 8px; margin-bottom: 18px; color: var(--dim);
-  }
-  .vision b { color: var(--text); }
 
   /* dashboard */
   .dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 8px; }
@@ -91,11 +86,24 @@
   .card {
     position: relative;
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    padding: 12px 56px 12px 16px; margin-bottom: 10px; border-left: 3px solid var(--line);
+    padding: 12px 44px 12px 38px; margin-bottom: 10px; border-left: 3px solid var(--line);
+    transition: opacity .15s, box-shadow .15s;
   }
+  .card.dragging { opacity: .4; }
+  .card.drop-before { border-top: 2px solid var(--todo); margin-top: -2px; }
+  .card.drop-after  { border-bottom: 2px solid var(--todo); }
+  .card .grab {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab; opacity: 0; transition: opacity .12s;
+  }
+  .card .grab .grab-icon { color: var(--faint); font-size: 14px; line-height: 1; }
+  .card:hover .grab, .card:focus-within .grab { opacity: 1; }
   .card .actions {
-    position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;
+    position: absolute; top: 8px; right: 8px;
     opacity: 0; transition: opacity .12s;
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 4px 3px;
   }
   .card:hover .actions, .card:focus-within .actions { opacity: 1; }
   .iconbtn {
@@ -125,10 +133,6 @@
 
   .add-row { margin: 4px 0 12px; }
 
-  .decisions summary { cursor: pointer; font-size: 19px; font-weight: 600; padding: 6px 0; }
-  .decisions ul { list-style: none; padding: 0; margin: 8px 0 0; }
-  .decisions li { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; margin-bottom: 7px; color: var(--dim); }
-  .decisions .date { color: var(--faint); font-size: 12px; }
 
   .empty { color: var(--faint); text-align: center; padding: 20px; font-style: italic; }
   .error { background: #2a1c1c; border: 1px solid #5b2f2f; color: #f0c0b8; padding: 16px; border-radius: 10px; margin-top: 20px; }
@@ -156,9 +160,7 @@
 <div class="wrap">
   <header>
     <h1 id="title">carl — Roadmap</h1>
-    <p class="blurb" id="blurb"></p>
     <div class="meta-row" id="metaRow"></div>
-    <div class="vision" id="vision"></div>
   </header>
 
   <div id="app"></div>
@@ -232,9 +234,6 @@ function matches(item) {
 
 function render() {
   document.getElementById("title").textContent = DATA.meta.title;
-  document.getElementById("blurb").textContent = DATA.meta.blurb;
-  document.getElementById("vision").innerHTML =
-    `<b>Vision.</b> ${escapeHTML(DATA.meta.vision)} <br><span style="font-size:13px">${escapeHTML(DATA.meta.note)}</span>`;
   document.getElementById("metaRow").innerHTML =
     `<span class="chip">Version <b>${escapeHTML(DATA.meta.version)}</b></span>
      <span class="chip">Updated <b>${escapeHTML(DATA.meta.updated)}</b></span>
@@ -262,7 +261,7 @@ function render() {
     <div class="controls">
       <input id="search" type="search" placeholder="Search the roadmap…" value="${escapeAttr(query)}">
       <div class="filters">
-        ${["all","done","todo","idea","debt"].map(f =>
+        ${["all","todo","idea","debt","done"].map(f =>
           `<div class="filter ${activeStatus===f?'active':''}" data-f="${f}">${f==="all"?"All":STATUS[f]}</div>`
         ).join("")}
       </div>
@@ -290,10 +289,6 @@ function render() {
 
   if (!anyShown) html += `<div class="empty">Nothing matches that filter / search.</div>`;
 
-  html += `<details class="decisions" open><summary>Decisions log</summary><ul>
-    ${DATA.decisions.map(d => `<li>${escapeHTML(d.text)} <span class="date">— ${escapeHTML(d.date)}</span></li>`).join("")}
-  </ul></details>`;
-
   html += `<footer>${serverMode
     ? "Editing here saves straight to <code>roadmap/roadmap.json</code>."
     : "Read-only — run <code>python3 roadmap/server.py</code> to edit."}
@@ -314,14 +309,15 @@ function cardHTML(item, secId) {
   const kids = (item.children && item.children.length)
     ? `<ul>${item.children.map(c => `<li>${escapeHTML(c)}</li>`).join("")}</ul>` : "";
   const note = item.note ? `<p class="note">${escapeHTML(item.note)}</p>` : "";
+  const grab = serverMode ? `
+    <div class="grab" title="Drag to reorder"><span class="grab-icon">⠿</span></div>` : "";
   const actions = serverMode ? `
     <div class="actions">
-      <button class="iconbtn up" data-idx="${idx}" title="Move up" ${isFirst?"disabled":""}>↑</button>
-      <button class="iconbtn down" data-idx="${idx}" title="Move down" ${isLast?"disabled":""}>↓</button>
-      <button class="iconbtn edit" data-idx="${idx}" title="Edit">✎</button>
       <button class="iconbtn del" data-idx="${idx}" title="Delete">×</button>
+      <button class="iconbtn edit" data-idx="${idx}" title="Edit">✎</button>
     </div>` : "";
-  return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}">
+  return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}" draggable="${serverMode}" data-idx="${idx}">
+    ${grab}
     ${actions}
     <div class="card-title">${star}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
     ${note}${kids}
@@ -346,10 +342,48 @@ function wireEvents() {
     b.onclick = e => { e.stopPropagation(); deleteItem(+b.dataset.idx); });
   document.querySelectorAll(".iconbtn.edit").forEach(b =>
     b.onclick = e => { e.stopPropagation(); openEditor(+b.dataset.idx); });
-  document.querySelectorAll(".iconbtn.up").forEach(b =>
-    b.onclick = e => { e.stopPropagation(); moveItem(+b.dataset.idx, -1); });
-  document.querySelectorAll(".iconbtn.down").forEach(b =>
-    b.onclick = e => { e.stopPropagation(); moveItem(+b.dataset.idx, +1); });
+
+  // Drag-to-reorder within sections
+  let dragIdx = null;
+  document.querySelectorAll(".card[draggable='true']").forEach(card => {
+    card.addEventListener("dragstart", e => {
+      dragIdx = +card.dataset.idx;
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    card.addEventListener("dragend", () => {
+      dragIdx = null;
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("dragging", "drop-before", "drop-after"));
+    });
+    card.addEventListener("dragover", e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (+card.dataset.idx === dragIdx) return;
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("drop-before", "drop-after"));
+      const rect = card.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      card.classList.add(e.clientY < mid ? "drop-before" : "drop-after");
+    });
+    card.addEventListener("dragleave", e => {
+      // only clear if leaving to outside the card entirely
+      if (!card.contains(e.relatedTarget)) card.classList.remove("drop-before", "drop-after");
+    });
+    card.addEventListener("drop", e => {
+      e.preventDefault();
+      const isBefore = card.classList.contains("drop-before");
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("drop-before", "drop-after"));
+      const dropIdx = +card.dataset.idx;
+      if (dragIdx === null || dragIdx === dropIdx) return;
+      const dragged = DATA.items[dragIdx];
+      const target = DATA.items[dropIdx];
+      if (dragged.section !== target.section) return;
+      DATA.items.splice(dragIdx, 1);
+      const newDrop = DATA.items.indexOf(target);
+      DATA.items.splice(isBefore ? newDrop : newDrop + 1, 0, dragged);
+      render();
+      save();
+    });
+  });
 }
 
 function deleteItem(idx) {
@@ -361,21 +395,6 @@ function deleteItem(idx) {
   save();
 }
 
-// Move an item up/down among its section-mates (reorders the global array).
-function moveItem(idx, dir) {
-  const item = DATA.items[idx];
-  if (!item) return;
-  const sameSection = DATA.items
-    .map((it, i) => ({ it, i }))
-    .filter(x => x.it.section === item.section);
-  const pos = sameSection.findIndex(x => x.i === idx);
-  const swapWith = sameSection[pos + dir];
-  if (!swapWith) return;
-  const a = idx, b = swapWith.i;
-  [DATA.items[a], DATA.items[b]] = [DATA.items[b], DATA.items[a]];
-  render();
-  save();
-}
 
 /* ---- editor modal ---- */
 function openEditor(idx) {

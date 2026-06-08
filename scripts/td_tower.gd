@@ -9,6 +9,15 @@ class_name TDTower
 
 enum Type { BASIC, FROST, BEAM, BOMB }
 
+signal destroyed(tower)        ## fired when a tower's health hits 0 (e.g. shot by a Gunner)
+
+## Shared live-tower list so Gunner enemies can find towers without scanning the
+## scene tree every frame. Towers self-register in _ready, deregister in _exit_tree.
+static var all_towers: Array = []
+
+## All towers share the same durability for now (tune per-type later if needed).
+const MAX_HEALTH := 60.0
+
 # Per-type, per-level stats. Index 0 = level 1.
 #  - Beam towers use "dps" + "beam": true instead of "damage"/"cooldown".
 #  - Bomb towers use "aoe" (blast radius) + "bomb": true; they lob to a predicted
@@ -78,15 +87,21 @@ var total_spent: int = 0
 var _cooldown: float = 0.0
 var _target: Node3D = null          ## cached current target
 var _retarget_timer: float = 0.0    ## time until the next full re-pick
-const RETARGET_INTERVAL := 0.15     ## seconds between full target searches
+const RETARGET_INTERVAL := 0.25     ## seconds between full target searches
 var _head_material: StandardMaterial3D
 var _beam_material: StandardMaterial3D
+
+var health: float = MAX_HEALTH       ## current durability; Gunner fire reduces it
+var _destroyed: bool = false
+const FLASH_TIME := 0.15
+var _flash_timer: float = 0.0
 
 func _ready() -> void:
 	_head_material = StandardMaterial3D.new()
 	_head_material.metallic = 0.4
 	if _head:
 		_head.material_override = _head_material
+	TDTower.all_towers.append(self)
 	if _beam:
 		_beam.top_level = true     # position in world space, not relative to the tower
 		_beam.visible = false
@@ -97,11 +112,39 @@ func _ready() -> void:
 		_beam.material_override = _beam_material
 	_apply_visual()
 
+func _exit_tree() -> void:
+	TDTower.all_towers.erase(self)
+
+## Damage from a Gunner creep (or an explosive grunt's death blast). At 0 the
+## tower is destroyed: it emits `destroyed` so the game frees the slot, then frees
+## itself. Flashes white on each hit for feedback.
+func take_damage(amount: float) -> void:
+	if _destroyed:
+		return
+	health = max(health - amount, 0.0)
+	_flash_timer = FLASH_TIME
+	if _head_material:
+		_head_material.albedo_color = Color.WHITE
+	if health <= 0.0:
+		_die()
+
+func _die() -> void:
+	if _destroyed:
+		return
+	_destroyed = true
+	destroyed.emit(self)
+	var tw := create_tween()
+	tw.tween_property(self, "scale", Vector3.ZERO, 0.2).set_trans(Tween.TRANS_BACK)
+	tw.tween_callback(queue_free)
+
 ## Called by the game controller right after instantiation.
 func configure(type: int) -> void:
 	tower_type = type
 	level = 1
 	total_spent = TYPES[type]["base_cost"]
+	# Spread retarget ticks across the full interval so all towers never fire
+	# their LOS raycasts in the same physics frame.
+	_retarget_timer = randf() * RETARGET_INTERVAL
 	_apply_visual()
 
 func _stats() -> Dictionary:
@@ -122,11 +165,25 @@ func upgrade() -> bool:
 	_apply_visual()
 	return true
 
+## Resting head color for the current type/level (brightens per level).
+func _head_color() -> Color:
+	return TYPES[tower_type]["color"].lightened((level - 1) * 0.18)
+
+# Timer-driven white flash on hit; fades back to the resting head color. Mirrors
+# the enemy's flash so repeated Gunner hits just refresh the timer (no tweens).
+func _tick_flash(delta: float) -> void:
+	_flash_timer -= delta
+	if _head_material == null:
+		return
+	if _flash_timer <= 0.0:
+		_head_material.albedo_color = _head_color()
+	else:
+		_head_material.albedo_color = Color.WHITE.lerp(_head_color(), 1.0 - _flash_timer / FLASH_TIME)
+
 func _apply_visual() -> void:
 	if _head_material == null: return
-	var base: Color = TYPES[tower_type]["color"]
 	# Brighten slightly per level so upgrades read at a glance.
-	_head_material.albedo_color = base.lightened((level - 1) * 0.18)
+	_head_material.albedo_color = _head_color()
 	if _head:
 		_head.scale = Vector3.ONE * (1.0 + (level - 1) * 0.12)
 	if _range_sphere and _range_sphere.visible:
@@ -194,13 +251,14 @@ func _set_beam(target: Node3D) -> void:
 		_beam_material.albedo_color = c
 		_beam_material.emission = c
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
+	if _destroyed:
+		return
 	_cooldown = max(_cooldown - delta, 0.0)
 	_retarget_timer -= delta
+	if _flash_timer > 0.0:
+		_tick_flash(delta)
 
-	# Re-pick only on the throttle, or when the cached target is gone/out of range
-	# (a cheap check — no raycast). The full search was the tower hotspot, so we
-	# keep it off the per-frame path.
 	if _retarget_timer <= 0.0 or not _target_valid(_stats()["range"]):
 		_target = _pick_target()
 		_retarget_timer = RETARGET_INTERVAL
@@ -216,7 +274,6 @@ func _physics_process(delta: float) -> void:
 		turret.look_at(look, Vector3.UP)
 
 	if _is_beam():
-		# Continuous DPS to the locked target; redraw the beam each frame.
 		if _target.has_method("take_damage"):
 			_target.take_damage(_stats()["dps"] * delta)
 		_set_beam(_target)
@@ -246,7 +303,7 @@ func _pick_target() -> Node3D:
 	var origin := muzzle.global_position if muzzle else global_position
 	var best: Node3D = null
 	var best_prog := -1.0
-	for e in get_tree().get_nodes_in_group("td_enemy"):
+	for e in TDEnemy.all_enemies:
 		if not is_instance_valid(e):
 			continue
 		var prog := float(e._target_idx) if "_target_idx" in e else 0.0
@@ -264,8 +321,8 @@ func _has_los(origin: Vector3, enemy: Node3D) -> bool:
 	var space := get_world_3d().direct_space_state
 	var params := PhysicsRayQueryParameters3D.create(origin, enemy.global_position, BLOCKER_MASK)
 	params.hit_from_inside = false
+	params.exclude = [self, enemy]
 	var hit := space.intersect_ray(params)
-	# Clear LOS if nothing blocked the ray before reaching the enemy.
 	return hit.is_empty()
 
 func _fire(target: Node3D) -> void:

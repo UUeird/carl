@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "carl \u2014 Roadmap",
-    "blurb": "A living plan for the game. We edit roadmap.json together: flip statuses, add items, revise decisions as we learn from playing. Keep it honest \u2014 if something's half-done or unproven, say so.",
+    "blurb": "A living plan for the game. We edit roadmap.json together: flip statuses, add items as we learn from playing. Keep it honest \u2014 if something's half-done or unproven, say so.",
     "version": "2026.06.06",
     "updated": "2026-06-06",
     "vision": "A classic fixed-path tower-defense game: enemies advance along set paths in waves, and you place & upgrade towers along them to stop them before they reach the goal. Built in Godot 4 (pivoted from an earlier 3D action prototype \u2014 same engine, rebuilt gameplay).",
@@ -16,9 +16,9 @@
     },
     {
       "id": "completed",
-      "title": "Completed",
+      "title": "Done",
       "kind": "done",
-      "desc": "Shipped TD work, newest first. (Pre-pivot work is archived below.)"
+      "desc": "Shipped TD work, newest first."
     },
     {
       "id": "later",
@@ -37,46 +37,6 @@
       "title": "Known issues / debt",
       "kind": "debt",
       "desc": "Things that work but aren't right yet."
-    },
-    {
-      "id": "archived",
-      "title": "Archived \u2014 action prototype (pre-pivot)",
-      "kind": "done",
-      "desc": "Built before the tower-defense pivot. Kept for history; not the current game. Still in git + CHANGELOG."
-    }
-  ],
-  "decisions": [
-    {
-      "text": "PIVOT to tower defense \u2014 classic fixed-path TD (enemies on set paths, place towers along them). Replaces the 3D action/boss/puzzle direction.",
-      "date": "2026-06-06"
-    },
-    {
-      "text": "Keep Godot + the engine/tooling (incl. the interactive roadmap); rebuild gameplay. Combat/level/boss systems are scrapped as the game, but health/projectile/enemy-movement code may be salvaged as reference.",
-      "date": "2026-06-06"
-    },
-    {
-      "text": "Plan-first: this branch (plan-tower-defense) updates the roadmap only \u2014 no game code yet.",
-      "date": "2026-06-06"
-    },
-    {
-      "text": "View-switching idea survives the pivot, reimagined for TD (tactical overview vs. zoomed-in). Still an idea, not committed.",
-      "date": "2026-06-06"
-    },
-    {
-      "text": "[pre-pivot] 3D isometric first \u2014 to test the most ambitious action vision before simplifying.",
-      "date": "2026-05-29"
-    },
-    {
-      "text": "[pre-pivot] Combat feel decided by playing \u2014 combat_mode switch; landed on ranged.",
-      "date": "2026-05-29"
-    },
-    {
-      "text": "[pre-pivot] First-person added as a toggle, not a replacement.",
-      "date": "2026-05-29"
-    },
-    {
-      "text": "Art deferred \u2014 placeholder shapes until the loop is proven fun. (Still holds for TD.)",
-      "date": "2026-05-29"
     }
   ],
   "items": [
@@ -88,7 +48,7 @@
       "children": [
         "Per-frame billboard did a get_camera_3d() lookup + look_at() per bar (~29 bars)",
         "Now uses one shared facing basis (correct for the orthographic iso camera), refreshed only if the camera moves",
-        "Other perf changes shipped alongside are hygiene, not measurably proven — see debt"
+        "Other perf changes shipped alongside are hygiene, not measurably proven \u2014 see debt"
       ]
     },
     {
@@ -189,20 +149,20 @@
       ]
     },
     {
-      "title": "Art pass \u2014 commit to a style once the loop is fun",
-      "note": "we need to improve and clarify the state of a tower type when selected. Right now it's hard for the user to know their selection state in the game.",
-      "section": "next",
-      "status": "todo",
-      "children": [
-        "add a color ring around the selected tower type"
-      ]
-    },
-    {
       "title": "Map verticality \u2014 multi-height terrain, elevated tower spots, paths that duck behind cover (LOS + spherical range groundwork is in)",
       "section": "later",
       "status": "todo",
       "children": [
         "create branching path logic in maps, so that enemies take random walks through maps, and towers have logic around which enemy to prioritize"
+      ]
+    },
+    {
+      "title": "Art pass \u2014 commit to a style once the loop is fun",
+      "note": "we need to improve and clarify the state of a tower type when selected. Right now it's hard for the user to know their selection state in the game.",
+      "section": "later",
+      "status": "todo",
+      "children": [
+        "add a color ring around the selected tower type"
       ]
     },
     {
@@ -257,24 +217,26 @@
       "title": "More combat juice \u2014 hit particles, screen shake, death effects, SFX"
     },
     {
+      "title": "More enemy types: tower-debuff aura + fast exploder",
+      "note": "shaking up the enemy types (round 2, building on the Grunt/Healer/Gunner system)",
       "section": "next",
       "status": "todo",
-      "title": "A 2nd enemy type",
-      "note": "contrast the basic creep \u2014 e.g. fast-but-weak vs. slow-but-tanky; mix within a wave",
-      "children": []
+      "children": [
+        "creep that casts a debuff aura on towers, slowing their fire rate",
+        "creep that moves quickly but has lower health, it also explodes on the base"
+      ]
     },
     {
-      "section": "ideas",
-      "status": "idea",
-      "starred": true,
-      "title": "View-switching as a core mechanic (reimagined for TD)",
-      "note": "Carried over from the action design. The original idea \u2014 switch views on purpose and design around it \u2014 could fit TD in a fresh way. Still just an idea.",
+      "title": "Enemy type variety: Grunt / Healer / Gunner",
+      "note": "Data-driven TDEnemy.TYPES table (mirrors the tower TYPES). Spawner mixes types by wave — Healers from wave 2, Gunners from wave 3.",
+      "section": "completed",
+      "status": "done",
       "children": [
-        "Tactical overview (iso/top-down) for placing & managing towers across the whole map\u2026",
-        "\u2026vs. a zoomed-in / first-person 'gunner' view where you manually aim or take control of a single tower for bonus effect during a wave.",
-        "Switch as a resource/decision: drop to the gunner view to clutch a leak, at the cost of overview of the rest of the map.",
-        "Open question: does manual control in a TD add depth or just busywork? Prototype one wave both ways before committing.",
-        "Keep parked until the plain fixed-path loop is proven fun."
+        "Explosive Grunt (main creep): orange blast on reaching the goal; on death a small AoE damages nearby towers",
+        "Healer: green heal-pulse on an interval that restores HP to nearby living allies (skips itself), with an expanding aura visual",
+        "Gunner: carries a turret that shoots the nearest tower in range (yellow tracer), on a per-shot cooldown",
+        "Towers are now destructible — Health + take_damage + white hit-flash; at 0 HP they're destroyed, free their slot, and close the panel if selected",
+        "11 new GUT tests cover type stats, heal aura range/self-skip, gunner range, explosive death blast, and tower destruction/slot cleanup"
       ]
     },
     {
@@ -285,14 +247,43 @@
       "children": []
     },
     {
-      "section": "debt",
-      "status": "debt",
-      "title": "Perf: locate the real combat hotspot with the IN-EDITOR profiler. Headless profiling proved too noisy to trust (same code measured 7\u2013153ms run-to-run), and earlier 'raycasts/projectiles' theories didn't hold up. Next: run from the Godot editor, Debugger \u2192 Profiler, sort by Self time during a heavy wave, and fix the top function with confidence."
+      "section": "completed",
+      "status": "done",
+      "title": "Deleted old action prototype scenes and scripts",
+      "note": "Nothing salvaged \u2014 health.gd, health_bar.gd, damage_number.gd, debug_overlay.gd were already shared and kept. Everything else (player, boss, combat, enemy, hud, main, projectile, etc.) removed."
     },
     {
-      "section": "debt",
-      "status": "debt",
-      "title": "Perf: investigate first-wave shader-compilation stutter \u2014 headless showed multi-second spikes on first render of each material (one-time cost, not steady-state). If real in-editor, fix with shader pre-warming, not per-frame optimization."
+      "section": "completed",
+      "status": "done",
+      "title": "Perf: located and fixed combat hotspots via inline timing instrumentation",
+      "note": "In-editor profiler didn't show function trees; used Time.get_ticks_usec() instrumentation instead. Engine cpu spikes eliminated, steady 60fps confirmed.",
+      "children": [
+        "TDTower was the dominant cost \u2014 switched from _physics_process to _process (eliminated physics catchup bursts)",
+        "Retarget timer staggered at build time so all towers don't fire LOS raycasts on the same frame",
+        "Retarget interval increased 0.15s -> 0.25s; get_nodes_in_group replaced with TDEnemy.all_enemies static cache",
+        "LOS raycast exclusions added (self + enemy); enemy look_at throttled to once per waypoint segment",
+        "Shader pre-warm at game start: all scene types + all 4 projectile tint materials compiled before first wave",
+        "TDBomb blast ring mesh/material shared (was allocating new StandardMaterial3D per explosion)",
+        "TDProjectile changed from Area3D to Node3D (was running broadphase for nothing \u2014 no collision shape)"
+      ]
+    },
+    {
+      "section": "completed",
+      "status": "done",
+      "title": "Perf: shader-compilation stutter fixed via pre-warm at game start",
+      "note": "Confirmed real in-editor (300-480ms one-frame spikes). Fixed by instantiating all scene types + all 4 projectile tint materials off-screen for one frame before first wave."
+    },
+    {
+      "section": "completed",
+      "status": "done",
+      "title": "Perf hygiene: throttled targeting, timer-driven flash, shared projectile materials",
+      "note": "All three confirmed effective by inline timing measurements. Targeting throttle + staggered retarget timers eliminated per-frame raycast bursts; flash timer eliminated per-hit tweens; shared materials eliminated per-shot allocations."
+    },
+    {
+      "section": "completed",
+      "status": "done",
+      "title": "Removed version.gd (action prototype overlay)",
+      "note": "Deleted as part of old-scripts cleanup. TD game has no version overlay yet \u2014 add one when TD has its own build/versioning."
     },
     {
       "section": "debt",
@@ -300,73 +291,16 @@
       "title": "Perf: pool short-lived nodes (projectiles, damage numbers, blast rings) \u2014 reuse from a pool instead of instance/free per spawn. Reasonable hygiene, but NOT yet shown to be a bottleneck; confirm with the profiler before investing."
     },
     {
-      "section": "debt",
-      "status": "debt",
-      "title": "Perf (hygiene, done-ish but unmeasured): targeting search is throttled/simplified and enemy flash is timer-driven (no per-hit tween) and projectiles share a material per type. Test-clean, but headless couldn't confirm a frame-time win \u2014 revisit value once the profiler names the real hotspot."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "Old action scenes/scripts (player, boss, combat, level) still in the repo \u2014 decide per-file what to salvage vs. delete as TD takes shape."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "In-app version overlay (version.gd) still reads as the action prototype's; revisit once TD has its own build."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "Start-wave button is logically disabled mid-wave but doesn't look obviously disabled; could grey it out / add a 'wave in progress' state."
-    },
-    {
-      "section": "debt",
-      "status": "debt",
-      "title": "No tower range preview when placing; you can't see a tower's reach before/after building."
-    },
-    {
-      "section": "archived",
+      "section": "completed",
       "status": "done",
-      "title": "Interactive HTML roadmap (tooling \u2014 still in use)",
-      "children": [
-        "JSON-backed roadmap web app with live editing saved to disk via a stdlib server",
-        "This tool survives the pivot; only the game direction changed"
-      ]
+      "title": "Early wave start: player can start the next wave 2s after the prior one begins",
+      "note": "Replaced the alive-enemies gate with a 2s cooldown timer. _spawning no longer blocks the button \u2014 only the cooldown does."
     },
     {
-      "section": "archived",
+      "section": "completed",
       "status": "done",
-      "title": "Weapons & FPS-style shooting",
-      "children": [
-        "Body gun + first-person viewmodel; projectiles from the active muzzle; FP shots follow full 3D aim"
-      ]
-    },
-    {
-      "section": "archived",
-      "status": "done",
-      "title": "First-person mode + presentation polish",
-      "children": [
-        "FP toggle (V): mouse-look, camera-relative movement, camera-forward aim, crosshair",
-        "Lit environment (sky + ambient); per-instance enemy/boss materials"
-      ]
-    },
-    {
-      "section": "archived",
-      "status": "done",
-      "title": "Level, platforming & enemies (action)",
-      "children": [
-        "Linear level with arenas, platforming over pits, checkpoints",
-        "Chaser enemies; boss FSM (dormant \u2192 CHASE \u2192 TELEGRAPH \u2192 ATTACK \u2192 COOLDOWN); follow camera"
-      ]
-    },
-    {
-      "section": "archived",
-      "status": "done",
-      "title": "Core combat prototype (action)",
-      "children": [
-        "Iso movement + mouse aim; combat_mode melee/ranged/mixed; reliable projectile hits",
-        "HUD HP bars; reusable health.gd (candidate for TD reuse)"
-      ]
+      "title": "Tower range preview when placing and selecting",
+      "note": "Translucent sphere shown on slot hover (for chosen build type) and on selected tower. Implemented as part of the spherical range + LOS work."
     }
   ]
 }

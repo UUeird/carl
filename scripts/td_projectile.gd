@@ -1,4 +1,4 @@
-extends Area3D
+extends Node3D
 class_name TDProjectile
 
 ## A tower's shot. Tracks its assigned target so it reliably connects with moving

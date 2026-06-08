@@ -33,6 +33,7 @@ func _ready() -> void:
 	_health = get_node_or_null(health_path)
 	if _health:
 		_health.health_changed.connect(_on_health_changed)
+		_health.died.connect(func(): visible = false)
 	visible = false
 
 func _make_quad(color: Color, z: float, priority: int) -> MeshInstance3D:

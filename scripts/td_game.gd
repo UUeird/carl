@@ -19,6 +19,8 @@ signal selection_cleared
 
 @export var enemy_scene: PackedScene
 @export var tower_scene: PackedScene
+@export var projectile_scene: PackedScene   ## used only for shader pre-warm at startup
+@export var bomb_scene: PackedScene         ## used only for shader pre-warm at startup
 @export var path_node: NodePath        ## a Path3D defining the route
 @export var enemy_y: float = 1.0       ## height creeps walk at
 
@@ -28,6 +30,8 @@ var wave: int = 0
 var build_type: int = 0               ## TDTower.Type to place (set by HUD)
 var _alive_enemies: int = 0
 var _spawning: bool = false
+var _wave_cooldown: float = 0.0
+const WAVE_COOLDOWN := 2.0
 var _over: bool = false
 var _waypoints: PackedVector3Array = PackedVector3Array()
 var _slot_tower: Dictionary = {}      ## slot -> tower built on it
@@ -46,8 +50,37 @@ func _ready() -> void:
 			slot.hovered.connect(_on_slot_hovered)
 			slot.unhovered.connect(_on_slot_unhovered)
 	_make_preview()
+	_prewarm_shaders()
 	state_changed.emit.call_deferred()
 	message.emit.call_deferred("Build towers, then start the wave.")
+
+# Spawn one instance of every scene type far off-screen for a single frame so
+# Godot compiles their shaders before gameplay starts, eliminating mid-wave stutter.
+func _prewarm_shaders() -> void:
+	var nodes: Array = []
+
+	# One instance of each scene type so their base shaders compile before gameplay.
+	for s in [enemy_scene, tower_scene, projectile_scene, bomb_scene]:
+		if s == null:
+			continue
+		var n: Node = s.instantiate()
+		n.position = Vector3(0, -9999, 0)
+		add_child(n)
+		nodes.append(n)
+
+	# Force all four per-type projectile tint materials to exist now, not on first shot.
+	for type in TDTower.Type.values():
+		var mat := TDTower._projectile_material(type)
+		var mi := MeshInstance3D.new()
+		mi.position = Vector3(0, -9999, 0)
+		mi.material_override = mat
+		add_child(mi)
+		nodes.append(mi)
+
+	await get_tree().process_frame
+	for n in nodes:
+		if is_instance_valid(n):
+			n.queue_free()
 
 func _make_preview() -> void:
 	_preview = MeshInstance3D.new()
@@ -88,13 +121,19 @@ func _read_path() -> PackedVector3Array:
 			pts.append(p.to_global(local))
 	return pts
 
+func _process(delta: float) -> void:
+	if _wave_cooldown > 0.0:
+		_wave_cooldown = max(_wave_cooldown - delta, 0.0)
+		state_changed.emit()
+
 ## Called by the HUD's "Start wave" button.
 func start_next_wave() -> void:
-	if _over or _spawning or _alive_enemies > 0:
+	if _over or _wave_cooldown > 0.0:
 		return
 	if wave >= wave_count:
 		return
 	wave += 1
+	_wave_cooldown = WAVE_COOLDOWN
 	state_changed.emit()
 	_spawn_wave()
 
@@ -107,7 +146,7 @@ func _spawn_wave() -> void:
 		await get_tree().create_timer(spawn_interval).timeout
 	_spawning = false
 
-func _spawn_one() -> void:
+func _spawn_one(type: int = -1) -> void:
 	if enemy_scene == null or _waypoints.size() < 2:
 		return
 	var e := enemy_scene.instantiate() as TDEnemy
@@ -117,10 +156,23 @@ func _spawn_one() -> void:
 		pts.append(Vector3(w.x, enemy_y, w.z))
 	add_child(e)
 	e.add_to_group("td_enemy")
+	# configure() after add_child so its @onready Health ref is valid; defaults to
+	# a wave-appropriate mix when no explicit type is given.
+	e.configure(type if type >= 0 else _pick_enemy_type())
 	e.set_path(pts)
 	e.killed.connect(_on_enemy_killed)
 	e.reached_goal.connect(_on_enemy_leaked)
 	_alive_enemies += 1
+
+## Choose an enemy type for the current wave. Early waves are pure Grunts; Healers
+## appear from wave 2 and Gunners from wave 3, as a minority of each wave.
+func _pick_enemy_type() -> int:
+	var roll := randf()
+	if wave >= 3 and roll < 0.2:
+		return TDEnemy.Type.GUNNER
+	if wave >= 2 and roll < 0.45:
+		return TDEnemy.Type.HEALER
+	return TDEnemy.Type.GRUNT
 
 func _on_enemy_killed(e: TDEnemy) -> void:
 	currency += e.bounty
@@ -140,7 +192,7 @@ func _dec_enemies() -> void:
 		if wave >= wave_count:
 			_end(true)
 		else:
-			message.emit("Wave %d cleared! Build, then start wave %d." % [wave, wave + 1])
+			message.emit("All clear! Start wave %d when ready." % [wave + 1])
 
 func _on_slot_clicked(slot) -> void:
 	if _over:
@@ -160,9 +212,24 @@ func _on_slot_clicked(slot) -> void:
 	add_child(t)
 	t.global_position = slot.global_position
 	t.configure(build_type)
+	if t.has_signal("destroyed"):
+		t.destroyed.connect(_on_tower_destroyed.bind(slot))
 	slot.set_occupied()
 	_slot_tower[slot] = t
 	currency -= cost
+	state_changed.emit()
+
+## A Gunner (or explosive grunt blast) destroyed a built tower: free its slot and
+## drop it from the map. If it was the selected tower, dismiss the panel too.
+func _on_tower_destroyed(_tower, slot) -> void:
+	if _selected_slot == slot:
+		_clear_selection()
+	_slot_tower.erase(slot)
+	if slot.has_method("set_free"):
+		slot.set_free()
+	else:
+		slot.occupied = false
+	message.emit("A tower was destroyed!")
 	state_changed.emit()
 
 func set_build_type(type: int) -> void:
@@ -229,7 +296,7 @@ func _end(victory: bool) -> void:
 	message.emit(msg)
 
 func can_start_wave() -> bool:
-	return not _over and not _spawning and _alive_enemies == 0 and wave < wave_count
+	return not _over and _wave_cooldown <= 0.0 and wave < wave_count
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("restart"):

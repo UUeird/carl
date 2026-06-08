@@ -18,6 +18,20 @@ var _flight: float = 1.0
 var _arc_height: float = 3.0
 var _exploded: bool = false
 
+static var _blast_mat: StandardMaterial3D = null
+static var _blast_mesh: SphereMesh = null
+
+func _ready() -> void:
+	if _blast_mat == null:
+		_blast_mat = StandardMaterial3D.new()
+		_blast_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_blast_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_blast_mat.albedo_color = Color(1.0, 0.6, 0.2, 0.4)
+	if _blast_mesh == null:
+		_blast_mesh = SphereMesh.new()
+		_blast_mesh.radius = 1.0
+		_blast_mesh.height = 2.0
+
 func launch_bomb(from: Vector3, to: Vector3, speed: float, damage: float, aoe: float) -> void:
 	_from = from
 	_to = to
@@ -45,7 +59,7 @@ func _physics_process(delta: float) -> void:
 func _explode() -> void:
 	_exploded = true
 	# Damage every enemy within the blast, scaled by distance (full at center).
-	for e in get_tree().get_nodes_in_group("td_enemy"):
+	for e in TDEnemy.all_enemies:
 		if not is_instance_valid(e):
 			continue
 		var d := _to.distance_to(e.global_position)
@@ -56,20 +70,13 @@ func _explode() -> void:
 	queue_free()
 
 func _spawn_blast() -> void:
-	# A quick expanding translucent ring so the AoE reads. Cosmetic — skip if
-	# there's no scene to parent into (e.g. test harness).
 	var scene := get_tree().current_scene
 	if scene == null:
 		return
 	var ring := MeshInstance3D.new()
-	var m := SphereMesh.new()
-	m.radius = 1.0
-	m.height = 2.0
-	ring.mesh = m
-	var mat := StandardMaterial3D.new()
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(1.0, 0.6, 0.2, 0.4)
+	ring.mesh = _blast_mesh
+	# Each blast needs its own material instance so the alpha tween is independent.
+	var mat: StandardMaterial3D = _blast_mat.duplicate()
 	ring.material_override = mat
 	scene.add_child(ring)
 	ring.global_position = _to

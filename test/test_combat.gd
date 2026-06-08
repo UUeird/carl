@@ -67,8 +67,8 @@ func test_beam_applies_continuous_dps():
 	t.global_position = Vector3(0, 0, 0)
 	var e = _enemy_at(Vector3(2, 1, 0))
 	var hp0 = e.health.current_health
-	# Run the tower's physics step manually with a 0.5s delta.
-	t._physics_process(0.5)
+	# Run the tower's process step manually with a 0.5s delta.
+	t._process(0.5)
 	var expected = t._stats()["dps"] * 0.5
 	assert_almost_eq(hp0 - e.health.current_health, expected, 0.01,
 		"beam deals dps * delta per step")
