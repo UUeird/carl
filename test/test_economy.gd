@@ -65,3 +65,34 @@ func test_sell_refunds_half_total_spent_and_frees_slot():
 	assert_eq(game.currency, before + int(spent * 0.5), "refund is 50% of total spent")
 	assert_false(_slot(0).occupied, "slot is freed after selling")
 	assert_false(game._slot_tower.has(_slot(0)), "slot/tower mapping cleared")
+
+func test_built_tower_is_selectable_after_game_over():
+	game.set_build_type(TDTower.Type.BASIC)
+	game._on_slot_clicked(_slot(0))
+	var tower = game._slot_tower[_slot(0)]
+	game._end(true)   # game over (victory)
+	var emitted := []
+	game.tower_selected.connect(func(t): emitted.append(t))
+	game._on_slot_clicked(_slot(0))
+	assert_eq(emitted.size(), 1, "clicking a built tower after game-over still selects it")
+	assert_eq(emitted[0], tower, "the clicked tower is the one emitted")
+
+func test_no_build_on_free_slot_after_game_over():
+	game._end(false)
+	game.set_build_type(TDTower.Type.BASIC)
+	var before = game.currency
+	game._on_slot_clicked(_slot(1))
+	assert_eq(game.currency, before, "no currency spent building after game-over")
+	assert_false(_slot(1).occupied, "free slot stays free after game-over")
+
+func test_no_upgrade_or_sell_after_game_over():
+	game.set_build_type(TDTower.Type.BASIC)
+	game._on_slot_clicked(_slot(0))
+	game._select_slot(_slot(0))
+	var tower = game._slot_tower[_slot(0)]
+	game._end(true)
+	var lvl = tower.level
+	game.upgrade_selected()
+	assert_eq(tower.level, lvl, "upgrade is blocked after game-over")
+	game.sell_selected()
+	assert_true(_slot(0).occupied, "sell is blocked after game-over (slot still occupied)")

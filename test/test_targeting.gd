@@ -49,11 +49,11 @@ func test_targets_enemy_furthest_along_the_path():
 	assert_eq(t._pick_target(), ahead, "should target the leader (furthest along)")
 
 func test_line_of_sight_blocked_by_obstacle():
-	# The map's Obstacle wall sits around (4, y, 3.5). Put the tower south of it
-	# and an enemy north of it so the wall is between them.
-	var t = _tower_at(Vector3(4, 0, 6))
+	# WallB sits at (0, 1.5, 0), size 2x4x16, spanning Z=-8..+8 at X=0.
+	# Tower south of wall, enemy north — wall is between them.
+	var t = _tower_at(Vector3(0, 0, 11))
 	var origin = t.muzzle.global_position
-	var behind_wall = _enemy_at(Vector3(4, 1, 1))   # other side of the wall
+	var behind_wall = _enemy_at(Vector3(0, 1, -11))  # other side of the wall
 	assert_false(t._has_los(origin, behind_wall), "wall should block line of sight")
 
 func test_clear_line_of_sight_when_unobstructed():

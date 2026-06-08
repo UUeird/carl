@@ -20,6 +20,7 @@ var _panel_stats: Label
 var _upgrade_btn: Button
 var _sell_btn: Button
 var _selected_tower = null
+var _game_over: bool = false   ## once over, panel is view-only (no upgrade/sell)
 
 func _ready() -> void:
 	_game = get_node_or_null(game_path)
@@ -50,8 +51,8 @@ func _build_demo_button() -> void:
 	# the tower details panel (which opens at the top-right, under Start-wave).
 	b.anchor_left = 1.0
 	b.anchor_right = 1.0
-	b.offset_left = -300.0
-	b.offset_right = -200.0
+	b.offset_left = -390.0
+	b.offset_right = -210.0
 	b.offset_top = 16.0
 	b.offset_bottom = 54.0
 	b.pressed.connect(func():
@@ -168,14 +169,23 @@ func _refresh_panel() -> void:
 		line += "\nSlow ×%s for %ss" % [str(s["slow"]), str(s["slow_dur"])]
 	if "aoe" in s:
 		line += "\nAoE radius %s" % str(s["aoe"])
+	line += "\nHP %d/%d" % [int(ceil(t.health)), int(TDTower.MAX_HEALTH)]
 	_panel_stats.text = line
+	if _game_over:
+		# View-only after the game ends: stats/health still show, actions are off.
+		_upgrade_btn.text = "Game over"
+		_upgrade_btn.disabled = true
+		_sell_btn.text = "Sell: +%d" % t.sell_value()
+		_sell_btn.disabled = true
+		return
 	if t.is_max_level():
 		_upgrade_btn.text = "Max level"
 		_upgrade_btn.disabled = true
 	else:
-		_upgrade_btn.text = "Upgrade — %d" % t.upgrade_cost()
+		_upgrade_btn.text = "Upgrade: %d" % t.upgrade_cost()
 		_upgrade_btn.disabled = false
-	_sell_btn.text = "Sell — +%d" % t.sell_value()
+	_sell_btn.text = "Sell: +%d" % t.sell_value()
+	_sell_btn.disabled = false
 
 func _refresh() -> void:
 	stats.text = "♥ %d    ⬢ %d    Wave %d/%d" % [_game.lives, _game.currency, _game.wave, _game.wave_count]
@@ -190,3 +200,7 @@ func _on_message(text: String) -> void:
 
 func _on_game_over(_victory: bool) -> void:
 	start_btn.disabled = true
+	_game_over = true
+	# Keep the panel usable for inspection, but reflect that actions are blocked.
+	if _panel and _panel.visible:
+		_refresh_panel()

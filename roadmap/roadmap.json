@@ -208,9 +208,18 @@
       "title": "More combat juice \u2014 hit particles, screen shake, death effects, SFX"
     },
     {
+      "id": 1,
+      "title": "Camera pan, orbit, and zoom controls",
+      "note": "Left-drag pans; right-drag orbits azimuth/elevation; scroll wheel zooms. Implemented in td_camera.gd. Perspective projection (45\u00b0 FOV). Zoom step fine-grained (2.5% per scroll notch) for precise levels.",
+      "status": "done",
+      "section": "completed",
+      "starred": false,
+      "children": []
+    },
+    {
       "title": "More enemy types: tower-debuff aura + fast exploder",
       "note": "shaking up the enemy types (round 2, building on the Grunt/Healer/Gunner system)",
-      "section": "next",
+      "section": "later",
       "status": "todo",
       "children": [
         "creep that casts a debuff aura on towers, slowing their fire rate",
@@ -240,12 +249,6 @@
     {
       "section": "completed",
       "status": "done",
-      "title": "Deleted old action prototype scenes and scripts",
-      "note": "Nothing salvaged \u2014 health.gd, health_bar.gd, damage_number.gd, debug_overlay.gd were already shared and kept. Everything else (player, boss, combat, enemy, hud, main, projectile, etc.) removed."
-    },
-    {
-      "section": "completed",
-      "status": "done",
       "title": "Perf: located and fixed combat hotspots via inline timing instrumentation",
       "note": "In-editor profiler didn't show function trees; used Time.get_ticks_usec() instrumentation instead. Engine cpu spikes eliminated, steady 60fps confirmed.",
       "children": [
@@ -271,10 +274,14 @@
       "note": "All three confirmed effective by inline timing measurements. Targeting throttle + staggered retarget timers eliminated per-frame raycast bursts; flash timer eliminated per-hit tweens; shared materials eliminated per-shot allocations."
     },
     {
-      "section": "completed",
-      "status": "done",
-      "title": "Removed version.gd (action prototype overlay)",
-      "note": "Deleted as part of old-scripts cleanup. TD game has no version overlay yet \u2014 add one when TD has its own build/versioning."
+      "title": "Display build version in game",
+      "note": "The game should carry a version number based on the date and timestamp and display it in game. It can display in very small text at the bottom right of the game view.",
+      "section": "next",
+      "status": "todo",
+      "children": [
+        "apply versioning system to game",
+        "display version in game"
+      ]
     },
     {
       "section": "debt",
@@ -318,13 +325,21 @@
     },
     {
       "title": "tower visual improvements",
-      "section": "later",
-      "status": "todo",
+      "section": "completed",
+      "status": "done",
       "children": [
         "towers don't immediately snap to the enemy, they must rotate slowly",
         "towers should be clearly identifiable by shape and damage type",
-        "towers should show visible damage"
-      ]
+        "towers should show visible damage",
+        "floating damage values should be of absolute size, not scale with map zoom"
+      ],
+      "note": "Shipped: turrets now swing toward targets at a max yaw rate (projectile towers hold fire until aimed) instead of snapping; each type has a distinct head silhouette (Cannon box+barrel, Frost crystalline prism, Beam slim emitter cone, Bomb mortar dome+tube); damaged towers show a floating green/red health bar (head keeps its true type color \u2014 no scorch tint, which had read as a hue shift); head uses low metallic + faint emission so its type color holds up in wall shadow; floating damage numbers use Label3D.fixed_size so they stay constant on-screen size regardless of camera zoom. Covered by test_tower_visuals.gd. Beam tower also got a tesla-coil/ray-gun emitter (coil post + horizontal barrel + glowing prongs/tip) that extends out to the muzzle where the beam begins."
+    },
+    {
+      "title": "Screenshot test map for visual checks",
+      "section": "completed",
+      "status": "done",
+      "note": "Added scenes/td_test_map.tscn \u2014 a flat straight spawn\u2192goal lane with 8 tower pads (4 per side) and no walls \u2014 plus test/shot_test_map.gd, a headed --script helper that builds one of each tower type, spawns an enemy so turrets aim across the view, and saves a PNG. The main map's isometric camera + walls made offscreen screenshots fiddly (empty frames, occlusion); the test map gives a clean head-on stage. Reuses td_game.gd + the HUD, so HUD/economy checks work there too. Documented in VISUAL_CHECKLIST.md."
     }
   ]
 }

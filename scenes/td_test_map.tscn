@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://td_main"]
+[gd_scene load_steps=15 format=3 uid="uid://td_test_map"]
 
 [ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://td_enemy" path="res://scenes/td_enemy.tscn" id="2_enemy"]
@@ -9,16 +9,6 @@
 [ext_resource type="Script" path="res://scripts/td_camera.gd" id="9_cam"]
 [ext_resource type="PackedScene" uid="uid://td_projectile" path="res://scenes/td_projectile.tscn" id="7_proj"]
 [ext_resource type="PackedScene" uid="uid://td_bomb" path="res://scenes/td_bomb.tscn" id="8_bomb"]
-
-[sub_resource type="BoxMesh" id="wall_mesh"]
-size = Vector3(2, 4, 16)
-
-[sub_resource type="BoxShape3D" id="wall_shape"]
-size = Vector3(2, 4, 16)
-
-[sub_resource type="StandardMaterial3D" id="obstacle_mat"]
-albedo_color = Color(0.3, 0.32, 0.38, 1)
-roughness = 0.9
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.38, 0.45, 0.6, 1)
@@ -39,24 +29,17 @@ ambient_light_energy = 1.0
 tonemap_mode = 2
 
 [sub_resource type="BoxMesh" id="ground_mesh"]
-size = Vector3(80, 1, 44)
+size = Vector3(70, 1, 24)
 
 [sub_resource type="StandardMaterial3D" id="ground_mat"]
 albedo_color = Color(0.22, 0.3, 0.24, 1)
 
-[sub_resource type="Curve3D" id="path_upper"]
+[sub_resource type="Curve3D" id="path_straight"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, -12, 0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0, 0, 0, 0, 0, 20, 0, -12, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0),
-"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0)
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -30, 0, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 7
-
-[sub_resource type="Curve3D" id="path_lower"]
-_data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 20, 0, 12, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0),
-"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0)
-}
-point_count = 7
+point_count = 2
 
 [sub_resource type="BoxMesh" id="path_seg"]
 size = Vector3(1, 0.15, 1)
@@ -76,21 +59,20 @@ emission_enabled = true
 emission = Color(0.1, 0.8, 0.25, 1)
 emission_energy_multiplier = 0.6
 
-[node name="TDMain" type="Node3D"]
+[node name="TDTestMap" type="Node3D"]
 script = ExtResource("1_game")
 enemy_scene = ExtResource("2_enemy")
 tower_scene = ExtResource("3_tower")
 projectile_scene = ExtResource("7_proj")
 bomb_scene = ExtResource("8_bomb")
-path_node = NodePath("PathUpper")
-path_node_b = NodePath("PathLower")
-starting_currency = 150
+path_node = NodePath("Path")
+starting_currency = 9999
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(0.707107, -0.408248, 0.577351, 0, 0.816497, 0.57735, -0.707107, -0.408248, 0.577351, 22, 38, 44)
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 14, 22)
 fov = 45.0
 script = ExtResource("9_cam")
 
@@ -108,137 +90,51 @@ collision_mask = 0
 mesh = SubResource("ground_mesh")
 material_override = SubResource("ground_mat")
 
-[node name="WallA" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallA"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallA"]
-shape = SubResource("wall_shape")
-
-[node name="WallB" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallB"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallB"]
-shape = SubResource("wall_shape")
-
-[node name="WallC" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallC"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallC"]
-shape = SubResource("wall_shape")
-
-[node name="PathUpper" type="Path3D" parent="."]
-curve = SubResource("path_upper")
-
-[node name="PathLower" type="Path3D" parent="."]
-curve = SubResource("path_lower")
+[node name="Path" type="Path3D" parent="."]
+curve = SubResource("path_straight")
 
 [node name="PathVis" type="Node3D" parent="."]
 
 [node name="SpawnMarker" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -36, 0.08, 0)
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -30, 0.08, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("spawn_mat")
 
-[node name="SharedEntry" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, -27, 0.05, 0)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnUL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20, 0.05, -6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnLL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20, 0.05, 6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="UpperLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.05, -12)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="LowerLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.05, 12)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnUR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20, 0.05, -6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnLR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20, 0.05, 6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="SharedExit" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, 27, 0.05, 0)
+[node name="Lane" type="MeshInstance3D" parent="PathVis"]
+transform = Transform3D(60, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.05, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="Goal" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 36, 0.08, 0)
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 30, 0.08, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("goal_mat")
 
 [node name="Slots" type="Node3D" parent="."]
 
 [node name="Slot0" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.05, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, -4)
 
 [node name="Slot1" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.05, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.05, -4)
 
 [node name="Slot2" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, -4)
 
 [node name="Slot3" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, -4)
 
 [node name="Slot4" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, 4)
 
 [node name="Slot5" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.05, 4)
 
 [node name="Slot6" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.05, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.05, 4)
 
 [node name="Slot7" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.05, 4)
-
-[node name="Slot8" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, -16)
-
-[node name="Slot9" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, -16)
-
-[node name="Slot10" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, 16)
-
-[node name="Slot11" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, 4)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("5_hud")
@@ -256,7 +152,7 @@ offset_top = 16.0
 offset_right = 420.0
 offset_bottom = 44.0
 theme_override_font_sizes/font_size = 20
-text = "♥ 20    ⬢ 150    Wave 0/5"
+text = "♥ 20    ⬢ 9999    Wave 0/5"
 
 [node name="Hint" type="Label" parent="HUD/Root"]
 offset_left = 20.0

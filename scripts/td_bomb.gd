@@ -75,13 +75,35 @@ func _spawn_blast() -> void:
 		return
 	var ring := MeshInstance3D.new()
 	ring.mesh = _blast_mesh
-	# Each blast needs its own material instance so the alpha tween is independent.
 	var mat: StandardMaterial3D = _blast_mat.duplicate()
 	ring.material_override = mat
 	scene.add_child(ring)
 	ring.global_position = _to
 	ring.scale = Vector3.ONE * 0.3
-	var tw := ring.create_tween()
-	tw.tween_property(ring, "scale", Vector3.ONE * _aoe, 0.25)
-	tw.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.25)
-	tw.tween_callback(ring.queue_free)
+	# Timer-driven fade: a small helper node ticks the expand/fade each frame
+	# instead of a tween, avoiding per-explosion material property animation overhead.
+	var helper := _BlastFade.new(ring, mat, _aoe)
+	scene.add_child(helper)
+
+class _BlastFade extends Node:
+	const DURATION := 0.25
+	var _ring: MeshInstance3D
+	var _mat: StandardMaterial3D
+	var _target_scale: float
+	var _elapsed: float = 0.0
+
+	func _init(ring: MeshInstance3D, mat: StandardMaterial3D, aoe: float) -> void:
+		_ring = ring
+		_mat = mat
+		_target_scale = aoe
+
+	func _process(delta: float) -> void:
+		_elapsed += delta
+		var f := minf(_elapsed / DURATION, 1.0)
+		if is_instance_valid(_ring):
+			_ring.scale = Vector3.ONE * lerpf(0.3, _target_scale, f)
+		_mat.albedo_color.a = lerpf(0.4, 0.0, f)
+		if f >= 1.0:
+			if is_instance_valid(_ring):
+				_ring.queue_free()
+			queue_free()
