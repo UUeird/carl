@@ -52,25 +52,28 @@ func _ready() -> void:
 			slot.unhovered.connect(_on_slot_unhovered)
 	_make_preview()
 	_prewarm_shaders()
-	# Autoplay driver, debug builds only (the HUD shows a Demo button to start it).
-	# preload (not the global class_name) so a fresh headless run parses before the
-	# editor has registered TDDemo in its class cache.
-	if OS.is_debug_build():
-		_demo = preload("res://scripts/td_demo.gd").new()
-		add_child(_demo)
-		_demo.setup(self)
 	state_changed.emit.call_deferred()
 	message.emit.call_deferred("Build towers, then start the wave.")
 
-## True when the autoplay demo is available (debug builds). The HUD uses this to
-## decide whether to show its Demo button.
+## True when the autoplay demo is available (debug builds only). Note this can't
+## depend on a node created in _ready: the HUD is a child, so its _ready runs
+## BEFORE this node's _ready. Gate purely on the build type; the driver itself is
+## created lazily in start_demo().
 func demo_available() -> bool:
-	return _demo != null
+	return OS.is_debug_build()
 
-## Kick off the autoplay demo (no-op if unavailable or already running).
+## Kick off the autoplay demo (debug builds only). Creates the driver on first use
+## so it doesn't rely on _ready ordering relative to the HUD.
 func start_demo() -> void:
-	if _demo != null:
-		_demo.start()
+	if not OS.is_debug_build():
+		return
+	if _demo == null:
+		# preload (not the global class_name) so a fresh headless run parses before
+		# the editor has registered TDDemo in its class cache.
+		_demo = preload("res://scripts/td_demo.gd").new()
+		add_child(_demo)
+		_demo.setup(self)
+	_demo.start()
 
 # Spawn one instance of every scene type far off-screen for a single frame so
 # Godot compiles their shaders before gameplay starts, eliminating mid-wave stutter.
