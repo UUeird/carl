@@ -115,16 +115,7 @@ func _style_type_button(b: Button, color: Color) -> void:
 func _select_build_type(type) -> void:
 	_game.set_build_type(type)
 	for entry in _build_buttons:
-		var selected: bool = entry["type"] == type
-		entry["btn"].button_pressed = selected
-		_refresh_type_button_text(entry["btn"], entry["type"], selected)
-
-# Prefix the selected button with a ► so the active type reads even at a glance
-# (and for anyone who can't distinguish the color fill).
-func _refresh_type_button_text(b: Button, type, selected: bool) -> void:
-	var info: Dictionary = TDTower.TYPES[type]
-	var label := "%s — %d" % [info["name"], info["base_cost"]]
-	b.text = ("► " + label) if selected else label
+		entry["btn"].button_pressed = entry["type"] == type
 
 func _build_panel() -> void:
 	_panel = PanelContainer.new()

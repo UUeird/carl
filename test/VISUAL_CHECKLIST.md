@@ -19,7 +19,7 @@ which a human (or an agent reading a screenshot) judges better than a pixel asse
 
 ### Towers & build
 - [ ] Four build buttons appear — **Cannon, Frost, Beam, Bomb** — each showing its cost.
-- [ ] The **active** build type is unmistakable: its button is filled in that tower's color with a bright border and a ► marker; the others are muted with a thin colored accent. Selecting another type moves the highlight.
+- [ ] The **active** build type is unmistakable: its button is filled in that tower's color with a bright border; the others are muted with a thin colored accent. Selecting another type moves the highlight.
 - [ ] Building a tower places a visible turret on the chosen slot; the slot turns occupied (dim).
 - [ ] Each tower type is visually distinguishable (color/shape), and upgraded towers look bigger/brighter.
 
