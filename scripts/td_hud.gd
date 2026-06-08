@@ -36,7 +36,28 @@ func _ready() -> void:
 	# which touches the panel.
 	_build_panel()
 	_build_type_buttons()
+	_build_demo_button()
 	_refresh()
+
+# Debug-only "Demo" button: kicks off the autoplay driver. Hidden in release
+# builds (where _game.demo_available() is false), so players never see it.
+func _build_demo_button() -> void:
+	if not _game.demo_available():
+		return
+	var b := Button.new()
+	b.text = "Demo ▶"
+	# Right-anchored, tucked just under the Start-wave button.
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = -190.0
+	b.offset_right = -20.0
+	b.offset_top = 60.0
+	b.offset_bottom = 90.0
+	b.pressed.connect(func():
+		_game.start_demo()
+		b.disabled = true
+		b.text = "Demo running…")
+	root.add_child(b)
 
 func _build_type_buttons() -> void:
 	var box := HBoxContainer.new()

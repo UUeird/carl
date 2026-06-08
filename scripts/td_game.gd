@@ -37,6 +37,7 @@ var _waypoints: PackedVector3Array = PackedVector3Array()
 var _slot_tower: Dictionary = {}      ## slot -> tower built on it
 var _selected_slot = null             ## currently selected (for the panel)
 var _preview: MeshInstance3D = null   ## range sphere shown while hovering a free slot
+var _demo = null                      ## TDDemo autoplay driver (debug builds only)
 
 func _ready() -> void:
 	currency = starting_currency
@@ -51,8 +52,25 @@ func _ready() -> void:
 			slot.unhovered.connect(_on_slot_unhovered)
 	_make_preview()
 	_prewarm_shaders()
+	# Autoplay driver, debug builds only (the HUD shows a Demo button to start it).
+	# preload (not the global class_name) so a fresh headless run parses before the
+	# editor has registered TDDemo in its class cache.
+	if OS.is_debug_build():
+		_demo = preload("res://scripts/td_demo.gd").new()
+		add_child(_demo)
+		_demo.setup(self)
 	state_changed.emit.call_deferred()
 	message.emit.call_deferred("Build towers, then start the wave.")
+
+## True when the autoplay demo is available (debug builds). The HUD uses this to
+## decide whether to show its Demo button.
+func demo_available() -> bool:
+	return _demo != null
+
+## Kick off the autoplay demo (no-op if unavailable or already running).
+func start_demo() -> void:
+	if _demo != null:
+		_demo.start()
 
 # Spawn one instance of every scene type far off-screen for a single frame so
 # Godot compiles their shaders before gameplay starts, eliminating mid-wave stutter.
@@ -202,22 +220,32 @@ func _on_slot_clicked(slot) -> void:
 		_select_slot(slot)
 		return
 	# Free slot → build the currently selected tower type.
-	if tower_scene == null:
-		return
 	var cost: int = TDTower.TYPES[build_type]["base_cost"]
 	if currency < cost:
 		message.emit("Not enough currency (need %d)." % cost)
 		return
+	try_build(slot, build_type)
+
+## Build a tower of `type` on a free `slot`, charging its cost. Returns true on
+## success. Shared by the click handler and the demo driver; the caller is
+## responsible for any "not enough currency" messaging it wants.
+func try_build(slot, type: int) -> bool:
+	if _over or tower_scene == null or slot == null or slot.occupied:
+		return false
+	var cost: int = TDTower.TYPES[type]["base_cost"]
+	if currency < cost:
+		return false
 	var t := tower_scene.instantiate()
 	add_child(t)
 	t.global_position = slot.global_position
-	t.configure(build_type)
+	t.configure(type)
 	if t.has_signal("destroyed"):
 		t.destroyed.connect(_on_tower_destroyed.bind(slot))
 	slot.set_occupied()
 	_slot_tower[slot] = t
 	currency -= cost
 	state_changed.emit()
+	return true
 
 ## A Gunner (or explosive grunt blast) destroyed a built tower: free its slot and
 ## drop it from the map. If it was the selected tower, dismiss the panel too.
@@ -257,20 +285,37 @@ func _hide_selected_range() -> void:
 		prev.hide_range()
 
 func upgrade_selected() -> void:
-	var tower = _slot_tower.get(_selected_slot)
-	if tower == null or _over:
+	if not try_upgrade(_slot_tower.get(_selected_slot)):
 		return
+	tower_selected.emit(_slot_tower.get(_selected_slot))   # refresh the panel
+
+## Upgrade a specific tower if affordable and not maxed; charges the cost. Returns
+## true on success. Shared by the panel button and the demo driver.
+func try_upgrade(tower) -> bool:
+	if tower == null or _over or not is_instance_valid(tower):
+		return false
 	if tower.is_max_level():
-		message.emit("Tower is already at max level.")
-		return
+		return false
 	var cost: int = tower.upgrade_cost()
 	if currency < cost:
-		message.emit("Not enough currency to upgrade (need %d)." % cost)
-		return
+		return false
 	currency -= cost
 	tower.upgrade()
 	state_changed.emit()
-	tower_selected.emit(tower)   # refresh the panel
+	return true
+
+## All built towers (used by the demo driver). Order isn't guaranteed.
+func built_towers() -> Array:
+	return _slot_tower.values()
+
+## Free tower slots, sorted by node name for deterministic build order.
+func free_slots() -> Array:
+	var slots := []
+	for slot in get_tree().get_nodes_in_group("tower_slot"):
+		if not slot.occupied:
+			slots.append(slot)
+	slots.sort_custom(func(a, b): return a.name < b.name)
+	return slots
 
 func sell_selected() -> void:
 	var slot = _selected_slot

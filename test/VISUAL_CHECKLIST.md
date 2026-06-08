@@ -53,5 +53,10 @@ which a human (or an agent reading a screenshot) judges better than a pixel asse
 - [ ] Clicking a built tower opens its panel (stats + Upgrade + Sell).
 - [ ] Clicking empty ground, or pressing **Esc**, dismisses the panel; clicking another tower switches to it.
 
+### Demo mode (debug builds only)
+- [ ] A **Demo ▶** button appears (under Start-wave) in debug builds only — not in a release export.
+- [ ] Clicking it autoplays hands-free: towers build out across **all four types**, get upgraded, and all 5 waves start on their own.
+- [ ] The run shows varied situations (each tower type firing, Gunners damaging/destroying towers, Healer pulses) — the point of the demo.
+
 ### Camera / scene
 - [ ] The iso scene is well-lit (no black/unlit surfaces); path, slots, goal, and obstacle all read clearly.
