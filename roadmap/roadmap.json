@@ -157,15 +157,6 @@
       ]
     },
     {
-      "title": "Art pass \u2014 commit to a style once the loop is fun",
-      "note": "we need to improve and clarify the state of a tower type when selected. Right now it's hard for the user to know their selection state in the game.",
-      "section": "later",
-      "status": "todo",
-      "children": [
-        "add a color ring around the selected tower type"
-      ]
-    },
-    {
       "title": "Multiple maps / levels with different path layouts",
       "note": "this feature is dependent on some sort of outer menu. Possible that all menu sits inside a modal, but there may be a way to leave the main game state and navigate a menu environment.",
       "section": "later",
@@ -228,14 +219,14 @@
     },
     {
       "title": "Enemy type variety: Grunt / Healer / Gunner",
-      "note": "Data-driven TDEnemy.TYPES table (mirrors the tower TYPES). Spawner mixes types by wave — Healers from wave 2, Gunners from wave 3.",
+      "note": "Data-driven TDEnemy.TYPES table (mirrors the tower TYPES). Spawner mixes types by wave \u2014 Healers from wave 2, Gunners from wave 3.",
       "section": "completed",
       "status": "done",
       "children": [
         "Explosive Grunt (main creep): orange blast on reaching the goal; on death a small AoE damages nearby towers",
         "Healer: green heal-pulse on an interval that restores HP to nearby living allies (skips itself), with an expanding aura visual",
         "Gunner: carries a turret that shoots the nearest tower in range (yellow tracer), on a per-shot cooldown",
-        "Towers are now destructible — Health + take_damage + white hit-flash; at 0 HP they're destroyed, free their slot, and close the panel if selected",
+        "Towers are now destructible \u2014 Health + take_damage + white hit-flash; at 0 HP they're destroyed, free their slot, and close the panel if selected",
         "11 new GUT tests cover type stats, heal aura range/self-skip, gunner range, explosive death blast, and tower destruction/slot cleanup"
       ]
     },
@@ -301,6 +292,39 @@
       "status": "done",
       "title": "Tower range preview when placing and selecting",
       "note": "Translucent sphere shown on slot hover (for chosen build type) and on selected tower. Implemented as part of the spherical range + LOS work."
+    },
+    {
+      "title": "map improvements",
+      "note": "we should make the map prettier",
+      "section": "later",
+      "status": "todo",
+      "children": [
+        "smooth pathing",
+        "add texture to map tiles",
+        "improve view of the \"base\" entity (enemy goal)",
+        "improve view of valid tower zones",
+        "when a tower is destroyed, it's zone goes into a 5s timeout",
+        "improve wall assets"
+      ]
+    },
+    {
+      "title": "enemy visual improvements",
+      "section": "later",
+      "status": "todo",
+      "children": [
+        "change enemy firing style",
+        "change enemy styles"
+      ]
+    },
+    {
+      "title": "tower visual improvements",
+      "section": "later",
+      "status": "todo",
+      "children": [
+        "towers don't immediately snap to the enemy, they must rotate slowly",
+        "towers should be clearly identifiable by shape and damage type",
+        "towers should show visible damage"
+      ]
     }
   ]
 }
