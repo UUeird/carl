@@ -8,7 +8,7 @@
   :root {
     --bg: #14171c; --panel: #1c2027; --panel-2: #232833; --line: #2e3540;
     --text: #e6e9ef; --dim: #9aa4b2; --faint: #6b7480;
-    --done: #46c98a; --todo: #5b9cf0; --idea: #d7a64a; --debt: #e0705f;
+    --done: #46c98a; --todo: #5b9cf0; --idea: #e8eaf0; --debt: #e0705f; --wip: #f0c040;
     --accent: #7c5cff;
   }
   * { box-sizing: border-box; }
@@ -35,12 +35,14 @@
   .stat .lbl { color: var(--faint); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
   .stat.done .num { color: var(--done); } .stat.todo .num { color: var(--todo); }
   .stat.idea .num { color: var(--idea); } .stat.debt .num { color: var(--debt); }
+  .stat.wip .num { color: var(--wip); }
   .progress { height: 8px; background: var(--panel-2); border-radius: 999px; overflow: hidden; margin: 16px 0 22px; border: 1px solid var(--line); display: flex; }
   .progress > div { height: 100%; transition: width .4s ease; }
   .progress > .p-done { background: var(--done); }
   .progress > .p-todo { background: var(--todo); }
   .progress > .p-idea { background: var(--idea); }
   .progress > .p-debt { background: var(--debt); }
+  .progress > .p-wip  { background: var(--wip); }
 
   /* controls */
   .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: var(--bg); padding: 10px 0; z-index: 5; }
@@ -59,8 +61,9 @@
   .filter.active[data-f="all"]  { background: var(--accent); }
   .filter.active[data-f="done"] { background: var(--done); color: #06150d; }
   .filter.active[data-f="todo"] { background: var(--todo); color: #04122b; }
-  .filter.active[data-f="idea"] { background: var(--idea); color: #1d1402; }
+  .filter.active[data-f="idea"] { background: var(--idea); color: #14161c; }
   .filter.active[data-f="debt"] { background: var(--debt); color: #1d0703; }
+  .filter.active[data-f="wip"]  { background: var(--wip);  color: #1a1100; }
   .btn {
     background: var(--accent); color: #fff; border: none; padding: 8px 14px;
     border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;
@@ -114,25 +117,29 @@
   }
   .iconbtn:hover { color: #fff; border-color: var(--faint); }
   .iconbtn.del:hover { background: var(--debt); border-color: var(--debt); }
+  .iconbtn.star-btn { color: var(--faint); }
+  .iconbtn.star-btn.starred { color: var(--idea); border-color: var(--idea); }
+  .iconbtn.star-btn:hover { color: var(--idea); border-color: var(--idea); }
   .iconbtn:disabled { opacity: .3; cursor: default; }
   .card.s-done { border-left-color: var(--done); }
   .card.s-todo { border-left-color: var(--todo); }
   .card.s-idea { border-left-color: var(--idea); }
   .card.s-debt { border-left-color: var(--debt); }
-  .card.starred { border-left-color: var(--idea); background: linear-gradient(180deg, rgba(215,166,74,.10), transparent 60%), var(--panel); }
+  .card.s-wip  { border-left-color: var(--wip); }
+  .card.starred { border-left-color: var(--idea); background: linear-gradient(180deg, rgba(232,234,240,.06), transparent 60%), var(--panel); }
   .card-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .badge { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 5px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-  .badge.done { background: rgba(70,201,138,.15); color: var(--done); }
-  .badge.todo { background: rgba(91,156,240,.15); color: var(--todo); }
-  .badge.idea { background: rgba(215,166,74,.15); color: var(--idea); }
-  .badge.debt { background: rgba(224,112,95,.15); color: var(--debt); }
+  .badge.done { background: rgba(70,201,138,.15);  color: var(--done); }
+  .badge.todo { background: rgba(91,156,240,.15);  color: var(--todo); }
+  .badge.idea { background: rgba(232,234,240,.12); color: var(--idea); }
+  .badge.debt { background: rgba(224,112,95,.15);  color: var(--debt); }
+  .badge.wip  { background: rgba(240,192,64,.15);  color: var(--wip); }
   .card .note { color: var(--dim); margin: 6px 0 0; font-size: 14px; }
   .card ul { margin: 8px 0 0; padding-left: 18px; color: var(--dim); }
   .card ul li { margin: 3px 0; }
   .star { color: var(--idea); }
 
   .add-row { margin: 4px 0 12px; }
-
 
   .empty { color: var(--faint); text-align: center; padding: 20px; font-style: italic; }
   .error { background: #2a1c1c; border: 1px solid #5b2f2f; color: #f0c0b8; padding: 16px; border-radius: 10px; margin-top: 20px; }
@@ -168,7 +175,14 @@
 <div id="modalRoot"></div>
 
 <script>
-const STATUS = { done: "Done", todo: "To do", idea: "Idea", debt: "Debt" };
+const STATUS = { todo: "To do", wip: "In Progress", idea: "Idea", done: "Done", debt: "Debt" };
+const STATUS_PICKER = { todo: "To do", wip: "In Progress", idea: "Idea", done: "Done" };
+const SEC_DESC = {
+  later:     "Bigger bets, not yet scheduled.",
+  debt:      "Things that work but aren't right yet.",
+  ideas:     "Directions under consideration, not yet committed.",
+  completed: "Shipped work, newest first.",
+};
 const API = "/api/roadmap";
 let DATA = null;
 let activeStatus = "all";
@@ -239,29 +253,30 @@ function render() {
      <span class="chip">Updated <b>${escapeHTML(DATA.meta.updated)}</b></span>
      ${serverMode ? "" : '<span class="chip" style="color:var(--debt)">read-only</span>'}`;
 
-  const counts = { done: 0, todo: 0, idea: 0, debt: 0 };
+  const counts = { done: 0, todo: 0, wip: 0, idea: 0, debt: 0 };
   DATA.items.forEach(i => counts[i.status] !== undefined && counts[i.status]++);
-  const total = counts.done + counts.todo + counts.idea + counts.debt || 1;
+  const total = counts.done + counts.todo + counts.wip + counts.debt || 1;
   const pct = s => (counts[s] / total * 100).toFixed(1);
 
   let html = `
     <div class="dash">
       <div class="stat done"><div class="num">${counts.done}</div><div class="lbl">Shipped</div></div>
+      <div class="stat wip"><div class="num">${counts.wip}</div><div class="lbl">In Progress</div></div>
       <div class="stat todo"><div class="num">${counts.todo}</div><div class="lbl">Planned</div></div>
-      <div class="stat idea"><div class="num">${counts.idea}</div><div class="lbl">Ideas</div></div>
       <div class="stat debt"><div class="num">${counts.debt}</div><div class="lbl">Debt</div></div>
+      <div class="stat idea"><div class="num">${counts.idea}</div><div class="lbl">Ideas</div></div>
     </div>
-    <div title="${counts.done} shipped · ${counts.todo} planned · ${counts.idea} ideas · ${counts.debt} debt" class="progress">
+    <div title="${counts.done} shipped · ${counts.wip} in progress · ${counts.todo} planned · ${counts.debt} debt" class="progress">
       <div class="p-done" style="width:${pct('done')}%"></div>
+      <div class="p-wip"  style="width:${pct('wip')}%"></div>
       <div class="p-todo" style="width:${pct('todo')}%"></div>
-      <div class="p-idea" style="width:${pct('idea')}%"></div>
       <div class="p-debt" style="width:${pct('debt')}%"></div>
     </div>
 
     <div class="controls">
       <input id="search" type="search" placeholder="Search the roadmap…" value="${escapeAttr(query)}">
       <div class="filters">
-        ${["all","todo","idea","debt","done"].map(f =>
+        ${["all","wip","todo","debt","done","idea"].map(f =>
           `<div class="filter ${activeStatus===f?'active':''}" data-f="${f}">${f==="all"?"All":STATUS[f]}</div>`
         ).join("")}
       </div>
@@ -272,7 +287,8 @@ function render() {
 
   let anyShown = false;
   DATA.sections.forEach(sec => {
-    const items = DATA.items.filter(i => i.section === sec.id && matches(i));
+    const items = DATA.items.filter(i => i.section === sec.id && matches(i))
+      .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
     if (!items.length) return;
     anyShown = true;
     html += `<section class="group" data-sec="${sec.id}">
@@ -281,7 +297,7 @@ function render() {
         <span class="arrow">▾</span>
       </div>
       <div class="group-body">
-        <div class="group-desc">${escapeHTML(sec.desc || "")}</div>
+        <div class="group-desc">${escapeHTML(SEC_DESC[sec.id] || "")}</div>
         ${items.map(it => cardHTML(it, sec.id)).join("")}
       </div>
     </section>`;
@@ -300,12 +316,9 @@ function render() {
 
 function cardHTML(item, secId) {
   const idx = DATA.items.indexOf(item);
-  // index of this item within its (unfiltered) section, for reorder bounds
   const sectionItems = DATA.items.filter(i => i.section === secId);
   const posInSec = sectionItems.indexOf(item);
-  const isFirst = posInSec === 0;
-  const isLast = posInSec === sectionItems.length - 1;
-  const star = item.starred ? `<span class="star" title="Standout idea">★</span> ` : "";
+  const starInTitle = item.starred ? `<span class="star">★</span> ` : "";
   const kids = (item.children && item.children.length)
     ? `<ul>${item.children.map(c => `<li>${escapeHTML(c)}</li>`).join("")}</ul>` : "";
   const note = item.note ? `<p class="note">${escapeHTML(item.note)}</p>` : "";
@@ -313,13 +326,14 @@ function cardHTML(item, secId) {
     <div class="grab" title="Drag to reorder"><span class="grab-icon">⠿</span></div>` : "";
   const actions = serverMode ? `
     <div class="actions">
+      <button class="iconbtn star-btn ${item.starred ? 'starred' : ''}" data-idx="${idx}" title="${item.starred ? 'Unstar' : 'Star'}">★</button>
       <button class="iconbtn del" data-idx="${idx}" title="Delete">×</button>
       <button class="iconbtn edit" data-idx="${idx}" title="Edit">✎</button>
     </div>` : "";
   return `<div class="card s-${item.status} ${item.starred ? 'starred' : ''}" draggable="${serverMode}" data-idx="${idx}">
     ${grab}
     ${actions}
-    <div class="card-title">${star}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
+    <div class="card-title">${starInTitle}<span class="badge ${item.status}">${STATUS[item.status]}</span> ${escapeHTML(item.title)}</div>
     ${note}${kids}
   </div>`;
 }
@@ -338,6 +352,8 @@ function wireEvents() {
   const addBtn = document.getElementById("addBtn");
   if (addBtn) addBtn.onclick = () => openEditor(null);
 
+  document.querySelectorAll(".iconbtn.star-btn").forEach(b =>
+    b.onclick = e => { e.stopPropagation(); toggleStar(+b.dataset.idx); });
   document.querySelectorAll(".iconbtn.del").forEach(b =>
     b.onclick = e => { e.stopPropagation(); deleteItem(+b.dataset.idx); });
   document.querySelectorAll(".iconbtn.edit").forEach(b =>
@@ -365,7 +381,6 @@ function wireEvents() {
       card.classList.add(e.clientY < mid ? "drop-before" : "drop-after");
     });
     card.addEventListener("dragleave", e => {
-      // only clear if leaving to outside the card entirely
       if (!card.contains(e.relatedTarget)) card.classList.remove("drop-before", "drop-after");
     });
     card.addEventListener("drop", e => {
@@ -386,15 +401,23 @@ function wireEvents() {
   });
 }
 
-function deleteItem(idx) {
+function toggleStar(idx) {
   const item = DATA.items[idx];
   if (!item) return;
-  if (!confirm(`Delete this roadmap item?\n\n“${item.title}”\n\nThis can't be undone.`)) return;
-  DATA.items.splice(idx, 1);
+  if (item.starred) delete item.starred;
+  else item.starred = true;
   render();
   save();
 }
 
+function deleteItem(idx) {
+  const item = DATA.items[idx];
+  if (!item) return;
+  if (!confirm(`Delete this roadmap item?\n\n"${item.title}"\n\nThis can't be undone.`)) return;
+  DATA.items.splice(idx, 1);
+  render();
+  save();
+}
 
 /* ---- editor modal ---- */
 function openEditor(idx) {
@@ -405,7 +428,7 @@ function openEditor(idx) {
 
   const secOptions = DATA.sections.map(s =>
     `<option value="${s.id}" ${item.section===s.id?"selected":""}>${escapeHTML(s.title)}</option>`).join("");
-  const statusOptions = Object.entries(STATUS).map(([k,v]) =>
+  const statusOptions = Object.entries(STATUS_PICKER).map(([k,v]) =>
     `<option value="${k}" ${item.status===k?"selected":""}>${v}</option>`).join("");
 
   document.getElementById("modalRoot").innerHTML = `
@@ -468,7 +491,7 @@ function openEditor(idx) {
 function syncHash() { location.hash = activeStatus === "all" ? "" : activeStatus; }
 function readHash() {
   const h = location.hash.replace("#", "");
-  if (["done", "todo", "idea", "debt", "all"].includes(h)) activeStatus = h;
+  if (["done", "todo", "wip", "idea", "debt", "all"].includes(h)) activeStatus = h;
 }
 function escapeHTML(s) {
   return String(s ?? "").replace(/[&<>"']/g, c =>

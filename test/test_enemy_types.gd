@@ -38,7 +38,8 @@ func test_configure_applies_type_stats():
 	var info = TDEnemy.TYPES[TDEnemy.Type.GUNNER]
 	assert_eq(g.speed, info["speed"], "speed comes from the type table")
 	assert_eq(g.bounty, info["bounty"], "bounty comes from the type table")
-	assert_eq(g.health.max_health, info["health"], "max health comes from the type table")
+	var expected_hp: float = info["flesh_hp"] + info["armor_hp"] + info["shield_hp"]
+	assert_eq(g.health.max_health, expected_hp, "max health is the sum of all layer HP")
 
 # --- Towers are destructible --------------------------------------------------
 

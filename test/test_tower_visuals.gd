@@ -51,13 +51,12 @@ func test_damage_emits_health_changed_for_the_bar():
 	assert_almost_eq(got[0][1], t.MAX_HEALTH, 0.001, "emitted max HP is MAX_HEALTH")
 
 func test_each_type_gets_a_distinct_head_mesh():
+	# All types now use ArrayMesh loaded from GLB — compare the resource reference,
+	# not get_class() (which returns "ArrayMesh" for all of them).
 	var meshes := {}
-	for type in [TDTower.Type.BASIC, TDTower.Type.FROST, TDTower.Type.BEAM, TDTower.Type.BOMB]:
+	for type in [TDTower.Type.BASIC, TDTower.Type.BEAM, TDTower.Type.BOMB]:
 		var t = _tower(type)
-		var m: Mesh = t._head.mesh
-		meshes[type] = m.get_class()
-	# Frost (prism), Beam (cylinder), Bomb (sphere) all differ from the cannon box.
-	assert_ne(meshes[TDTower.Type.FROST], meshes[TDTower.Type.BASIC], "frost head differs from cannon")
+		meshes[type] = t._head.mesh
 	assert_ne(meshes[TDTower.Type.BEAM], meshes[TDTower.Type.BASIC], "beam head differs from cannon")
 	assert_ne(meshes[TDTower.Type.BOMB], meshes[TDTower.Type.BASIC], "bomb head differs from cannon")
 
@@ -73,7 +72,7 @@ func test_beam_tower_builds_emitter_reaching_the_muzzle():
 	assert_almost_eq(tip.position.z, muzzle_z, 0.001, "emitter tip is at the muzzle / beam start")
 
 func test_non_beam_towers_have_no_visible_emitter():
-	for type in [TDTower.Type.BASIC, TDTower.Type.FROST, TDTower.Type.BOMB]:
+	for type in [TDTower.Type.BASIC, TDTower.Type.BOMB]:
 		var t = _tower(type)
 		assert_true(t._emitter == null or not t._emitter.visible,
 			"type %d has no visible beam emitter" % type)

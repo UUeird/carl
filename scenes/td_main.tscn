@@ -97,7 +97,7 @@ script = ExtResource("9_cam")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, 30, 0)
 light_energy = 0.95
-shadow_enabled = true
+shadow_enabled = false
 
 [node name="Ground" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
@@ -153,92 +153,92 @@ curve = SubResource("path_lower")
 [node name="PathVis" type="Node3D" parent="."]
 
 [node name="SpawnMarker" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -36, 0.08, 0)
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -36, 0.15, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("spawn_mat")
 
 [node name="SharedEntry" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, -27, 0.05, 0)
+transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, -27,  0.12, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="ConnUL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20, 0.05, -6)
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20,  0.12, -6)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="ConnLL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20, 0.05, 6)
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20,  0.12, 6)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="UpperLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.05, -12)
+transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0,  0.12, -12)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="LowerLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0.05, 12)
+transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0,  0.12, 12)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="ConnUR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20, 0.05, -6)
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20,  0.12, -6)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="ConnLR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20, 0.05, 6)
+transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20,  0.12, 6)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="SharedExit" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, 27, 0.05, 0)
+transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, 27,  0.12, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("path_mat")
 
 [node name="Goal" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 36, 0.08, 0)
+transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, 36, 0.15, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("goal_mat")
 
 [node name="Slots" type="Node3D" parent="."]
 
 [node name="Slot0" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.05, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28,  0.12, -4)
 
 [node name="Slot1" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 0.05, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28,  0.12, 4)
 
 [node name="Slot2" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10,  0.12, -16)
 
 [node name="Slot3" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10,  0.12, -16)
 
 [node name="Slot4" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10,  0.12, 16)
 
 [node name="Slot5" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10,  0.12, 16)
 
 [node name="Slot6" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.05, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28,  0.12, -4)
 
 [node name="Slot7" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0.05, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28,  0.12, 4)
 
 [node name="Slot8" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18,  0.12, -16)
 
 [node name="Slot9" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18,  0.12, -16)
 
 [node name="Slot10" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18,  0.12, 16)
 
 [node name="Slot11" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.05, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18,  0.12, 16)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("5_hud")
@@ -274,6 +274,19 @@ offset_right = -20.0
 offset_bottom = 54.0
 text = "Start wave 1  ▶"
 
+[node name="VersionLabel" type="Label" parent="HUD/Root"]
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -24.0
+offset_right = -8.0
+offset_bottom = -6.0
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.4, 0.42, 0.48, 0.7)
+
 [node name="Message" type="Label" parent="HUD/Root"]
 anchor_left = 0.5
 anchor_top = 1.0
@@ -290,15 +303,9 @@ theme_override_font_sizes/font_size = 18
 layer = 10
 script = ExtResource("6_dbg")
 
-[node name="Label" type="Label" parent="DebugOverlay"]
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = -96.0
-offset_right = 400.0
-offset_bottom = -8.0
-theme_override_colors/font_color = Color(0.6, 1, 0.6, 1)
+[node name="Label" type="RichTextLabel" parent="DebugOverlay"]
+theme_override_colors/default_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 0.8)
 theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 14
-vertical_alignment = 2
+theme_override_font_sizes/normal_font_size = 14
+bbcode_enabled = true

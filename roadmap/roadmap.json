@@ -3,52 +3,65 @@
     "title": "carl \u2014 Roadmap",
     "blurb": "A living plan for the game. We edit roadmap.json together: flip statuses, add items as we learn from playing. Keep it honest \u2014 if something's half-done or unproven, say so.",
     "version": "2026.06.06",
-    "updated": "2026-06-06",
+    "updated": "2026-06-09",
     "vision": "A classic fixed-path tower-defense game: enemies advance along set paths in waves, and you place & upgrade towers along them to stop them before they reach the goal. Built in Godot 4 (pivoted from an earlier 3D action prototype \u2014 same engine, rebuilt gameplay).",
     "note": "Pre-prototype for the TD direction. Placeholder primitives only; reuse engine + tooling, rebuild the game."
   },
   "sections": [
     {
-      "id": "next",
-      "title": "Next up",
-      "kind": "todo",
-      "desc": "First TD prototype, roughly in build order."
-    },
-    {
-      "id": "completed",
-      "title": "Done",
-      "kind": "done",
-      "desc": "Shipped TD work, newest first."
-    },
-    {
       "id": "later",
-      "title": "Later",
-      "kind": "todo",
-      "desc": "Bigger TD bets, not yet scheduled."
-    },
-    {
-      "id": "ideas",
-      "title": "Ideas & open questions",
-      "kind": "idea",
-      "desc": "Directions under consideration, not yet committed."
+      "title": "Planned",
+      "kind": "todo"
     },
     {
       "id": "debt",
       "title": "Known issues / debt",
-      "kind": "debt",
-      "desc": "Things that work but aren't right yet."
+      "kind": "debt"
+    },
+    {
+      "id": "ideas",
+      "title": "Ideas & open questions",
+      "kind": "idea"
+    },
+    {
+      "id": "completed",
+      "title": "Done",
+      "kind": "done"
     }
   ],
   "items": [
     {
       "section": "completed",
       "status": "done",
-      "title": "Perf: health-bar billboard cost (measured ~16ms -> ~3ms)",
-      "note": "the one solid, repeatable win from the perf pass",
+      "title": "Unified per-enemy damage number (Borderlands-style accumulator)",
+      "note": "Shipped 2026-06-09. One pinned DamageNumber per enemy counts up across all concurrent damage sources (beam, bullet, bomb). Follows the enemy as it moves. Lingers 0.25s after the last hit, then releases to drift and fade. All per-tower beam accumulator machinery removed \u2014 enemy owns the display entirely.",
       "children": [
-        "Per-frame billboard did a get_camera_3d() lookup + look_at() per bar (~29 bars)",
-        "Now uses one shared facing basis (correct for the orthographic iso camera), refreshed only if the camera moves",
-        "Other perf changes shipped alongside are hygiene, not measurably proven \u2014 see debt"
+        "Move the accumulator onto TDEnemy: a running float (_dmg_accum) and a linger timer (_dmg_linger). All damage paths (take_damage, take_damage_silent) add to _dmg_accum and reset the timer.",
+        "TDEnemy owns the single pinned DamageNumber node for its lifetime. It acquires one on first hit (if none active), updates its text each frame, and releases it to drift+fade once the linger timer expires with no new hits.",
+        "Remove the per-tower _beam_number / _beam_dmg_accum machinery from TDTower \u2014 the tower calls take_damage_silent as before but the enemy handles all display.",
+        "Linger window: 0.25s after the last hit before the number is released. Any new damage resets the linger timer and keeps the number pinned and counting.",
+        "The pinned number tracks the enemy's world position each frame (enemy moves, number follows). On release it stays at the release position and drifts upward from there.",
+        "Bomb AoE hits multiple enemies simultaneously \u2014 each enemy's own accumulator handles it independently, so simultaneous multi-enemy hits each show their own correct total.",
+        "Remove the old _pending_dmg accumulator (was per-enemy but only guarded against sub-1 beam flicker, not multi-source overlap)."
+      ]
+    },
+    {
+      "section": "completed",
+      "status": "done",
+      "title": "Damage types + enemy health types system (replaces frost tower)",
+      "note": "Shipped 2026-06-09. Frost tower removed. DamageType enum (PHYSICAL/FIRE/FROST/POISON/SHOCK) + modifier matrix in TDTower. Damage branch chosen at level 2 via HUD picker. Enemy health layered (shield\u2192armor\u2192flesh, sequential). Health bar shows colored segments. Frost type retains slow. All 48 tests passing.",
+      "children": [
+        "REMOVE frost tower type from TDTower.TYPES; update HUD, tests, and completed roadmap entry",
+        "Add damage type enum: PHYSICAL, FIRE, FROST, POISON, SHOCK \u2014 stored per tower, defaults PHYSICAL at build",
+        "Upgrade branch at level 2: player picks a damage type; choice is permanent and reflected in level 2+3 stat tiers in TYPES table",
+        "Frost damage type retains the slow effect (reduced enemy speed for a duration) in addition to its modifier matrix",
+        "Add health type system to TDEnemy: every enemy has shield_hp, armor_hp, flesh_hp (any can be 0). Damage flows strictly in order: shield fully depleted first, then armor fully depleted, then flesh. No simultaneous draining.",
+        "Damage modifier matrix (applied per pool as damage flows through): fire: flesh 1.0, armor 0.75, shield 1.5 | frost: flesh 1.0, armor 1.25, shield 0.75 | poison: flesh 1.5, armor 1.25, shield 0.5 | shock: flesh 1.0, armor 0.5, shield 2.0 | physical: all 1.0",
+        "Health bar visual: shield segment shown in blue above the existing green/red bar; armor shown in yellow; flesh stays green. Segments sized proportionally to their max HP",
+        "Update existing enemy types with health type compositions: Grunt = flesh-only, Healer = flesh+armor mix, Gunner = flesh+shield mix \u2014 exact splits TBD from playtesting",
+        "Wire damage type into take_damage() so modifiers apply automatically; beam DPS path included",
+        "Add GUT tests: modifier matrix correctness, shield-first ordering, armor/flesh proportional drain, frost slow still applies on frost-typed hit",
+        "Update VISUAL_CHECKLIST.md: colored health bar segments, upgrade branch UI, frost-typed tower still slows"
       ]
     },
     {
@@ -139,9 +152,9 @@
       "section": "completed",
       "status": "done",
       "title": "2nd tower type + tiered upgrades + sell",
-      "note": "the variety that makes it a game, not a tech demo",
+      "note": "the variety that makes it a game, not a tech demo. NOTE: frost tower is being removed and replaced by the damage type upgrade system (see 'Damage types + enemy health types' in Next up).",
       "children": [
-        "Frost tower: lower damage, slows enemies on hit (blue tint + slow-factor/duration); enemies have a slow effect",
+        "Frost tower: lower damage, slows enemies on hit (blue tint + slow-factor/duration); enemies have a slow effect \u2014 REMOVED, slow mechanic folded into frost damage type upgrade",
         "Two build-type buttons (Cannon / Frost) with costs; pick one, then click a slot",
         "Tiered upgrades (Lv 1\u21923) via a click-to-select tower panel; stats + rising cost, capped at max",
         "Sell a placed tower for 50% of total spent; frees the slot",
@@ -150,17 +163,17 @@
     },
     {
       "title": "Map verticality \u2014 multi-height terrain, elevated tower spots, paths that duck behind cover (LOS + spherical range groundwork is in)",
+      "note": "LOS + spherical range checks are already in place, so elevation is a layer on top of existing groundwork.",
       "section": "later",
       "status": "todo",
       "children": [
-        "create branching path logic in maps, so that enemies take random walks through maps, and towers have logic around which enemy to prioritize"
+        "Height tiers: define 2-3 discrete elevation levels in map data; towers placed on high ground get a range bonus and can see over low cover",
+        "Branching paths: enemy routes fork at junctions; each branch is a valid full path to the goal so enemies randomly pick at each fork \u2014 creates unpredictable spread across the map",
+        "Tower targeting priority: when a tower has enemies on multiple branches in range, prefer the one furthest along its path (existing logic); expose a per-tower priority toggle (furthest / nearest / lowest HP) in the HUD",
+        "Cover: elevated terrain segments block LOS for towers on equal or lower ground, but not for towers above \u2014 creates meaningful placement decisions",
+        "Map editor support: mark tiles as elevated or cover in the map JSON; td_game reads this when building the nav mesh and range-check geometry",
+        "Visual treatment: ramp meshes between height tiers; elevated tiles get a slightly lighter material so the height reads clearly in the isometric view"
       ]
-    },
-    {
-      "title": "Multiple maps / levels with different path layouts",
-      "note": "this feature is dependent on some sort of outer menu. Possible that all menu sits inside a modal, but there may be a way to leave the main game state and navigate a menu environment.",
-      "section": "later",
-      "status": "todo"
     },
     {
       "title": "More tower types (chain/lightning, support/buff aura)",
@@ -169,33 +182,33 @@
       "children": [
         "tower that buffs attack speed for friendly towers within range",
         "tower that heals other towers within range",
-        "tower that slows enemy attack speed within range",
-        "tower that slows enemy healing",
-        "tower that fires chain lightning which can spread to other enemies",
-        "tower that poisons enemies, applying damage over time",
         "tower that casts a spell on enemies and makes them walk backwards"
       ]
     },
     {
-      "title": "More enemy types (armored, flying, shielded, boss waves)",
-      "note": "enemies should be able to be armored or shielded. armor displays in yellow and shield in blue. lightning effects have a damage bonus against shield, and poison has a damage buff against armor.",
-      "section": "later",
-      "status": "todo"
-    },
-    {
       "title": "Meta-progression between runs (unlocks, persistent upgrades)",
+      "note": "Gives players a reason to replay and a sense of long-term growth beyond a single run.",
       "section": "later",
       "status": "todo",
       "children": [
-        "tower skins",
-        "achievement badges",
-        "stats"
+        "Persistent currency: earn a small amount of hard currency per run based on waves survived and enemies killed; carries over on loss",
+        "Unlock tree: spend hard currency to permanently unlock new tower types, enemy info cards, or starting bonuses (extra gold, an extra life) for future runs",
+        "Tower skins: cosmetic variants per tower type unlocked through the tree or achievements \u2014 no stat changes, pure expression",
+        "Per-run stats screen: waves survived, total damage dealt per tower type, most valuable tower, gold efficiency \u2014 shown on game-over and victory",
+        "Achievement badges: milestone unlocks (first win, survive wave 10 with no leaks, kill 500 enemies with beam towers, etc.) displayed on a profile screen",
+        "Save format: a small JSON file in user:// tracking currency, unlocks, and lifetime stats; designed so adding new unlock nodes never breaks old saves"
       ]
     },
     {
+      "title": "Navigation: map picker, in-game escape, pause, game-over/victory screens",
+      "note": "Map picker on load is done. In-game escape back to the map picker is next. Pause screen and post-game screens (stats, retry, back to menu) still to do.",
       "section": "later",
       "status": "todo",
-      "title": "Main menu + pause + game-over/victory screens"
+      "children": [
+        "Escape / back button from in-game returns to the map picker (next up)",
+        "Pause screen (Esc mid-wave): resume, restart, back to map picker",
+        "Game-over and victory screens with stats (waves survived, kills, time) and retry / menu buttons"
+      ]
     },
     {
       "section": "later",
@@ -249,35 +262,22 @@
     {
       "section": "completed",
       "status": "done",
-      "title": "Perf: located and fixed combat hotspots via inline timing instrumentation",
-      "note": "In-editor profiler didn't show function trees; used Time.get_ticks_usec() instrumentation instead. Engine cpu spikes eliminated, steady 60fps confirmed.",
+      "title": "Performance pass",
+      "note": "Used inline PerfTimer (Time.get_ticks_usec) instrumentation after the in-editor profiler couldn't show function trees. Steady 60fps confirmed post-fixes.",
       "children": [
-        "TDTower was the dominant cost \u2014 switched from _physics_process to _process (eliminated physics catchup bursts)",
-        "Retarget timer staggered at build time so all towers don't fire LOS raycasts on the same frame",
-        "Retarget interval increased 0.15s -> 0.25s; get_nodes_in_group replaced with TDEnemy.all_enemies static cache",
-        "LOS raycast exclusions added (self + enemy); enemy look_at throttled to once per waypoint segment",
-        "Shader pre-warm at game start: all scene types + all 4 projectile tint materials compiled before first wave",
-        "TDBomb blast ring mesh/material shared (was allocating new StandardMaterial3D per explosion)",
-        "TDProjectile changed from Area3D to Node3D (was running broadphase for nothing \u2014 no collision shape)"
+        "Health-bar billboard: ~16ms \u2192 ~3ms. Was doing get_camera_3d() + look_at() per bar each frame; now uses one shared facing basis refreshed only when the camera moves",
+        "TDTower switched from _physics_process to _process \u2014 eliminated physics-catchup bursts that spiked CPU on busy frames",
+        "Retarget timer staggered at build time; interval raised 0.15s \u2192 0.25s; get_nodes_in_group replaced with TDEnemy.all_enemies static cache",
+        "Shader pre-warm at game start: all scene types + projectile tint materials compiled off-screen before wave 1 (was causing 300\u2013480ms one-frame hitches)",
+        "TDBomb blast ring mesh/material shared (was allocating new StandardMaterial3D per explosion); TDProjectile changed from Area3D to Node3D (broadphase for nothing)",
+        "LOS raycast exclusions added (self + enemy); enemy look_at throttled to once per waypoint segment; flash timer replaces per-hit tweens"
       ]
     },
     {
-      "section": "completed",
-      "status": "done",
-      "title": "Perf: shader-compilation stutter fixed via pre-warm at game start",
-      "note": "Confirmed real in-editor (300-480ms one-frame spikes). Fixed by instantiating all scene types + all 4 projectile tint materials off-screen for one frame before first wave."
-    },
-    {
-      "section": "completed",
-      "status": "done",
-      "title": "Perf hygiene: throttled targeting, timer-driven flash, shared projectile materials",
-      "note": "All three confirmed effective by inline timing measurements. Targeting throttle + staggered retarget timers eliminated per-frame raycast bursts; flash timer eliminated per-hit tweens; shared materials eliminated per-shot allocations."
-    },
-    {
       "title": "Display build version in game",
-      "note": "The game should carry a version number based on the date and timestamp and display it in game. It can display in very small text at the bottom right of the game view.",
-      "section": "next",
-      "status": "todo",
+      "note": "version stored in project.godot as application/config/version (e.g. 2026.06.09.1); displayed bottom-right in small muted text via HUD VersionLabel",
+      "section": "completed",
+      "status": "done",
       "children": [
         "apply versioning system to game",
         "display version in game"
@@ -286,7 +286,8 @@
     {
       "section": "debt",
       "status": "debt",
-      "title": "Perf: pool short-lived nodes (projectiles, damage numbers, blast rings) \u2014 reuse from a pool instead of instance/free per spawn. Reasonable hygiene, but NOT yet shown to be a bottleneck; confirm with the profiler before investing."
+      "title": "Perf: pool short-lived nodes (projectiles, blast rings)",
+      "note": "Damage numbers are already pooled. Projectiles and blast rings are still allocated per-spawn. Not yet confirmed as a bottleneck \u2014 profile before investing."
     },
     {
       "section": "completed",
@@ -340,6 +341,11 @@
       "section": "completed",
       "status": "done",
       "note": "Added scenes/td_test_map.tscn \u2014 a flat straight spawn\u2192goal lane with 8 tower pads (4 per side) and no walls \u2014 plus test/shot_test_map.gd, a headed --script helper that builds one of each tower type, spawns an enemy so turrets aim across the view, and saves a PNG. The main map's isometric camera + walls made offscreen screenshots fiddly (empty frames, occlusion); the test map gives a clean head-on stage. Reuses td_game.gd + the HUD, so HUD/economy checks work there too. Documented in VISUAL_CHECKLIST.md."
+    },
+    {
+      "title": "tower visual improvements",
+      "section": "later",
+      "status": "todo"
     }
   ]
 }

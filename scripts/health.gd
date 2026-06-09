@@ -31,5 +31,15 @@ func heal(amount: float) -> void:
 	current_health = min(current_health + amount, max_health)
 	health_changed.emit(current_health, max_health)
 
+## Set HP directly — used by layered health systems that compute damage
+## externally and only need Health to emit signals and trigger death.
+func set_hp(value: float) -> void:
+	if current_health <= 0.0:
+		return
+	current_health = maxf(value, 0.0)
+	health_changed.emit(current_health, max_health)
+	if current_health <= 0.0:
+		died.emit()
+
 func is_alive() -> bool:
 	return current_health > 0.0
