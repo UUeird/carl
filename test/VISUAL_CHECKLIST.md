@@ -65,10 +65,17 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 - [ ] **Grunt** (red) is the common creep; on death it shows a small orange **blast ring**, and a tower next to it loses HP (flashes white).
 - [ ] An exploding grunt that reaches the goal shows the blast (cosmetic) and costs a life as before.
 - [ ] **Healer** (green) periodically emits a green **heal pulse**; a damaged ally inside the pulse visibly regains HP (its bar grows back).
-- [ ] **Gunner** (purple) fires a brief yellow **tracer** at the nearest tower in range; the targeted tower flashes white and loses HP.
+- [ ] **Gunner** (purple) fires a visible **red/orange moving sphere** at the nearest tower in range; the sphere travels across the map and hits; the targeted tower loses HP.
+- [ ] **Boss** (2× scale grunt) spawns solo between waves, walks the path with noticeably more HP, and requires sustained fire to kill.
 - [ ] A tower under sustained Gunner / blast damage is **destroyed** (shrinks away), its slot frees up, and a "tower destroyed" message shows; if it was selected, the panel closes.
 
+### Damage types & health layers
+- [ ] Enemies show a **three-segment health bar**: blue (shield) → yellow (armor) → green (flesh); each segment depletes before the next begins.
+- [ ] Tower upgrade panel at level 1 shows a **damage type picker** (Fire / Frost / Poison / Shock); the chosen type appears in panel stats after selection.
+- [ ] Frost-typed hits still **slow enemies** (they tint blue and move visibly slower).
+
 ### HUD & flow
+- [ ] The **Maps** button sits to the right of the wave/stats label in the top-left and does not overlap the tower panel.
 - [ ] Lives / currency / wave update correctly as you play.
 - [ ] Start-wave button is unavailable mid-wave and available between waves.
 - [ ] Win message after the last wave; lose message at 0 lives; **R** restarts.
