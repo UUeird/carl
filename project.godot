@@ -15,9 +15,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="carl"
-run/main_scene="res://scenes/td_main.tscn"
+config/version="2026.06.09.1"
+run/main_scene="res://scenes/map_picker.tscn"
 config/features=PackedStringArray("4.6")
 config/icon="res://icon.svg"
+
+[autoload]
+
+PerfTimer="*res://scripts/perf_timer.gd"
 
 [input]
 
@@ -70,3 +75,4 @@ toggle_view={
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=1

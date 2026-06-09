@@ -65,6 +65,50 @@ The main scene is `scenes/td_main.tscn`. Engine: Godot 4.6, run via
   cross-class); `var x := scene.instantiate()` can't infer type — annotate
   `var x: Node = ...`. Godot 4 projects need `config_version=5` in `project.godot`.
 
+## Adding or replacing assets (meshes, animations, effects)
+
+Every new visual asset needs to be wired into three systems to avoid mid-wave
+hitches. We learned this the hard way — skipping any one of them causes a
+visible freeze the first time that asset appears in gameplay.
+
+### 1. Static mesh cache (`_load_glb_mesh`)
+`.glb` files are loaded via `TDEnemy._load_glb_mesh(path)` and
+`TDTower._load_glb_mesh(path)` — both `static func`, both backed by a
+`static var _mesh_cache: Dictionary`. The cache means `load()` +
+`instantiate()` only happen once per path. When you add a new `.glb`:
+- Add its path to the relevant `_MESHES` / `_HEAD_MESHES` const.
+- Call `_load_glb_mesh(path)` for it in `_prewarm_shaders()` in
+  [scripts/td_game.gd](scripts/td_game.gd) so the cache is warm before
+  the first wave. Without this, the first spawn of that type hitches.
+
+### 2. Shader prewarm (`_prewarm_shaders` in `td_game.gd`)
+Godot compiles shaders on first render. `_prewarm_shaders()` adds one
+invisible instance of every scene/material off-screen for a single frame
+so compilation happens at load time, not mid-wave. When you add:
+- A new enemy or tower scene → add it to the scene loop in `_prewarm_shaders`.
+- A new effect with a unique material (e.g. a new pulse ring, particle, VFX
+  mesh) → add a `MeshInstance3D` with that material to `_prewarm_shaders`.
+- A new `.glb` mesh type → add the `_load_glb_mesh` call (see above).
+
+### 3. Object pools (short-lived nodes)
+Nodes that spawn and die repeatedly — damage numbers, hit effects, pulse
+rings — must be pooled, not allocated per-event. Allocating a `Label3D` or
+`MeshInstance3D` mid-frame causes consistent stutter under combat load.
+- **Damage numbers** are pooled in `DamageNumber` (`scripts/damage_number.gd`)
+  via a static free-list. `DamageNumber.prewarm(scene_root)` is called at
+  startup; `popup()` pulls from the pool and returns to it on expiry.
+- **Heal pulses and similar one-shot VFX** should share a single static
+  material instance rather than allocating `StandardMaterial3D.new()` per
+  pulse. If a new repeating effect allocates a material per spawn, extract
+  it to a `static var` initialized once.
+- If you add a new short-lived visual (hit sparks, explosion ring, etc.),
+  use the same pattern: static pool + prewarm, not `Node.new()` per event.
+
+### 4. GDScript static method gotcha
+Self-referential typed static arrays (`static var _pool: Array[MyClass]`)
+cause a parser bootstrapping failure in Godot 4 — the class isn't fully
+defined when the static initializer runs. Use untyped `Array` instead.
+
 ## Adding an enemy or tower type (the common task)
 
 1. Add an entry to the `TYPES` table (color, health/stats, behavior flags).

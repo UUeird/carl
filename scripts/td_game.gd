@@ -83,11 +83,37 @@ func start_demo() -> void:
 func _prewarm_shaders() -> void:
 	var nodes: Array = []
 
-	# One instance of each scene type so their base shaders compile before gameplay.
-	for s in [enemy_scene, tower_scene, projectile_scene, bomb_scene]:
-		if s == null:
-			continue
-		var n: Node = s.instantiate()
+	# Prime the glb mesh caches for all enemy and tower types so the first
+	# configure() call of each type doesn't hit load() mid-wave.
+	for type in TDEnemy.Type.values():
+		TDEnemy._load_glb_mesh(TDEnemy._MESHES[type])
+	for shape in TDTower._HEAD_MESHES:
+		TDTower._load_glb_mesh(TDTower._HEAD_MESHES[shape])
+	TDTower._load_glb_mesh(TDTower._BASE_MESH_PATH)
+
+	# Pre-allocate the damage number pool so hits never alloc a Label3D mid-frame.
+	preload("res://scripts/damage_number.gd").prewarm(self)
+
+	# One instance per enemy type so every mesh gets GPU-uploaded before wave 1.
+	# A single instantiate() only preloads whichever type configure() defaults to.
+	if enemy_scene != null:
+		for type in TDEnemy.Type.values():
+			var e: Node = enemy_scene.instantiate()
+			e.position = Vector3(0, -9999, 0)
+			add_child(e)
+			if e.has_method("configure"):
+				e.configure(type)
+			nodes.append(e)
+
+	# Pre-allocate projectile and bomb pools so shots never instantiate mid-wave.
+	if projectile_scene != null:
+		TDProjectile.prewarm(self, projectile_scene)
+	if bomb_scene != null:
+		TDBomb.prewarm(self, bomb_scene)
+
+	# One instance of the tower scene for shader compilation.
+	if tower_scene != null:
+		var n: Node = tower_scene.instantiate()
 		n.position = Vector3(0, -9999, 0)
 		add_child(n)
 		nodes.append(n)
@@ -95,6 +121,18 @@ func _prewarm_shaders() -> void:
 	# Force all four per-type projectile tint materials to exist now, not on first shot.
 	for type in TDTower.Type.values():
 		var mat := TDTower._projectile_material(type)
+		var mi := MeshInstance3D.new()
+		mi.position = Vector3(0, -9999, 0)
+		mi.material_override = mat
+		add_child(mi)
+		nodes.append(mi)
+
+	# Pre-allocate enemy shot pool so gunner enemies never allocate mid-wave.
+	TDEnemy.prewarm_shot_pool(self)
+
+	# Initialize enemy VFX material templates and add them off-screen so their
+	# shaders compile now (heal pulse, explosion, tracer) rather than mid-combat.
+	for mat in TDEnemy.prewarm_vfx_templates():
 		var mi := MeshInstance3D.new()
 		mi.position = Vector3(0, -9999, 0)
 		mi.material_override = mat
@@ -147,8 +185,11 @@ func _read_path(node_path: NodePath) -> PackedVector3Array:
 
 func _process(delta: float) -> void:
 	if _wave_cooldown > 0.0:
+		var prev := _wave_cooldown
 		_wave_cooldown = max(_wave_cooldown - delta, 0.0)
-		state_changed.emit()
+		# Only emit when cooldown crosses zero (wave becomes startable), not every frame.
+		if prev > 0.0 and _wave_cooldown <= 0.0:
+			state_changed.emit()
 
 ## Called by the HUD's "Start wave" button.
 func start_next_wave() -> void:
@@ -163,6 +204,11 @@ func start_next_wave() -> void:
 
 func _spawn_wave() -> void:
 	_spawning = true
+	# Boss spawns between waves: after wave 1 clears, a solo boss walks in before
+	# the player can start the next wave. Skipped after the final wave.
+	if wave > 1 and wave <= wave_count:
+		_spawn_one(TDEnemy.Type.BOSS)
+		await get_tree().create_timer(spawn_interval).timeout
 	for i in enemies_per_wave:
 		if _over:
 			break

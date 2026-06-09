@@ -31,7 +31,6 @@ The main scene is `scenes/td_main.tscn`.
 | Tower  | Role |
 |--------|------|
 | **Cannon** | Burst single-target projectile. |
-| **Frost**  | Low damage, **slows** enemies it hits. |
 | **Beam**   | Continuous low **DPS** beam locked on one target. |
 | **Bomb**   | Lobs an arcing AoE shell to a *predicted* landing point — leads the target, so it can miss on turns. |
 
@@ -39,6 +38,34 @@ Towers target the enemy **furthest along the path** within a spherical range, an
 with clear **line of sight** (terrain/obstacles block shots). Upgrades raise range, damage,
 fire rate, and projectile speed. Towers are **destructible** — a Gunner's fire or an exploding
 Grunt can destroy one, freeing its slot.
+
+At **level 2**, every tower permanently chooses a **damage type** — Fire, Frost, Poison, or
+Shock — which applies modifiers against each enemy health layer. Frost-typed towers also slow
+enemies on hit.
+
+### Enemy health layers
+
+Enemies have up to three stacked health pools, depleted sequentially:
+
+| Layer | Color | Depletes before… |
+|-------|-------|-----------------|
+| **Shield** (blue) | shown on top | Armor |
+| **Armor** (yellow) | shown middle | Flesh |
+| **Flesh** (red) | shown at bottom | — (death) |
+
+Each layer gives way to a dark-grey background as it drains. Depleted layers disappear from
+the health bar. Damage type modifiers apply per layer as damage flows through.
+
+### Design influences
+
+The damage type / health layer / damage number system is deliberately modelled on the
+**Borderlands** franchise (Gearbox Software). Key borrowings:
+
+- Elemental damage types with per-layer modifier tables (fire melts shields, shock wrecks
+  armor, etc.)
+- Stacked health bars that deplete sequentially and disappear when exhausted
+- A single accumulating damage number per enemy that counts up across all concurrent sources,
+  then pops off and fades when the damage streak ends
 
 ### Enemy types
 

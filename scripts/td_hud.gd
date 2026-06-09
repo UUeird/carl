@@ -11,6 +11,7 @@ extends CanvasLayer
 @onready var message: Label = $Root/Message
 @onready var start_btn: Button = $Root/StartBtn
 @onready var hint: Label = $Root/Hint
+var _version_label: Label
 
 var _game
 var _build_buttons: Array = []
@@ -19,6 +20,8 @@ var _panel_title: Label
 var _panel_stats: Label
 var _upgrade_btn: Button
 var _sell_btn: Button
+var _damage_type_box: VBoxContainer   ## shown at level 1 to pick damage branch
+var _dt_buttons: Array = []           ## {btn, dt} entries for the picker
 var _selected_tower = null
 var _game_over: bool = false   ## once over, panel is view-only (no upgrade/sell)
 
@@ -35,9 +38,13 @@ func _ready() -> void:
 	hint.text = "Pick a tower, click a green slot to build. Click a built tower to upgrade or sell."
 	# Panel before type buttons: selecting the initial type clears selection,
 	# which touches the panel.
+	_version_label = get_node_or_null("Root/VersionLabel")
+	if _version_label:
+		_version_label.text = "v" + ProjectSettings.get_setting("application/config/version", "dev")
 	_build_panel()
 	_build_type_buttons()
 	_build_demo_button()
+	_build_map_button()
 	_refresh()
 
 # Debug-only "Demo" button: kicks off the autoplay driver. Hidden in release
@@ -59,6 +66,19 @@ func _build_demo_button() -> void:
 		_game.start_demo()
 		b.disabled = true
 		b.text = "Demo running…")
+	root.add_child(b)
+
+func _build_map_button() -> void:
+	var b := Button.new()
+	b.text = "⬡ Maps"
+	b.anchor_left = 0.0
+	b.anchor_right = 0.0
+	b.offset_left = 430.0
+	b.offset_right = 530.0
+	b.offset_top = 16.0
+	b.offset_bottom = 44.0
+	b.add_theme_font_size_override("font_size", 12)
+	b.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/map_picker.tscn"))
 	root.add_child(b)
 
 func _build_type_buttons() -> void:
@@ -136,6 +156,44 @@ func _build_panel() -> void:
 	v.add_child(_panel_title)
 	_panel_stats = Label.new()
 	v.add_child(_panel_stats)
+
+	# Damage type picker — shown at level 1 so the player picks their branch
+	# before the first upgrade. Hidden otherwise.
+	_damage_type_box = VBoxContainer.new()
+	_damage_type_box.add_theme_constant_override("separation", 4)
+	v.add_child(_damage_type_box)
+	var dt_label := Label.new()
+	dt_label.text = "Choose damage type:"
+	dt_label.add_theme_font_size_override("font_size", 13)
+	_damage_type_box.add_child(dt_label)
+	var dt_grid := GridContainer.new()
+	dt_grid.columns = 2
+	dt_grid.add_theme_constant_override("h_separation", 4)
+	dt_grid.add_theme_constant_override("v_separation", 4)
+	_damage_type_box.add_child(dt_grid)
+	const DT := TDTower.DamageType
+	const DT_INFO := [
+		[DT.FIRE,    "Fire",    Color(0.95, 0.35, 0.15)],
+		[DT.FROST,   "Frost",   Color(0.45, 0.75, 0.98)],
+		[DT.POISON,  "Poison",  Color(0.35, 0.85, 0.25)],
+		[DT.SHOCK,   "Shock",   Color(0.95, 0.90, 0.2)],
+	]
+	for entry in DT_INFO:
+		var dt: int = entry[0]
+		var label: String = entry[1]
+		var color: Color = entry[2]
+		var b := Button.new()
+		b.text = label
+		b.focus_mode = Control.FOCUS_NONE
+		_style_type_button(b, color)
+		b.pressed.connect(func():
+			if _selected_tower and is_instance_valid(_selected_tower):
+				_selected_tower.set_damage_type(dt)
+				_refresh_panel())
+		dt_grid.add_child(b)
+		_dt_buttons.append({ "btn": b, "dt": dt })
+	_damage_type_box.visible = false
+
 	_upgrade_btn = Button.new()
 	_upgrade_btn.pressed.connect(func(): _game.upgrade_selected())
 	v.add_child(_upgrade_btn)
@@ -165,20 +223,27 @@ func _refresh_panel() -> void:
 		line = "DPS %s   RNG %s" % [str(s["dps"]), str(s["range"])]
 	else:
 		line = "DMG %s   RNG %s   CD %ss" % [str(s["damage"]), str(s["range"]), str(s["cooldown"])]
-	if "slow" in s:
-		line += "\nSlow ×%s for %ss" % [str(s["slow"]), str(s["slow_dur"])]
 	if "aoe" in s:
 		line += "\nAoE radius %s" % str(s["aoe"])
 	line += "\nHP %d/%d" % [int(ceil(t.health)), int(TDTower.MAX_HEALTH)]
+	if t.damage_type != TDTower.DamageType.PHYSICAL:
+		line += "\n%s damage" % t.damage_type_name()
 	_panel_stats.text = line
+
+	# Show the damage type picker only at level 1 (before choosing a branch).
+	var picking: bool = t.needs_damage_type() and not _game_over
+	_damage_type_box.visible = picking
+
 	if _game_over:
-		# View-only after the game ends: stats/health still show, actions are off.
 		_upgrade_btn.text = "Game over"
 		_upgrade_btn.disabled = true
 		_sell_btn.text = "Sell: +%d" % t.sell_value()
 		_sell_btn.disabled = true
 		return
-	if t.is_max_level():
+	if picking:
+		_upgrade_btn.text = "Choose a damage type first"
+		_upgrade_btn.disabled = true
+	elif t.is_max_level():
 		_upgrade_btn.text = "Max level"
 		_upgrade_btn.disabled = true
 	else:

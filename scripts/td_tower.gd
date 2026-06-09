@@ -2,12 +2,24 @@ extends Node3D
 class_name TDTower
 
 ## A stationary auto-tower. Each frame it targets the enemy furthest along the
-## path within range (and line of sight). Cannon/Frost fire discrete projectiles
-## on a cooldown; the Beam tower instead applies continuous DPS to a locked
-## target and draws a solid beam. Stats come from TYPES so balancing and adding
-## tiers/types is a one-place edit.
+## path within range (and line of sight). Cannon/Bomb fire discrete projectiles
+## on a cooldown; the Beam tower applies continuous DPS to a locked target.
+## Stats come from TYPES so balancing and adding tiers/types is a one-place edit.
 
-enum Type { BASIC, FROST, BEAM, BOMB }
+enum Type { BASIC, BEAM, BOMB }
+
+enum DamageType { PHYSICAL, FIRE, FROST, POISON, SHOCK }
+
+# Damage modifier per type per enemy health layer.
+# Applied as a multiplier when damage flows through that layer.
+# shield → armor → flesh, each fully depleted before the next takes damage.
+const DAMAGE_MODIFIERS := {
+	DamageType.PHYSICAL: { "flesh": 1.0, "armor": 1.0,  "shield": 1.0 },
+	DamageType.FIRE:     { "flesh": 1.0, "armor": 0.75, "shield": 1.5 },
+	DamageType.FROST:    { "flesh": 1.0, "armor": 1.25, "shield": 0.75 },
+	DamageType.POISON:   { "flesh": 1.5, "armor": 1.25, "shield": 0.5 },
+	DamageType.SHOCK:    { "flesh": 1.0, "armor": 0.5,  "shield": 2.0 },
+}
 
 signal destroyed(tower)        ## fired when a tower's health hits 0 (e.g. shot by a Gunner)
 signal health_changed(current: float, maximum: float)  ## drives the floating HealthBar
@@ -25,7 +37,7 @@ const MAX_HEALTH := 60.0
 #  - Bomb towers use "aoe" (blast radius) + "bomb": true; they lob to a predicted
 #    ground point, so upgrading "proj_speed" both speeds the lob AND tightens the
 #    lead prediction (shorter flight time = less chance the target has turned).
-#  - "proj_speed" applies to all projectile towers (cannon/frost shot speed too).
+#  - "proj_speed" applies to all projectile towers.
 const TYPES := {
 	Type.BASIC: {
 		"name": "Cannon",
@@ -37,18 +49,6 @@ const TYPES := {
 			{ "range": 6.0, "damage": 10.0, "cooldown": 0.7, "proj_speed": 14.0 },
 			{ "range": 6.8, "damage": 16.0, "cooldown": 0.6, "proj_speed": 18.0 },
 			{ "range": 7.6, "damage": 24.0, "cooldown": 0.5, "proj_speed": 22.0 },
-		],
-	},
-	Type.FROST: {
-		"name": "Frost",
-		"color": Color(0.45, 0.7, 0.95),
-		"shape": "frost",
-		"base_cost": 65,
-		"upgrade_costs": [50, 80],
-		"tiers": [
-			{ "range": 5.5, "damage": 4.0, "cooldown": 0.9, "proj_speed": 13.0, "slow": 0.6, "slow_dur": 1.2 },
-			{ "range": 6.0, "damage": 6.0, "cooldown": 0.8, "proj_speed": 16.0, "slow": 0.5, "slow_dur": 1.5 },
-			{ "range": 6.5, "damage": 9.0, "cooldown": 0.7, "proj_speed": 20.0, "slow": 0.4, "slow_dur": 1.8 },
 		],
 	},
 	Type.BEAM: {
@@ -78,6 +78,10 @@ const TYPES := {
 }
 const MAX_LEVEL := 3
 
+# Slow parameters applied by frost-typed projectiles on hit.
+const FROST_SLOW_FACTOR    := 0.55   # multiplier on enemy speed (lower = slower)
+const FROST_SLOW_DURATION  := 1.4    # seconds the slow lasts
+
 @export var projectile_scene: PackedScene
 @export var bomb_scene: PackedScene
 
@@ -85,14 +89,26 @@ const MAX_LEVEL := 3
 @onready var muzzle: Node3D = $Turret/Muzzle
 @onready var _head: MeshInstance3D = $Turret/Head
 @onready var _barrel: MeshInstance3D = $Turret/Barrel
+@onready var _base: MeshInstance3D = $Base
 @onready var _range_sphere: MeshInstance3D = $RangeSphere
 @onready var _beam: MeshInstance3D = $Beam
+
+const _HEAD_MESHES := {
+	"cannon": "res://assets/models/towers/cannon_head.glb",
+	"beam":   "res://assets/models/towers/beam_head.glb",
+	"bomb":   "res://assets/models/towers/bomb_head.glb",
+}
+const _BASE_MESH_PATH := "res://assets/models/towers/base.glb"
+
+## Cache loaded meshes so we only extract them from the PackedScene once.
+static var _mesh_cache: Dictionary = {}
 
 ## Built lazily for the Beam tower: a tesla-coil/ray-gun emitter that extends out
 ## along the barrel to the muzzle, where the beam begins. Null for other types.
 var _emitter: Node3D = null
 
 var tower_type: int = Type.BASIC
+var damage_type: int = DamageType.PHYSICAL
 var level: int = 1
 var total_spent: int = 0
 var _cooldown: float = 0.0
@@ -106,6 +122,7 @@ var health: float = MAX_HEALTH       ## current durability; Gunner fire reduces 
 var _destroyed: bool = false
 const FLASH_TIME := 0.15
 var _flash_timer: float = 0.0
+
 
 func _ready() -> void:
 	_head_material = StandardMaterial3D.new()
@@ -154,9 +171,31 @@ func _die() -> void:
 	_destroyed = true
 	died.emit()
 	destroyed.emit(self)
-	var tw := create_tween()
-	tw.tween_property(self, "scale", Vector3.ZERO, 0.2).set_trans(Tween.TRANS_BACK)
-	tw.tween_callback(queue_free)
+	add_child(_ShrinkAndFree.new(self, 0.2))
+
+class _ShrinkAndFree extends Node:
+	var _host: Node3D
+	var _dur: float
+	var _elapsed: float = 0.0
+	var _start_scale: Vector3
+
+	func _init(host: Node3D, dur: float) -> void:
+		_host = host
+		_dur = dur
+
+	func _ready() -> void:
+		_start_scale = _host.scale if is_instance_valid(_host) else Vector3.ONE
+
+	func _process(delta: float) -> void:
+		_elapsed += delta
+		var f := minf(_elapsed / _dur, 1.0)
+		var t := 1.0 - f
+		if is_instance_valid(_host):
+			_host.scale = _start_scale * (t * t * t)
+		if f >= 1.0:
+			if is_instance_valid(_host):
+				_host.queue_free()
+			queue_free()
 
 ## Called by the game controller right after instantiation.
 func configure(type: int) -> void:
@@ -172,11 +211,26 @@ func _stats() -> Dictionary:
 	return TYPES[tower_type]["tiers"][level - 1]
 
 func type_name() -> String: return TYPES[tower_type]["name"]
+func damage_type_name() -> String:
+	match damage_type:
+		DamageType.FIRE:    return "Fire"
+		DamageType.FROST:   return "Frost"
+		DamageType.POISON:  return "Poison"
+		DamageType.SHOCK:   return "Shock"
+		_:                  return "Physical"
 func is_max_level() -> bool: return level >= MAX_LEVEL
+## True when the tower is at level 1 and has not yet chosen a damage type branch.
+func needs_damage_type() -> bool: return level == 1 and damage_type == DamageType.PHYSICAL
 func upgrade_cost() -> int:
 	if is_max_level(): return 0
 	return TYPES[tower_type]["upgrade_costs"][level - 1]
 func sell_value() -> int: return int(total_spent * 0.5)
+
+## Set the damage type branch. Only meaningful at level 1 before first upgrade;
+## the choice is permanent and affects all future shots.
+func set_damage_type(dt: int) -> void:
+	damage_type = dt
+	_apply_visual()
 
 ## Returns true if upgraded (caller already checked/charged affordability).
 func upgrade() -> bool:
@@ -186,11 +240,17 @@ func upgrade() -> bool:
 	_apply_visual()
 	return true
 
-## Resting head color for the current type/level (brightens per level). Damage is
-## shown by the floating HealthBar, not by tinting the head, so a tower's type
-## always reads from its color regardless of how hurt it is.
+## Resting head color. Once a damage type is chosen it overrides the tower-type
+## base color so the elemental branch reads at a glance.
+const _DAMAGE_TYPE_COLORS := {
+	DamageType.FIRE:   Color(0.95, 0.35, 0.15),
+	DamageType.FROST:  Color(0.45, 0.75, 0.98),
+	DamageType.POISON: Color(0.35, 0.85, 0.25),
+	DamageType.SHOCK:  Color(0.95, 0.90, 0.2),
+}
 func _head_color() -> Color:
-	return TYPES[tower_type]["color"].lightened((level - 1) * 0.18)
+	var base: Color = _DAMAGE_TYPE_COLORS.get(damage_type, TYPES[tower_type]["color"])
+	return base.lightened((level - 1) * 0.18)
 
 # Set both albedo and the faint emission to the same color, so a head in shadow
 # still glows toward its true type hue instead of going muddy/brown.
@@ -221,51 +281,42 @@ func _apply_visual() -> void:
 	if _range_sphere and _range_sphere.visible:
 		_update_range_sphere()
 
-# Per-type head silhouette so towers are identifiable by shape, not just color.
-# The Head mesh is swapped and the Barrel shown/hidden to match the damage type:
-#   cannon — broad box head + barrel (heavy direct fire)
-#   frost  — crystalline prism, no barrel (icy bolt)
-#   beam   — tall slim emitter cylinder, no barrel (continuous beam)
-#   bomb   — squat mortar dome, short wide barrel (lobbed ordnance)
+# Load a Mesh from a .glb PackedScene. GLB files import as scenes with a
+# MeshInstance3D child; we extract and cache the Mesh resource so we only
+# traverse the scene tree once per path.
+static func _load_glb_mesh(path: String) -> Mesh:
+	if _mesh_cache.has(path):
+		return _mesh_cache[path]
+	var packed: PackedScene = load(path)
+	if packed == null:
+		return null
+	var root: Node = packed.instantiate()
+	var mesh: Mesh = null
+	for child in root.get_children():
+		if child is MeshInstance3D:
+			mesh = child.mesh
+			break
+	root.queue_free()
+	_mesh_cache[path] = mesh
+	return mesh
+
+# Per-type head silhouette from the exported .glb assets. Barrel is hidden
+# permanently — it is now part of each head mesh. Beam tower still builds its
+# procedural emitter assembly on top of the glb base.
 func _apply_shape() -> void:
 	if _head == null:
 		return
 	var shape: String = TYPES[tower_type].get("shape", "cannon")
 	if _emitter and shape != "beam":
 		_emitter.visible = false
-	match shape:
-		"frost":
-			var prism := PrismMesh.new()
-			prism.size = Vector3(0.55, 0.6, 0.55)
-			_head.mesh = prism
-			if _barrel: _barrel.visible = false
-		"beam":
-			# Compact coil base on the head; the tesla-coil/ray-gun emitter (a forward
-			# rod + glowing tip) is a separate assembly reaching out to the muzzle.
-			var base := CylinderMesh.new()
-			base.top_radius = 0.22
-			base.bottom_radius = 0.3
-			base.height = 0.34
-			_head.mesh = base
-			if _barrel: _barrel.visible = false
-			_build_beam_emitter()
-		"bomb":
-			var dome := SphereMesh.new()
-			dome.radius = 0.32
-			dome.height = 0.44
-			_head.mesh = dome
-			if _barrel:
-				_barrel.visible = true
-				_barrel.mesh = _bomb_barrel_mesh()
-		_:  # cannon / default
-			var box := BoxMesh.new()
-			box.size = Vector3(0.5, 0.4, 0.5)
-			_head.mesh = box
-			if _barrel:
-				_barrel.visible = true
-				_barrel.mesh = _cannon_barrel_mesh()
-	if _barrel and _barrel.visible:
-		_barrel.material_override = _head_material
+	if _barrel:
+		_barrel.visible = false
+	if _base:
+		_base.mesh = _load_glb_mesh(_BASE_MESH_PATH)
+	var head_path: String = _HEAD_MESHES.get(shape, _HEAD_MESHES["cannon"])
+	_head.mesh = _load_glb_mesh(head_path)
+	if shape == "beam":
+		_build_beam_emitter()
 
 # Build (once) the Beam tower's tesla-coil / ray-gun emitter under the Turret. It
 # reads as a ray gun: a short vertical coil post on the head lifts a prominent
@@ -352,21 +403,6 @@ func _build_beam_emitter() -> void:
 	tip.material_override = glow
 	_emitter.add_child(tip)
 
-static var _cannon_barrel: BoxMesh = null
-static func _cannon_barrel_mesh() -> BoxMesh:
-	if _cannon_barrel == null:
-		_cannon_barrel = BoxMesh.new()
-		_cannon_barrel.size = Vector3(0.16, 0.16, 0.7)
-	return _cannon_barrel
-
-static var _bomb_barrel: CylinderMesh = null
-static func _bomb_barrel_mesh() -> CylinderMesh:
-	if _bomb_barrel == null:
-		_bomb_barrel = CylinderMesh.new()
-		_bomb_barrel.top_radius = 0.18
-		_bomb_barrel.bottom_radius = 0.18
-		_bomb_barrel.height = 0.4
-	return _bomb_barrel
 
 ## Show the spherical range. Call with no args for this tower's current range, or
 ## pass a type to preview that type's level-1 range (used while placing).
@@ -431,20 +467,24 @@ func _set_beam(target: Node3D) -> void:
 		_beam_material.emission = c
 
 func _process(delta: float) -> void:
+	PerfTimer.begin("towers")
 	if _destroyed:
+		PerfTimer.end("towers")
 		return
 	_cooldown = max(_cooldown - delta, 0.0)
 	_retarget_timer -= delta
 	if _flash_timer > 0.0:
 		_tick_flash(delta)
 
-	if _retarget_timer <= 0.0 or not _target_valid(_stats()["range"]):
+	var s := _stats()
+	if _retarget_timer <= 0.0 or not _target_valid(s["range"]):
 		_target = _pick_target()
 		_retarget_timer = RETARGET_INTERVAL
 
 	if _target == null:
-		if _is_beam():
+		if s.get("beam", false):
 			_set_beam(null)
+		PerfTimer.end("towers")
 		return
 
 	var look := _target.global_position
@@ -453,15 +493,16 @@ func _process(delta: float) -> void:
 	if look.distance_to(turret.global_position) > 0.05:
 		aimed = _rotate_turret_toward(look, delta)
 
-	if _is_beam():
+	if s.get("beam", false):
 		if _target.has_method("take_damage"):
-			_target.take_damage(_stats()["dps"] * delta)
+			_target.take_damage(s["dps"] * delta, damage_type)
 		_set_beam(_target)
 	elif _cooldown <= 0.0 and aimed:
 		# Only fire once the barrel has actually swung onto the target, so shots
 		# leave the muzzle pointed the right way instead of snapping mid-turn.
 		_fire(_target)
-		_cooldown = _stats()["cooldown"]
+		_cooldown = s["cooldown"]
+	PerfTimer.end("towers")
 
 ## Max turret yaw speed (radians/sec). Turrets swing toward their target rather
 ## than snapping, so re-targeting reads as a visible rotation. Returns true once
@@ -483,8 +524,6 @@ func _rotate_turret_toward(look: Vector3, delta: float) -> bool:
 	turret.rotation.y = current + signf(diff) * step
 	return absf(diff) <= AIM_TOLERANCE
 
-func _is_beam() -> bool:
-	return _stats().get("beam", false)
 
 ## Layer mask of geometry that blocks line of sight (environment/obstacles).
 const BLOCKER_MASK := 4
@@ -494,6 +533,8 @@ const BLOCKER_MASK := 4
 # path allocation- and raycast-free.
 func _target_valid(r: float) -> bool:
 	if _target == null or not is_instance_valid(_target):
+		return false
+	if "_dead" in _target and _target._dead:
 		return false
 	return global_position.distance_to(_target.global_position) <= r
 
@@ -538,13 +579,15 @@ func _fire(target: Node3D) -> void:
 func _fire_projectile(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 	if projectile_scene == null:
 		return
-	var proj := projectile_scene.instantiate()
-	get_tree().current_scene.add_child(proj)
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
+	var proj := TDProjectile.acquire(scene_root, projectile_scene)
 	proj.add_to_group("td_projectile")   # for the debug overlay's live count
 	if proj.has_method("launch"):
-		proj.launch(origin, target, s["damage"], s.get("proj_speed", -1.0))
-		if tower_type == Type.FROST and proj.has_method("set_slow"):
-			proj.set_slow(s["slow"], s["slow_dur"])
+		proj.launch(origin, target, s["damage"], s.get("proj_speed", -1.0), damage_type)
+		if damage_type == DamageType.FROST and proj.has_method("set_slow"):
+			proj.set_slow(FROST_SLOW_FACTOR, FROST_SLOW_DURATION)
 		_tint_projectile(proj)
 	else:
 		proj.global_position = origin
@@ -552,16 +595,18 @@ func _fire_projectile(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 func _fire_bomb(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 	if bomb_scene == null:
 		return
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
 	# Predict where the target *would* be, assuming it keeps its current velocity.
 	# Because the lead point is locked at fire time, a turn in the path makes the
 	# bomb miss — exactly the intended fallibility.
 	var speed: float = s.get("proj_speed", 10.0)
 	var lead := _predict_landing(target, origin, speed)
-	var bomb := bomb_scene.instantiate()
-	get_tree().current_scene.add_child(bomb)
+	var bomb := TDBomb.acquire(scene_root, bomb_scene)
 	bomb.add_to_group("td_projectile")   # for the debug overlay's live count
 	if bomb.has_method("launch_bomb"):
-		bomb.launch_bomb(origin, lead, speed, s["damage"], s["aoe"])
+		bomb.launch_bomb(origin, lead, speed, s["damage"], s["aoe"], damage_type)
 
 ## Solve (roughly) for the lead point: horizontal flight time ≈ ground distance /
 ## speed, iterated a couple of times since moving the aim point changes the time.

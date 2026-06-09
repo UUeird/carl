@@ -16,9 +16,15 @@ Everything else is served as a static file from this folder.
 
 import argparse
 import json
+import mimetypes
 import os
 import tempfile
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+# Ensure common web types are always recognised regardless of OS mimetypes DB.
+mimetypes.add_type("text/css", ".css")
+mimetypes.add_type("text/javascript", ".js")
+mimetypes.add_type("application/json", ".json")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(HERE, "roadmap.json")

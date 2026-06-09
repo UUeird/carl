@@ -19,6 +19,7 @@ func _enemy_at(pos: Vector3, progress: int = 1):
 	var e = ENEMY.instantiate()
 	game.add_child(e)
 	e.add_to_group("td_enemy")
+	e.configure(TDEnemy.Type.GRUNT)   # flesh_hp=30, no armor/shield
 	e.set_physics_process(false)
 	# Give it a 2-point path so current_velocity() has a real direction; set_path
 	# moves it to path[0], so override position afterward.

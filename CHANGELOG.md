@@ -13,6 +13,26 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ---
 
+## 2026.06.09
+
+### Added
+- **Boss enemy** — large (2× scale), high-health (120 flesh + 60 armor), slow creep worth 40g that spawns solo between each wave.
+- **Damage layer system** — enemies have shield / armor / flesh HP pools that deplete sequentially; health bar shows three colour segments.
+- **Damage type system** — towers choose a damage type (Fire / Frost / Poison / Shock / Physical) at first upgrade; a modifier matrix amplifies or resists each type against each layer.
+- **Enemy projectiles** — Gunner enemies fire visible red/orange moving spheres instead of instant tracer cylinders; 24-slot pool, no per-shot allocation.
+- **Map picker** — new scene lets you choose a map before starting.
+- **Performance timer** (`PerfTimer`) for per-bucket CPU profiling in debug builds.
+
+### Changed
+- Projectile pool (32 slots) and bomb pool (8 slots) replace instantiate/queue_free per shot.
+- Healer aura ring is now parented to the healer so it follows the enemy as it moves.
+- Damage numbers now use a per-enemy accumulator with a single pinned label (Borderlands-style), pooled to avoid Label3D allocation mid-combat.
+- Fixed "0" damage number flash on enemy death.
+- **Maps button** moved to top-left row (beside wave/stats) so it no longer overlaps the tower panel.
+- Roadmap: sections reordered (In Progress → Planned → Debt → Ideas → Done), Next Up removed, starred items sort to section top, star/unstar toggle on card, status picker cleaned up.
+
+---
+
 ## 2026.06.06
 
 ### Changed

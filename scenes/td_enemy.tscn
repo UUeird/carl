@@ -21,6 +21,7 @@ script = ExtResource("1_e")
 shape = SubResource("s")
 
 [node name="Mesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 0, 0)
 mesh = SubResource("m")
 
 [node name="Health" type="Node" parent="."]
