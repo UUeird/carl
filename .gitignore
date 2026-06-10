@@ -22,3 +22,7 @@ mono_crash.*.json
 
 # Editor-local settings
 .vscode/
+
+# Roadmap app
+roadmap/node_modules/
+roadmap/test-results/
