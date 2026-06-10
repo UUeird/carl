@@ -71,6 +71,17 @@ toggle_view={
 ]
 }
 
+[display]
+
+window/dpi/allow_hidpi=true
+window/dpi/allow_hidpi.editor=false
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=2
+window/size/mode.editor=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
