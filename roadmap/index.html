@@ -77,7 +77,7 @@
   #saveStatus.error  { color: var(--bug); }
 
   /* kanban board */
-  .board { display: flex; gap: 14px; align-items: flex-start; overflow-x: auto; padding-bottom: 24px; }
+  .board { display: flex; gap: 14px; align-items: stretch; overflow-x: auto; padding-bottom: 24px; }
   .lane { flex: 1 1 270px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; }
   .lane-head { padding: 10px 14px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
   .lane-head:hover { background: var(--panel-2); border-radius: 9px 9px 0 0; }
@@ -88,7 +88,7 @@
   .lane-head .arrow { color: var(--faint); font-size: 13px; transition: transform .2s; }
   .lane.collapsed .lane-head .arrow { display: none; }
   .lane.collapsed .lane-head .badge { writing-mode: vertical-lr; text-orientation: upright; letter-spacing: .08em; padding: 6px 3px; }
-  .lane-body { padding: 8px; min-height: 80px; flex: 1; border-radius: 0 0 9px 9px; transition: background .12s; }
+  .lane-body { padding: 8px; min-height: 80px; flex: 1; border-radius: 0 0 9px 9px; transition: background .12s; overflow-y: auto; }
   .lane.collapsed .lane-body { display: none; }
   .lane.collapsed { flex: 0 0 38px; }
   .lane.drop-target .lane-body { background: var(--panel-2); }
