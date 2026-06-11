@@ -470,7 +470,10 @@ func _fire_shot(tower: Node3D) -> void:
 		scene.add_child(mi)
 	mi.global_position = global_position + Vector3.UP * 0.6
 	mi.visible = true
-	add_child(_ShotMover.new(mi, tower, _gun_damage, _shot_pool))
+	# Parent the mover to the scene, NOT self: if this gunner dies/leaks mid-flight,
+	# a self-parented mover would be freed with it before returning the pooled mesh,
+	# orphaning a visible sphere and permanently draining the shot pool.
+	scene.add_child(_ShotMover.new(mi, tower, _gun_damage, _shot_pool))
 
 # --- Explosive: blast on goal + AoE-vs-towers on death -------------------------
 
