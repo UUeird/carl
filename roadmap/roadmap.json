@@ -197,7 +197,7 @@
       "title": "map improvements",
       "note": "we should make the map prettier",
       "type": "story",
-      "status": "wip",
+      "status": "todo",
       "children": [
         {
           "title": "smooth pathing",
@@ -221,7 +221,7 @@
         }
       ],
       "updatedAt": "2026-06-10T05:26:46.672Z",
-      "statusChangedAt": "2026-06-10T05:26:31.455Z"
+      "statusChangedAt": "2026-06-11T05:26:55.655Z"
     },
     {
       "title": "Navigation: map picker, in-game escape, pause, game-over/victory screens",
