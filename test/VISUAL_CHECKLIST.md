@@ -76,7 +76,8 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 - [ ] Frost-typed hits still **slow enemies** (they tint blue and move visibly slower).
 
 ### HUD & flow
-- [ ] The **Maps** button sits to the right of the wave/stats label in the top-left and does not overlap the tower panel.
+- [ ] The **Maps** button sits in the top-right cluster (left of **Demo** and **Start wave**) and does not overlap the tower panel.
+- [ ] **At different window sizes** (resize the window, or launch with `--resolution 800x600` and `--resolution 1920x1080`): the top-right cluster (Maps · Demo · Start-wave) stays grouped at the right edge, the build-type row stays under the stats at the left, and nothing clips off-screen or overlaps. On a HiDPI/Retina Mac the UI renders crisp, not zoomed-out/blurry.
 - [ ] Lives / currency / wave update correctly as you play.
 - [ ] Start-wave button is unavailable mid-wave and available between waves.
 - [ ] Win message after the last wave; lose message at 0 lives; **R** restarts.
@@ -87,7 +88,7 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 
 ### Demo mode (debug builds only)
 - [ ] A **Demo ▶** button appears (under Start-wave) in debug builds only — not in a release export.
-- [ ] Clicking it autoplays hands-free: towers build out across **all four types**, get upgraded, and all 5 waves start on their own.
+- [ ] Clicking it autoplays hands-free: towers build out across **all three types**, get upgraded, and all 5 waves start on their own.
 - [ ] The run shows varied situations (each tower type firing, Gunners damaging/destroying towers, Healer pulses) — the point of the demo.
 
 ### Camera / scene

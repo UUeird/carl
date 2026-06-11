@@ -31,6 +31,7 @@ window/size/viewport_height=720
 window/size/mode=2
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/dpi/allow_hidpi=true
 window/dpi/allow_hidpi.editor=false
 window/size/mode.editor=0
 

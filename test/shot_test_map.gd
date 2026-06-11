@@ -25,8 +25,9 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 
-	# Build one of each type across the pads (slots are named Slot0..Slot7).
-	var types := [TDTower.Type.BASIC, TDTower.Type.FROST, TDTower.Type.BEAM, TDTower.Type.BOMB]
+	# Build one of each tower type across the pads (slots are named Slot0..Slot7),
+	# cycling through the types if there are more pads than types.
+	var types := [TDTower.Type.BASIC, TDTower.Type.BEAM, TDTower.Type.BOMB]
 	var slots = game.get_node("Slots")
 	var i := 0
 	for slot in slots.get_children():

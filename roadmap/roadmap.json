@@ -22,7 +22,7 @@
   "items": [
     {
       "title": "Multi-resolution / HiDPI display support",
-      "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue.",
+      "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue. [Shipped: stretch=canvas_items/expand + allow_hidpi=true in project.godot; HUD top-right cluster (Maps/Demo/Start-wave) and build-type row re-anchored in td_hud.gd so the layout holds at any window size, verified headed at 800x600 and 1920x1080.]",
       "type": "story",
       "status": "done",
       "children": [
@@ -43,7 +43,7 @@
           "status": "done"
         }
       ],
-      "updatedAt": "2026-06-10T05:14:15.276Z",
+      "updatedAt": "2026-06-11T03:28:42.660Z",
       "statusChangedAt": "2026-06-10T03:50:02.747Z"
     },
     {
