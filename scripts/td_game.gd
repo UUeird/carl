@@ -65,6 +65,11 @@ func _ready() -> void:
 func demo_available() -> bool:
 	return OS.is_debug_build()
 
+## Debug-only: grant 500 currency for fast iteration testing.
+func cheat_add_gold() -> void:
+	currency += 500
+	state_changed.emit()
+
 ## Kick off the autoplay demo (debug builds only). Creates the driver on first use
 ## so it doesn't rely on _ready ordering relative to the HUD.
 func start_demo() -> void:
@@ -111,16 +116,21 @@ func _prewarm_shaders() -> void:
 	if bomb_scene != null:
 		TDBomb.prewarm(self, bomb_scene)
 
-	# One instance of the tower scene for shader compilation.
+	# One instance per tower type so all head meshes, materials, and the beam
+	# electrode/arc shader are compiled before the first wave. The BEAM instance
+	# must be configured so _build_beam_emitter() runs and creates arc materials.
 	if tower_scene != null:
-		var n: Node = tower_scene.instantiate()
-		n.position = Vector3(0, -9999, 0)
-		add_child(n)
-		nodes.append(n)
+		for type in TDTower.Type.values():
+			var n: Node = tower_scene.instantiate()
+			n.position = Vector3(0, -9999, 0)
+			add_child(n)
+			if n.has_method("configure"):
+				n.configure(type)
+			nodes.append(n)
 
-	# Force all four per-type projectile tint materials to exist now, not on first shot.
-	for type in TDTower.Type.values():
-		var mat := TDTower._projectile_material(type)
+	# Force all per-damage-type projectile tint materials to exist now, not on first shot.
+	for dt in TDTower.DamageType.values():
+		var mat := TDTower._projectile_material(dt)
 		var mi := MeshInstance3D.new()
 		mi.position = Vector3(0, -9999, 0)
 		mi.material_override = mat

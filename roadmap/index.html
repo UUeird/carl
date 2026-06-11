@@ -143,11 +143,17 @@
 
   /* detail / focus view */
   .detail-wrap { margin: 40px 0 0; }
-  .detail-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
-  .detail-card { background: var(--panel); border-radius: 14px; padding: 32px 36px; }
-  .detail-type { font-size: 13px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .detail-card { background: var(--panel); border-radius: 14px; padding: 28px 36px 32px; }
+  .detail-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line);
+  }
+  .detail-header-center {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .detail-type { font-size: 13px; color: var(--faint); text-transform: uppercase; letter-spacing: .06em; }
   .detail-title {
-    font-size: 26px; font-weight: 700; line-height: 1.35; margin: 10px 0 16px;
+    font-size: 26px; font-weight: 700; line-height: 1.35; margin: 0 0 16px;
     cursor: text; border-radius: 5px; padding: 2px 4px; margin-left: -4px;
   }
   .detail-title:hover { background: var(--panel-2); }
@@ -189,7 +195,7 @@
     cursor: pointer; font-family: inherit; padding: 3px 2px;
   }
   .child-add-btn:hover { color: var(--text); }
-  .child-card input.detail-edit { font-size: 15px; font-weight: normal; padding: 2px 6px; }
+  .child-card textarea.detail-edit { font-size: 15px; font-weight: normal; padding: 4px 6px; min-height: 72px; resize: vertical; }
 
   .error { background: #2a1c1c; border: 1px solid #5b2f2f; color: #f0c0b8; padding: 16px; border-radius: 10px; margin-top: 20px; }
   .error code { background: #00000044; padding: 1px 6px; border-radius: 4px; }
@@ -437,7 +443,7 @@ function detailHTML(item, idx) {
   const noteClass = item.note ? "detail-note" : "detail-note placeholder";
   const noteText = item.note ? escapeHTML(item.note) : "Add a description…";
   const delBtn = serverMode
-    ? `<button class="btn ghost" id="detailDel" style="color:var(--bug);border-color:var(--bug)">Delete</button>` : "";
+    ? `<button class="btn ghost" id="detailDel" style="color:var(--bug);border-color:var(--bug);padding:5px 12px;font-size:14px">Delete</button>` : "";
   const tStatus = relTime(item.statusChangedAt);
   const tEdited = relTime(item.updatedAt);
   const timestamps = (tStatus || tEdited) ? `<div class="detail-timestamps">
@@ -445,14 +451,15 @@ function detailHTML(item, idx) {
     ${tEdited ? `<span class="detail-ts"><span class="ts-label">Edited</span>${tEdited}</span>` : ""}
   </div>` : "";
   return `<div class="detail-wrap">
-    <div class="detail-controls">
-      <button class="btn ghost" id="detailBack">← Back</button>
-      <span style="flex:1"></span>
-      ${delBtn}
-    </div>
     <div class="detail-card" style="border:2.5px solid ${hex};box-shadow:0 0 0 6px ${glow},0 0 48px ${glow}">
-      <div class="detail-type">${escapeHTML(typeLabel)}</div>
-      <span class="badge ${item.status}">${STATUS[item.status] || item.status}</span>
+      <div class="detail-header">
+        <button class="btn ghost" id="detailBack" style="padding:5px 12px;font-size:14px;flex-shrink:0">← Back</button>
+        <div class="detail-header-center">
+          <div class="detail-type">${escapeHTML(typeLabel)}</div>
+          <span class="badge ${item.status}">${STATUS[item.status] || item.status}</span>
+        </div>
+        ${delBtn}
+      </div>
       <div class="detail-title">${escapeHTML(item.title)}</div>
       <p class="${noteClass}">${noteText}</p>
       ${childBoardHTML(item)}
@@ -497,7 +504,7 @@ function wireChildBoard(item, idx) {
     span.addEventListener("click", e => {
       e.stopPropagation();
       const ci = +span.dataset.childIdx;
-      startInlineEdit(span, "input", item.children[ci].title, val => {
+      startInlineEdit(span, "textarea", item.children[ci].title, val => {
         const v = val.trim();
         if (v) { item.children[ci].title = v; span.textContent = v; item.updatedAt = now(); }
         else { item.children.splice(ci, 1); item.updatedAt = now(); refreshChildBoard(item, idx); }

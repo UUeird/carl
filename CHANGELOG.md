@@ -16,17 +16,26 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 ## Unreleased
 
 ### Added
-- **Multi-resolution / HiDPI display support** (completed) — the HUD now holds its layout at any window size: the top-right cluster (Maps · Demo · Start-wave) and the build-type row are anchor-based instead of fixed-pixel, so nothing drifts or overlaps as the window widens. Restored `allow_hidpi=true` for native Retina rendering. Verified headed at 800×600 and 1920×1080.
+- **Multi-resolution / HiDPI display support** — the HUD holds its layout at any window size: the top-right cluster and the build-type row are anchor-based instead of fixed-pixel. Restored `allow_hidpi=true` for native Retina rendering.
+- **Cannon tower split mesh** — the cannon now renders as two independent pieces: a grey boxy housing + gun barrel (body), and an octagonal cap disc + dome that takes the elemental color on upgrade. Generated via `assets/models/generate_meshes.py`.
+- **↺ Reset button** — always-available button in the top-right HUD cluster; reloads the current scene immediately without waiting for waves to finish.
+- **Shock slow** — Shock-typed towers now apply the slow effect (0.55× speed, 1.4 s) to any enemy with no active shield, in addition to their 2× damage multiplier against shields. Enemies with an active shield take the damage bonus but are not slowed. Works for both projectile and beam towers.
+
+### Changed
+- **Frost damage type removed** — Frost's slow-and-armor-bonus role is now folded into Shock. The damage type picker shows Fire / Poison / Shock only.
+- **Tower type buttons are now monochrome** — color identity is carried by the tower's elemental cap, not the build buttons. Selected button shows a bright white border.
+- **Pre-element tower cap is neutral grey** — a freshly built tower's cap stays grey until the player assigns a damage type at level 1 upgrade.
+- **Shock color changed to dark blue** (was yellow).
 
 ### Fixed
-- **Gunner shot pool leak** — a Gunner's in-flight projectile mover was parented to the Gunner, so if the Gunner died or reached the goal mid-flight the mover was freed with it, orphaning a visible pooled sphere on the map and permanently draining the shot pool. The mover is now parented to the scene and flies to completion.
-- **`⬡ Maps` button drifted on wide windows** — it was left-anchored at a fixed 430px offset, so it floated away from the top bar (nearly colliding with the build buttons) as the window widened. Now right-anchored with the rest of the top-right controls.
-- **Broken screenshot helper** — `test/shot_test_map.gd` referenced `TDTower.Type.FROST`, which doesn't exist (Frost is a `DamageType`, not a tower `Type`), so the helper crashed on launch. Now builds the three real tower types.
+- **Gunner shot pool leak** — in-flight mover now parented to the scene, not the Gunner.
+- **`⬡ Maps` button drifted on wide windows** — now right-anchored with the rest of the top-right controls.
+- **Broken screenshot helper** — `test/shot_test_map.gd` referenced a non-existent `TDTower.Type.FROST`; fixed to use the three real tower types.
 
 ### Docs
-- README & CLAUDE.md: corrected the boot scene to `map_picker.tscn` (it loads `td_main.tscn`); documented the Boss enemy in the README enemy table; removed the stale "leftover action-prototype scripts" note (those files no longer exist).
-- Removed dead `DamageNumber.popup()` API (superseded by `acquire`/`release`).
-- Roadmap: marked the HiDPI item done; removed two stray "Test ticket from Playwright" items.
+- README & CLAUDE.md: corrected the boot scene to `map_picker.tscn`; documented the Boss enemy; removed stale notes.
+- Removed dead `DamageNumber.popup()` API.
+- Roadmap: marked HiDPI item done; removed stray junk items; added Tower mesh redesign subtasks.
 
 ## 2026.06.09
 

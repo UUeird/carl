@@ -24,7 +24,7 @@ func _enemy_at(pos: Vector3, progress: int = 1):
 	e._target_idx = progress
 	return e
 
-func _tower_at(pos: Vector3, type: int = TDTower.Type.BASIC):
+func _tower_at(pos: Vector3, type: int = TDTower.Type.MACHINE_GUN):
 	var t = TOWER.instantiate()
 	game.add_child(t)
 	t.configure(type)

@@ -82,6 +82,8 @@ func _try_build_for_variety() -> bool:
 	return _game.try_build(slots[0], type)
 
 ## Upgrade the lowest-level (cheapest-to-improve) built tower we can afford.
+## If the tower is at level 1 and hasn't chosen a damage type yet, pick one first
+## so the upgrade goes through and the demo actually shows elemental towers.
 func _try_upgrade_weakest() -> bool:
 	var best = null
 	var best_level := TDTower.MAX_LEVEL + 1
@@ -93,6 +95,9 @@ func _try_upgrade_weakest() -> bool:
 			best = t
 	if best == null:
 		return false
+	if best.has_method("needs_damage_type") and best.needs_damage_type():
+		var choices := [TDTower.DamageType.FIRE, TDTower.DamageType.POISON, TDTower.DamageType.SHOCK]
+		best.set_damage_type(choices[randi() % choices.size()])
 	return _game.try_upgrade(best)
 
 ## Count built towers by type.

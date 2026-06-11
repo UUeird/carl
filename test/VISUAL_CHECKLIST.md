@@ -72,8 +72,8 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 
 ### Damage types & health layers
 - [ ] Enemies show a **three-segment health bar**: blue (shield) → yellow (armor) → green (flesh); each segment depletes before the next begins.
-- [ ] Tower upgrade panel at level 1 shows a **damage type picker** (Fire / Frost / Poison / Shock); the chosen type appears in panel stats after selection.
-- [ ] Frost-typed hits still **slow enemies** (they tint blue and move visibly slower).
+- [ ] Tower upgrade panel at level 1 shows a **damage type picker** (Fire / Poison / Shock); the chosen type appears in panel stats after selection.
+- [ ] **Shock-typed hits slow enemies that have no active shield** — they tint blue and move visibly slower. Enemies that still have a shield take the Shock damage multiplier but are not slowed.
 
 ### HUD & flow
 - [ ] The **Maps** button sits in the top-right cluster (left of **Demo** and **Start wave**) and does not overlap the tower panel.
