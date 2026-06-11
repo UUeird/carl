@@ -24,7 +24,7 @@ func _enemy(type: int, pos: Vector3):
 	e.global_position = pos
 	return e
 
-func _tower(pos: Vector3, type: int = TDTower.Type.BASIC):
+func _tower(pos: Vector3, type: int = TDTower.Type.MACHINE_GUN):
 	var t = TOWER.instantiate()
 	game.add_child(t)
 	t.configure(type)
@@ -58,7 +58,7 @@ func test_tower_destroyed_at_zero_health_emits_signal():
 func test_destroyed_tower_frees_its_slot():
 	# Build a real tower via a slot so the game's destroyed handler runs.
 	var slot = game.get_tree().get_nodes_in_group("tower_slot")[0]
-	game.build_type = TDTower.Type.BASIC
+	game.build_type = TDTower.Type.MACHINE_GUN
 	game._on_slot_clicked(slot)
 	assert_true(slot.occupied, "slot is occupied after building")
 	var tower = game._slot_tower[slot]

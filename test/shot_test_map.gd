@@ -27,7 +27,7 @@ func _initialize() -> void:
 
 	# Build one of each tower type across the pads (slots are named Slot0..Slot7),
 	# cycling through the types if there are more pads than types.
-	var types := [TDTower.Type.BASIC, TDTower.Type.BEAM, TDTower.Type.BOMB]
+	var types := [TDTower.Type.MACHINE_GUN, TDTower.Type.BEAM, TDTower.Type.MISSILE]
 	var slots = game.get_node("Slots")
 	var i := 0
 	for slot in slots.get_children():

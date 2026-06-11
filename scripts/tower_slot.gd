@@ -13,9 +13,9 @@ signal unhovered(slot: TowerSlot)
 
 var occupied: bool = false
 var _material: StandardMaterial3D
-const COLOR_FREE := Color(0.3, 0.7, 0.4, 0.85)
-const COLOR_HOVER := Color(0.5, 0.95, 0.6, 0.95)
-const COLOR_TAKEN := Color(0.3, 0.32, 0.36, 0.5)
+const COLOR_FREE  := Color(0.62, 0.64, 0.68, 0.90)   # light grey — available
+const COLOR_HOVER := Color(0.85, 0.87, 0.92, 0.97)   # near-white on hover
+const COLOR_TAKEN := Color(0.22, 0.23, 0.26, 0.50)   # dim grey — occupied
 
 func _ready() -> void:
 	input_event.connect(_on_input_event)

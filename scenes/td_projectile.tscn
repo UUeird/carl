@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/td_projectile.gd" id="1_p"]
 
-[sub_resource type="SphereMesh" id="m"]
-radius = 0.18
-height = 0.36
+[sub_resource type="CapsuleMesh" id="m"]
+radius = 0.055
+height = 0.38
 
 [sub_resource type="StandardMaterial3D" id="mat"]
 albedo_color = Color(1, 0.9, 0.4, 1)
@@ -18,3 +18,4 @@ script = ExtResource("1_p")
 [node name="Mesh" type="MeshInstance3D" parent="."]
 mesh = SubResource("m")
 material_override = SubResource("mat")
+rotation = Vector3(1.5708, 0, 0)

@@ -21,6 +21,70 @@
   ],
   "items": [
     {
+      "title": "Path tiles \u2014 curved segments at 15\u00b0 increments",
+      "note": "Work was done on another machine and not pushed. Needs to be retrieved or recreated. Spec: tileset for building curved paths at any 15\u00b0 heading increment so maps aren't limited to 90\u00b0 turns. Likely a Blender Python script (similar to generate_meshes.py) producing straight, 15\u00b0, 30\u00b0, 45\u00b0, 60\u00b0, 75\u00b0, and 90\u00b0 curve tiles as .glb files.",
+      "type": "story",
+      "status": "todo"
+    },
+    {
+      "title": "Machine Gun tower \u2014 rename Cannon, dual alternating barrels, lead-locked shots",
+      "note": "Shipped: Type.BASIC \u2192 Type.MACHINE_GUN; name 'Machine Gun'; faster RoF (0.22s cd), lower damage per shot (4 dmg), higher proj_speed (22). Dual barrel: alternates left/right muzzle offset (DUAL_BARREL_OFFSET = 0.18 units along turret X). Lead-locked shot: aim fixed at fire time via _predict_landing(); misses if target turns/slows/reverses \u2014 uses new TDProjectile.launch_straight() which flies straight and hits any enemy within HIT_RADIUS, no homing. Standardized firing modes documented in td_tower.gd header: homing (default), lead_shot, bomb.",
+      "type": "story",
+      "status": "done"
+    },
+    {
+      "title": "Beam arc pre-element color \u2014 white instead of grey",
+      "note": "Shipped: _arc_color() returns Color.WHITE when damage_type == PHYSICAL (pre-element); takes element color after first upgrade. Electrode rods use same color. Cap mesh stays grey (unpainted metal).",
+      "type": "story",
+      "status": "done"
+    },
+    {
+      "title": "Rename Bomb \u2192 Missile in all contexts",
+      "note": "Shipped: Type.BOMB \u2192 Type.MISSILE in td_tower.gd enum and TYPES table; HUD button text; all test files (test_combat.gd, test_tower_visuals.gd, shot_test_map.gd). Internal scene/script names (td_bomb.tscn, TDBomb) kept as-is \u2014 they're implementation, not user-facing.",
+      "type": "story",
+      "status": "done",
+      "children": [
+        {
+          "title": "Rename Type.BOMB \u2192 Type.MISSILE in td_tower.gd TYPES table and all references",
+          "status": "done"
+        },
+        {
+          "title": "Update HUD button text and all user-facing strings",
+          "status": "done"
+        },
+        {
+          "title": "Update tests, VISUAL_CHECKLIST, CHANGELOG, roadmap notes",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "title": "Gold cheat button (+500 currency, debug builds only)",
+      "note": "Shipped: +500 \u25cf button in HUD top-right cluster, anchored left of Reset. Calls TDGame.cheat_add_gold(); hidden in release builds via OS.is_debug_build().",
+      "type": "story",
+      "status": "done"
+    },
+    {
+      "title": "Elemental attack colors \u2014 projectiles and beams tint to element color",
+      "note": "Cannon shots, missile rockets, and beam arcs should all display in the tower's chosen element color. White/grey before element is chosen.",
+      "type": "story",
+      "status": "todo",
+      "children": [
+        {
+          "title": "Cannon projectile: tint to element color on fire (currently always yellow)",
+          "status": "todo"
+        },
+        {
+          "title": "Missile rocket: tint to element color on launch",
+          "status": "todo"
+        },
+        {
+          "title": "Beam arc: tracked under Tower mesh redesigns",
+          "status": "todo"
+        }
+      ]
+    },
+    {
       "title": "Multi-resolution / HiDPI display support",
       "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue. [Shipped: stretch=canvas_items/expand + allow_hidpi=true in project.godot; HUD top-right cluster (Maps/Demo/Start-wave) and build-type row re-anchored in td_hud.gd so the layout holds at any window size, verified headed at 800x600 and 1920x1080.]",
       "type": "story",
@@ -289,54 +353,54 @@
       "statusChangedAt": "2026-06-10T03:42:41.751Z"
     },
     {
-      "title": "Damage types + enemy health types system (replaces frost tower)",
-      "note": "Shipped 2026-06-09. Frost tower removed. DamageType enum (PHYSICAL/FIRE/FROST/POISON/SHOCK) + modifier matrix in TDTower. Damage branch chosen at level 2 via HUD picker. Enemy health layered (shield\u2192armor\u2192flesh, sequential). Health bar shows colored segments. Frost type retains slow. All 48 tests passing.",
+      "title": "Damage types + enemy health types system",
+      "note": "Shipped 2026-06-09, revised 2026-06-11. DamageType enum (PHYSICAL/FIRE/POISON/SHOCK) + modifier matrix in TDTower. FROST removed \u2014 slow mechanic folded into SHOCK (applies to enemies with no active shield). Damage branch chosen at level 1 upgrade via HUD picker (Fire/Poison/Shock). Enemy health layered (shield\u2192armor\u2192flesh, sequential). Health bar shows three colored segments. Tower type build buttons are now monochrome. All 48 tests passing.",
       "type": "story",
       "status": "done",
       "children": [
         {
-          "title": "REMOVE frost tower type from TDTower.TYPES; update HUD, tests, and completed roadmap entry",
-          "status": "todo"
+          "title": "Add damage type enum: PHYSICAL, FIRE, POISON, SHOCK \u2014 stored per tower, defaults PHYSICAL at build",
+          "status": "done"
         },
         {
-          "title": "Add damage type enum: PHYSICAL, FIRE, FROST, POISON, SHOCK \u2014 stored per tower, defaults PHYSICAL at build",
-          "status": "todo"
+          "title": "Upgrade branch at level 1: player picks a damage type; choice is permanent",
+          "status": "done"
         },
         {
-          "title": "Upgrade branch at level 2: player picks a damage type; choice is permanent and reflected in level 2+3 stat tiers in TYPES table",
-          "status": "todo"
+          "title": "FROST damage type removed; slow mechanic merged into SHOCK \u2014 applies 0.55\u00d7 speed / 1.4s to any enemy with no active shield (both projectile and beam paths)",
+          "status": "done"
         },
         {
-          "title": "Frost damage type retains the slow effect (reduced enemy speed for a duration) in addition to its modifier matrix",
-          "status": "todo"
+          "title": "Add health type system to TDEnemy: every enemy has shield_hp, armor_hp, flesh_hp (any can be 0). Damage flows strictly in order: shield fully depleted first, then armor, then flesh.",
+          "status": "done"
         },
         {
-          "title": "Add health type system to TDEnemy: every enemy has shield_hp, armor_hp, flesh_hp (any can be 0). Damage flows strictly in order: shield fully depleted first, then armor fully depleted, then flesh. No simultaneous draining.",
-          "status": "todo"
+          "title": "Damage modifier matrix: fire: flesh 1.0, armor 0.75, shield 1.5 | poison: flesh 1.5, armor 1.25, shield 0.5 | shock: flesh 1.0, armor 0.5, shield 2.0 | physical: all 1.0",
+          "status": "done"
         },
         {
-          "title": "Damage modifier matrix (applied per pool as damage flows through): fire: flesh 1.0, armor 0.75, shield 1.5 | frost: flesh 1.0, armor 1.25, shield 0.75 | poison: flesh 1.5, armor 1.25, shield 0.5 | shock: flesh 1.0, armor 0.5, shield 2.0 | physical: all 1.0",
-          "status": "todo"
+          "title": "Health bar visual: shield=blue, armor=yellow, flesh=green; segments sized proportionally",
+          "status": "done"
         },
         {
-          "title": "Health bar visual: shield segment shown in blue above the existing green/red bar; armor shown in yellow; flesh stays green. Segments sized proportionally to their max HP",
-          "status": "todo"
-        },
-        {
-          "title": "Update existing enemy types with health type compositions: Grunt = flesh-only, Healer = flesh+armor mix, Gunner = flesh+shield mix \u2014 exact splits TBD from playtesting",
-          "status": "todo"
+          "title": "Enemy type health compositions: Grunt=flesh-only, Healer=flesh+armor, Gunner=flesh+shield, Boss=flesh+armor",
+          "status": "done"
         },
         {
           "title": "Wire damage type into take_damage() so modifiers apply automatically; beam DPS path included",
-          "status": "todo"
+          "status": "done"
         },
         {
-          "title": "Add GUT tests: modifier matrix correctness, shield-first ordering, armor/flesh proportional drain, frost slow still applies on frost-typed hit",
-          "status": "todo"
+          "title": "Tower type build buttons are monochrome \u2014 no per-type color; selected state uses white border only",
+          "status": "done"
         },
         {
-          "title": "Update VISUAL_CHECKLIST.md: colored health bar segments, upgrade branch UI, frost-typed tower still slows",
-          "status": "todo"
+          "title": "GUT tests updated: frost slow test renamed to shock slow; all 48 pass",
+          "status": "done"
+        },
+        {
+          "title": "VISUAL_CHECKLIST.md updated: shock slow behavior, damage type picker lists (Fire/Poison/Shock)",
+          "status": "done"
         }
       ]
     },
@@ -623,6 +687,12 @@
       ]
     },
     {
+      "title": "Reset button (always-available in-game restart)",
+      "note": "Shipped 2026-06-11. A \u21ba Reset button in the top-right HUD cluster calls reload_current_scene() immediately \u2014 no need to wait for waves to end or lose/win. Sits left of the Maps button.",
+      "type": "story",
+      "status": "done"
+    },
+    {
       "title": "Early wave start: player can start the next wave 2s after the prior one begins",
       "note": "Replaced the alive-enemies gate with a 2s cooldown timer. _spawning no longer blocks the button \u2014 only the cooldown does.",
       "type": "story",
@@ -666,31 +736,36 @@
     },
     {
       "title": "Tower mesh redesigns",
-      "note": "Each tower type needs a purpose-built mesh that reads its role at a glance and supports the gameplay (Beam: no barrel to mis-aim; Cannon: clear gun barrel; Bomb: silo that telegraphs the launch).",
+      "note": "Each tower type needs a purpose-built mesh that reads its role at a glance. Cannon shipped 2026-06-11: cannon_body.glb (grey boxy housing + barrel) + cannon_cap.glb (octagonal disc + dome, takes elemental color). Beam logic shipped: rotating electrode crown (5\u21926 rods at L3), multi-target arcs with per-tip LOS, full DPS per target. Beam dome mesh and missile silo mesh still pending. Meshes generated via assets/models/generate_meshes.py (Blender Python).",
       "type": "story",
-      "status": "todo",
+      "status": "wip",
       "children": [
         {
-          "title": "Beam tower \u2014 replace the current emitter-barrel head with a domed turret base and a rotating crown of electrodes; the arc fires from the electrode tips so there is no barrel to mis-align with the beam direction",
+          "title": "Cannon tower \u2014 split mesh: grey boxy housing + gun barrel (cannon_body.glb) + octagonal elemental cap (cannon_cap.glb); cap grey until element chosen, then elemental color; upgrade scales full turret",
+          "status": "done"
+        },
+        {
+          "title": "Beam tower \u2014 TYPES table, multi-target logic, electrode crown GDScript, arc visuals, element color",
+          "status": "done"
+        },
+        {
+          "title": "Beam tower \u2014 generate beam_dome.glb via Blender script (hemispherical dome on pedestal, no barrel)",
           "status": "todo"
         },
         {
-          "title": "Cannon tower \u2014 adopt the current Beam layout (gun barrel extending from the turret) so it clearly reads as a ballistic weapon; the barrel should visually track the target before firing",
+          "title": "Missile tower \u2014 redesign as a missile silo: closed hatch at rest, hatch opens on target acquired, rocket rises and flies arcing trajectory to predicted landing point, hatch closes after launch",
           "status": "todo"
         },
         {
-          "title": "Bomb tower \u2014 redesign as a missile silo: closed hatch at rest, hatch opens when a target is acquired, a rocket rises out and flies an arcing trajectory to the predicted landing point, hatch closes after launch",
+          "title": "Update shader prewarm and mesh cache in td_game._prewarm_shaders() for any new .glb assets",
           "status": "todo"
         },
         {
-          "title": "Update shader prewarm and mesh cache in td_game._prewarm_shaders() for any new .glb assets added by the redesigns",
-          "status": "todo"
-        },
-        {
-          "title": "Update VISUAL_CHECKLIST.md with per-type shape checks for the new designs",
+          "title": "Update VISUAL_CHECKLIST.md with per-type shape checks for all redesigned towers",
           "status": "todo"
         }
-      ]
+      ],
+      "updatedAt": "2026-06-11T05:08:56.172Z"
     },
     {
       "title": "Maze / free-placement TD twist",

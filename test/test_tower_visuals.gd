@@ -30,19 +30,21 @@ func _enemy_at(pos: Vector3):
 	e._target_idx = 1
 	return e
 
-func test_head_color_is_type_color_regardless_of_damage():
-	# Damage is shown by the HealthBar, not by tinting the head, so the head color
-	# must stay the type's identity color even when badly hurt.
-	var t = _tower(TDTower.Type.BOMB)
+func test_head_color_is_stable_regardless_of_damage():
+	# Damage is shown by the HealthBar, not by tinting the head, so the cap color
+	# must not change when the tower takes damage.  Before an element is chosen the
+	# cap is the neutral grey pre-element color; after choosing an element it takes
+	# that element's color.  Neither should shift on damage.
+	var t = _tower(TDTower.Type.MISSILE)
 	var full = t._head_color()
 	t.take_damage(t.MAX_HEALTH * 0.75)
 	var hurt = t._head_color()
-	assert_eq(hurt, full, "head keeps its type color after taking damage")
-	var base: Color = TDTower.TYPES[TDTower.Type.BOMB]["color"]
-	assert_almost_eq(hurt.r, base.r, 0.001, "bomb head stays its base orange")
+	assert_eq(hurt, full, "head color is unchanged after taking damage")
+	# Pre-element cap must be the neutral grey, not the tower type color.
+	assert_almost_eq(hurt.r, TDTower._PRE_ELEMENT_CAP_COLOR.r, 0.001, "pre-element cap is neutral grey")
 
 func test_damage_emits_health_changed_for_the_bar():
-	var t = _tower(TDTower.Type.BASIC)
+	var t = _tower(TDTower.Type.MACHINE_GUN)
 	var got := []
 	t.health_changed.connect(func(cur, mx): got.append([cur, mx]))
 	t.take_damage(10.0)
@@ -54,31 +56,31 @@ func test_each_type_gets_a_distinct_head_mesh():
 	# All types now use ArrayMesh loaded from GLB — compare the resource reference,
 	# not get_class() (which returns "ArrayMesh" for all of them).
 	var meshes := {}
-	for type in [TDTower.Type.BASIC, TDTower.Type.BEAM, TDTower.Type.BOMB]:
+	for type in [TDTower.Type.MACHINE_GUN, TDTower.Type.BEAM, TDTower.Type.MISSILE]:
 		var t = _tower(type)
 		meshes[type] = t._head.mesh
-	assert_ne(meshes[TDTower.Type.BEAM], meshes[TDTower.Type.BASIC], "beam head differs from cannon")
-	assert_ne(meshes[TDTower.Type.BOMB], meshes[TDTower.Type.BASIC], "bomb head differs from cannon")
+	assert_ne(meshes[TDTower.Type.BEAM], meshes[TDTower.Type.MACHINE_GUN], "beam head differs from cannon")
+	assert_ne(meshes[TDTower.Type.MISSILE], meshes[TDTower.Type.MACHINE_GUN], "missile head differs from cannon")
 
-func test_beam_tower_builds_emitter_reaching_the_muzzle():
+func test_beam_tower_builds_electrode_crown():
 	var t = _tower(TDTower.Type.BEAM, Vector3.ZERO)
 	assert_not_null(t._emitter, "beam tower builds an emitter assembly")
 	assert_true(t._emitter.visible, "emitter is visible")
-	assert_eq(t._emitter.get_child_count(), 6, "emitter has post + barrel + nozzle + 2 prongs + tip")
-	# The last child is the glowing tip; it should sit at the muzzle's local Z (the
-	# beam's origin), so the emitter visibly extends out to where the beam begins.
-	var tip: Node3D = t._emitter.get_child(t._emitter.get_child_count() - 1)
-	var muzzle_z: float = t.turret.to_local(t.muzzle.global_position).z
-	assert_almost_eq(tip.position.z, muzzle_z, 0.001, "emitter tip is at the muzzle / beam start")
+	assert_not_null(t._electrode_crown, "emitter contains an electrode crown node")
+	var expected_rods: int = t._stats().get("electrodes", 5)
+	assert_eq(t._electrode_rods.size(), expected_rods,
+		"crown has %d electrode rods at level 1" % expected_rods)
+	# Arc mesh slots created (one per max possible arc = 4).
+	assert_eq(t._arc_meshes.size(), 4, "four arc mesh slots created")
 
 func test_non_beam_towers_have_no_visible_emitter():
-	for type in [TDTower.Type.BASIC, TDTower.Type.BOMB]:
+	for type in [TDTower.Type.MACHINE_GUN, TDTower.Type.MISSILE]:
 		var t = _tower(type)
 		assert_true(t._emitter == null or not t._emitter.visible,
 			"type %d has no visible beam emitter" % type)
 
 func test_turret_rotates_gradually_not_instantly():
-	var t = _tower(TDTower.Type.BASIC, Vector3.ZERO)
+	var t = _tower(TDTower.Type.MACHINE_GUN, Vector3.ZERO)
 	t.turret.rotation.y = 0.0
 	# Target directly behind (requires a large yaw); a single small step must not
 	# snap all the way around.

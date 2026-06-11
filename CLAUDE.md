@@ -28,10 +28,12 @@ The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
   prose checks live in [test/VISUAL_CHECKLIST.md](test/VISUAL_CHECKLIST.md) — add
   to it when you add visible behavior.
 - **Commit/push only when asked.** Branch first if on `main`.
-- **Keep the roadmap honest.** When you finish a roadmap item, move it to the
-  `completed` section (`status: "done"`) with a note on what actually shipped; if
-  you discover a problem, add a `debt` item. Validate the file after editing:
-  `python3 -m json.tool roadmap/roadmap.json`.
+- **Keep the roadmap honest — every session, not just at the end.**
+  - When you *start* a roadmap item, set its status to `"wip"`.
+  - When it ships, set status to `"done"` and update the `note` with what actually landed.
+  - If a user request doesn't map to any existing item, **add one** (or a child task) before doing the work.
+  - If you discover a problem or leave something half-done, add a `debt` item.
+  - Validate after every edit: `python3 -m json.tool roadmap/roadmap.json`.
 
 ## Conventions that matter (follow the existing grain)
 

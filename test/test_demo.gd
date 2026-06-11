@@ -51,21 +51,21 @@ func test_variety_spreads_evenly_before_doubling():
 func test_try_build_places_a_tower_and_charges_currency():
 	var slot = game.free_slots()[0]
 	var c0 = game.currency
-	var ok = game.try_build(slot, TDTower.Type.BASIC)
+	var ok = game.try_build(slot, TDTower.Type.MACHINE_GUN)
 	assert_true(ok, "build succeeds on a free slot with enough currency")
 	assert_true(slot.occupied, "slot becomes occupied")
-	assert_eq(game.currency, c0 - TDTower.TYPES[TDTower.Type.BASIC]["base_cost"],
+	assert_eq(game.currency, c0 - TDTower.TYPES[TDTower.Type.MACHINE_GUN]["base_cost"],
 		"currency drops by the tower's cost")
 
 func test_try_build_fails_when_too_poor():
 	var slot = game.free_slots()[0]
 	game.currency = 0
-	assert_false(game.try_build(slot, TDTower.Type.BASIC), "no build with zero currency")
+	assert_false(game.try_build(slot, TDTower.Type.MACHINE_GUN), "no build with zero currency")
 	assert_false(slot.occupied, "slot stays free")
 
 func test_try_upgrade_raises_level_and_charges():
 	var slot = game.free_slots()[0]
-	game.try_build(slot, TDTower.Type.BASIC)
+	game.try_build(slot, TDTower.Type.MACHINE_GUN)
 	var tower = game.built_towers()[0]
 	game.currency = 9999
 	var lvl0 = tower.level
@@ -75,5 +75,5 @@ func test_try_upgrade_raises_level_and_charges():
 func test_free_slots_shrinks_as_we_build():
 	var n0 = game.free_slots().size()
 	assert_gt(n0, 0, "there are free slots to begin with")
-	game.try_build(game.free_slots()[0], TDTower.Type.BASIC)
+	game.try_build(game.free_slots()[0], TDTower.Type.MACHINE_GUN)
 	assert_eq(game.free_slots().size(), n0 - 1, "one fewer free slot after building")

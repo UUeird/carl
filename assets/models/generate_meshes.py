@@ -121,26 +121,99 @@ def make_tower_base():
 
 
 # ---------------------------------------------------------------------------
-# CANNON HEAD  — box body + round barrel along −Z
-# Turret sits at y=0.85 in the scene; head is centered at local origin.
+# CANNON — split into two meshes so GDScript can color them independently:
+#   cannon_body.glb  → always grey: boxy armour housing + gun barrel tube
+#   cannon_cap.glb   → elemental color: octagonal lid that sits on the housing
+#
+# Coordinate conventions (same as all other meshes):
+#   Y is up.  Base of the assembled turret head sits at Y=0.
+#   Gun barrel points along −Z (forward).
+#   Both meshes share the same local origin so they align when placed on
+#   $Turret/Barrel (body) and $Turret/Head (cap) in the Godot scene.
+#
+# Body height: 0.28 units.  Cap sits at Y=0.28, height 0.10.
 # ---------------------------------------------------------------------------
 
-def make_cannon_head():
-    print("tower/cannon_head …")
+CANNON_BODY_H  = 0.28   # height of the main housing
+CANNON_CAP_H   = 0.10   # height of the elemental cap disc
+CANNON_BODY_W  = 0.54   # X width of housing
+CANNON_BODY_D  = 0.48   # Z depth of housing
+
+
+def make_cannon_body():
+    """
+    Grey housing + gun barrel.  Assigned to $Turret/Barrel in Godot (made
+    visible for cannon; hidden for other tower types).
+    """
+    print("tower/cannon_body …")
     clear_scene()
 
-    # Box head centered at origin
-    add_box(0.55, 0.38, 0.50, location=(0, 0, 0))
+    # ── Main housing box, base at Y=0 ──────────────────────────────────────
+    box(CANNON_BODY_W, CANNON_BODY_H, CANNON_BODY_D)
 
-    # Barrel: cylinder pointing along Z, rotated so it faces −Z
+    # ── Armour cheek-plates: two thick slabs on the sides, slightly proud ──
+    # They overlap the housing sides and read as bolted armour panels.
+    cheek_w = 0.08
+    cheek_h = CANNON_BODY_H * 0.72
+    cheek_d = CANNON_BODY_D * 0.60
+    for sx in (-1, 1):
+        box(cheek_w, cheek_h, cheek_d,
+            x=sx * (CANNON_BODY_W * 0.5 + cheek_w * 0.35),
+            y_base=CANNON_BODY_H * 0.14)
+
+    # ── Barrel collar: a short cylinder ring where the tube exits the front ─
+    collar_r  = 0.13
+    collar_h  = 0.06
+    cyl(collar_r, collar_r, collar_h, seg=12,
+        y_base=CANNON_BODY_H * 0.28,
+        z=-(CANNON_BODY_D * 0.5))
+
+    # ── Gun barrel: round tube pointing along −Z, exits collar center ───────
+    barrel_r     = 0.075
+    barrel_len   = 0.60
+    barrel_z     = -(CANNON_BODY_D * 0.5 + barrel_len * 0.5)
     bpy.ops.mesh.primitive_cylinder_add(
-        vertices=8, radius=0.085, depth=0.65,
-        location=(0, 0.05, -0.575),
+        vertices=10, radius=barrel_r, depth=barrel_len,
+        location=(0, CANNON_BODY_H * 0.28, barrel_z),
         rotation=(math.radians(90), 0, 0),
     )
 
+    # ── Muzzle brake: two thin disc rings at the barrel tip ─────────────────
+    brake_z = -(CANNON_BODY_D * 0.5 + barrel_len - 0.04)
+    for dz in (0.0, 0.07):
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=10, radius=barrel_r + 0.035, depth=0.025,
+            location=(0, CANNON_BODY_H * 0.28, brake_z - dz),
+            rotation=(math.radians(90), 0, 0),
+        )
+
     join_all()
-    export_glb(os.path.join(TOWER_DIR, "cannon_head.glb"))
+    export_glb(os.path.join(TOWER_DIR, "cannon_body.glb"))
+
+
+def make_cannon_cap():
+    """
+    Elemental cap disc — sits on top of the housing at Y=CANNON_BODY_H.
+    Assigned to $Turret/Head in Godot; GDScript tints this with the
+    elemental color (grey pre-upgrade, then fire/frost/shock/poison).
+    The 16-segment octagonal profile is visually distinct from the boxy
+    housing so the two pieces read as separate at a glance.
+    """
+    print("tower/cannon_cap …")
+    clear_scene()
+
+    cap_r = CANNON_BODY_W * 0.52   # slightly wider than the housing top
+
+    # ── Main cap disc ────────────────────────────────────────────────────────
+    cyl(cap_r, cap_r * 0.88, CANNON_CAP_H, seg=16, y_base=CANNON_BODY_H)
+
+    # ── Central raised dome — the 'eye' that glows with element color ────────
+    dome_r = cap_r * 0.36
+    sphere(dome_r, u=12, v=8,
+           y=CANNON_BODY_H + CANNON_CAP_H + dome_r * 0.55)
+
+    join_all()
+    export_glb(os.path.join(TOWER_DIR, "cannon_cap.glb"))
 
 
 # ---------------------------------------------------------------------------
@@ -320,7 +393,8 @@ def make_gunner():
 
 print("=== generating carl meshes ===")
 make_tower_base()
-make_cannon_head()
+make_cannon_body()   # replaces make_cannon_head() — split into body + cap
+make_cannon_cap()
 make_frost_head()
 make_beam_head()
 make_bomb_head()

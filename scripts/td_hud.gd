@@ -45,6 +45,8 @@ func _ready() -> void:
 	_build_type_buttons()
 	_build_demo_button()
 	_build_map_button()
+	_build_reset_button()
+	_build_gold_cheat_button()
 	_refresh()
 
 # Debug-only "Demo" button: kicks off the autoplay driver. Hidden in release
@@ -84,6 +86,34 @@ func _build_map_button() -> void:
 	b.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/map_picker.tscn"))
 	root.add_child(b)
 
+func _build_reset_button() -> void:
+	var b := Button.new()
+	b.text = "↺ Reset"
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = -590.0
+	b.offset_right = -500.0
+	b.offset_top = 16.0
+	b.offset_bottom = 44.0
+	b.add_theme_font_size_override("font_size", 12)
+	b.pressed.connect(func(): get_tree().reload_current_scene())
+	root.add_child(b)
+
+func _build_gold_cheat_button() -> void:
+	if not OS.is_debug_build():
+		return
+	var b := Button.new()
+	b.text = "+500 ●"
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = -700.0
+	b.offset_right = -600.0
+	b.offset_top = 16.0
+	b.offset_bottom = 44.0
+	b.add_theme_font_size_override("font_size", 12)
+	b.pressed.connect(func(): _game.cheat_add_gold())
+	root.add_child(b)
+
 func _build_type_buttons() -> void:
 	var box := HBoxContainer.new()
 	# Anchor to the top-left corner with a fixed inset, so the row holds its place
@@ -101,21 +131,19 @@ func _build_type_buttons() -> void:
 		b.toggle_mode = true
 		b.text = "%s — %d" % [info["name"], info["base_cost"]]
 		b.focus_mode = Control.FOCUS_NONE   # don't let focus outline muddy the selected look
-		_style_type_button(b, info["color"])
+		_style_type_button(b)
 		b.pressed.connect(func(): _select_build_type(type))
 		box.add_child(b)
 		_build_buttons.append({ "btn": b, "type": type })
 	_select_build_type(TDTower.TYPES.keys()[0])
 
-# Theme one build button in its tower's identity color. We override every state's
-# StyleBox so the SELECTED (pressed) look is unmistakable — a bright fill in the
-# tower color with a thick light border — while the idle/hover looks stay muted
-# with just a thin colored accent. _refresh_type_button_text() adds a ► marker.
-func _style_type_button(b: Button, color: Color) -> void:
+# Style a toggle button: dark idle, slightly lighter hover, bright white-bordered
+# fill when selected. No tower-type color — identity comes from shape/cap color.
+func _style_type_button(b: Button) -> void:
 	var idle := StyleBoxFlat.new()
 	idle.bg_color = Color(0.13, 0.14, 0.17, 0.92)
 	idle.set_border_width_all(2)
-	idle.border_color = Color(color.r, color.g, color.b, 0.55)
+	idle.border_color = Color(0.55, 0.57, 0.62, 0.55)
 	idle.set_corner_radius_all(5)
 	idle.content_margin_left = 12
 	idle.content_margin_right = 12
@@ -124,11 +152,11 @@ func _style_type_button(b: Button, color: Color) -> void:
 
 	var hover := idle.duplicate()
 	hover.bg_color = Color(0.2, 0.21, 0.25, 0.95)
-	hover.border_color = Color(color.r, color.g, color.b, 0.85)
+	hover.border_color = Color(0.75, 0.77, 0.82, 0.85)
 
-	# Selected = pressed state: fill with the tower color, bright thick border.
+	# Selected = pressed state: light fill, bright thick border.
 	var selected := idle.duplicate()
-	selected.bg_color = Color(color.r, color.g, color.b, 0.92)
+	selected.bg_color = Color(0.28, 0.30, 0.36, 0.95)
 	selected.set_border_width_all(3)
 	selected.border_color = Color(1, 1, 1, 0.9)
 
@@ -136,11 +164,7 @@ func _style_type_button(b: Button, color: Color) -> void:
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("focus", idle)
 	b.add_theme_stylebox_override("pressed", selected)
-	# Toggled-on uses the same styleboxes as pressed/hover-pressed.
 	b.add_theme_stylebox_override("hover_pressed", selected)
-	# Dark text reads better on the bright selected fill; light text otherwise.
-	b.add_theme_color_override("font_pressed_color", Color(0.05, 0.05, 0.07))
-	b.add_theme_color_override("font_hover_pressed_color", Color(0.05, 0.05, 0.07))
 
 func _select_build_type(type) -> void:
 	_game.set_build_type(type)
@@ -181,19 +205,16 @@ func _build_panel() -> void:
 	_damage_type_box.add_child(dt_grid)
 	const DT := TDTower.DamageType
 	const DT_INFO := [
-		[DT.FIRE,    "Fire",    Color(0.95, 0.35, 0.15)],
-		[DT.FROST,   "Frost",   Color(0.45, 0.75, 0.98)],
-		[DT.POISON,  "Poison",  Color(0.35, 0.85, 0.25)],
-		[DT.SHOCK,   "Shock",   Color(0.95, 0.90, 0.2)],
+		[DT.FIRE,    "Fire"],
+		[DT.POISON,  "Poison"],
+		[DT.SHOCK,   "Shock"],
 	]
 	for entry in DT_INFO:
 		var dt: int = entry[0]
 		var label: String = entry[1]
-		var color: Color = entry[2]
 		var b := Button.new()
 		b.text = label
 		b.focus_mode = Control.FOCUS_NONE
-		_style_type_button(b, color)
 		b.pressed.connect(func():
 			if _selected_tower and is_instance_valid(_selected_tower):
 				_selected_tower.set_damage_type(dt)
