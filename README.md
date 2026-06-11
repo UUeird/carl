@@ -31,17 +31,17 @@ gameplay scene `scenes/td_main.tscn`.
 
 | Tower  | Role |
 |--------|------|
-| **Cannon** | Burst single-target projectile. |
-| **Beam**   | Continuous low **DPS** beam locked on one target. |
-| **Bomb**   | Lobs an arcing AoE shell to a *predicted* landing point — leads the target, so it can miss on turns. |
+| **Machine Gun** | Rapid dual alternating-barrel fire. Bullets fly straight to the *predicted* position — miss if the target turns, slows, or reverses. |
+| **Beam**        | Continuous DPS arcs to multiple targets via a rotating electrode crown. Arc count and target count increase with upgrades. |
+| **Missile**     | Lobs an arcing AoE shell to a *predicted* landing point — leads the target, so it can miss on turns. |
 
 Towers target the enemy **furthest along the path** within a spherical range, and only fire
 with clear **line of sight** (terrain/obstacles block shots). Upgrades raise range, damage,
 fire rate, and projectile speed. Towers are **destructible** — a Gunner's fire or an exploding
 Grunt can destroy one, freeing its slot.
 
-At **level 2**, every tower permanently chooses a **damage type** — Fire, Frost, Poison, or
-Shock — which applies modifiers against each enemy health layer. Frost-typed towers also slow
+At **level 2**, every tower permanently chooses a **damage type** — Fire, Poison, or
+Shock — which applies modifiers against each enemy health layer. Shock-typed towers also slow
 enemies on hit.
 
 ### Enemy health layers
