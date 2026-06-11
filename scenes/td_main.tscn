@@ -1,6 +1,7 @@
-[gd_scene load_steps=32 format=3 uid="uid://td_main"]
+[gd_scene load_steps=30 format=3 uid="uid://td_main"]
 
 [ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/path_ribbon.gd" id="10_ribbon"]
 [ext_resource type="PackedScene" uid="uid://td_enemy" path="res://scenes/td_enemy.tscn" id="2_enemy"]
 [ext_resource type="PackedScene" uid="uid://td_tower" path="res://scenes/td_tower.tscn" id="3_tower"]
 [ext_resource type="PackedScene" uid="uid://td_tower_slot" path="res://scenes/tower_slot.tscn" id="4_slot"]
@@ -10,15 +11,6 @@
 [ext_resource type="PackedScene" uid="uid://td_projectile" path="res://scenes/td_projectile.tscn" id="7_proj"]
 [ext_resource type="PackedScene" uid="uid://td_bomb" path="res://scenes/td_bomb.tscn" id="8_bomb"]
 
-[sub_resource type="BoxMesh" id="wall_mesh"]
-size = Vector3(2, 4, 16)
-
-[sub_resource type="BoxShape3D" id="wall_shape"]
-size = Vector3(2, 4, 16)
-
-[sub_resource type="StandardMaterial3D" id="obstacle_mat"]
-albedo_color = Color(0.3, 0.32, 0.38, 1)
-roughness = 0.9
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.38, 0.45, 0.6, 1)
@@ -46,14 +38,14 @@ albedo_color = Color(0.22, 0.3, 0.24, 1)
 
 [sub_resource type="Curve3D" id="path_upper"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, -12, 0, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0, 0, 0, 0, 0, 20, 0, -12, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0),
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -29.0, 0, -12.12, 0, 0, 0, 0, 0, 0, -12.12, 0, -16.65, 0, 0, 0, 0, 0, 0, 0.01, 0, -9.65, 0, 0, 0, 0, 0, 0, 12.13, 0, -16.65, 0, 0, 0, 0, 0, 0, 29.02, 0, -12.12, 0, 0, 0, 0, 0, 0, 36, 0, 0),
 "tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0)
 }
 point_count = 7
 
 [sub_resource type="Curve3D" id="path_lower"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 0, 0, 0, 0, 0, 0, 0, -20, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 20, 0, 12, 0, 0, 0, 0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0),
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -36, 0, 0, 0, 0, 0, 0, 0, 0, -26.1, 0, 9.9, 0, 0, 0, 0, 0, 0, -9.9, 0, 14.24, 0, 0, 0, 0, 0, 0, 0.0, 0, 4.34, 0, 0, 0, 0, 0, 0, 9.9, 0, 14.24, 0, 0, 0, 0, 0, 0, 26.1, 0, 9.9, 0, 0, 0, 0, 0, 0, 36, 0, 0),
 "tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0)
 }
 point_count = 7
@@ -108,41 +100,6 @@ collision_mask = 0
 mesh = SubResource("ground_mesh")
 material_override = SubResource("ground_mat")
 
-[node name="WallA" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallA"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallA"]
-shape = SubResource("wall_shape")
-
-[node name="WallB" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallB"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallB"]
-shape = SubResource("wall_shape")
-
-[node name="WallC" type="StaticBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, 0)
-collision_layer = 4
-collision_mask = 0
-
-[node name="Mesh" type="MeshInstance3D" parent="WallC"]
-mesh = SubResource("wall_mesh")
-material_override = SubResource("obstacle_mat")
-
-[node name="Collision" type="CollisionShape3D" parent="WallC"]
-shape = SubResource("wall_shape")
 
 [node name="PathUpper" type="Path3D" parent="."]
 curve = SubResource("path_upper")
@@ -157,44 +114,14 @@ transform = Transform3D(4, 0, 0, 0, 1, 0, 0, 0, 4, -36, 0.15, 0)
 mesh = SubResource("path_seg")
 material_override = SubResource("spawn_mat")
 
-[node name="SharedEntry" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, -27,  0.12, 0)
-mesh = SubResource("path_seg")
+[node name="PathARibbon" type="MeshInstance3D" parent="PathVis"]
+script = ExtResource("10_ribbon")
+path_node = NodePath("../../PathUpper")
 material_override = SubResource("path_mat")
 
-[node name="ConnUL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20,  0.12, -6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnLL" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, -20,  0.12, 6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="UpperLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0,  0.12, -12)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="LowerLane" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(40, 0, 0, 0, 1, 0, 0, 0, 2, 0,  0.12, 12)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnUR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20,  0.12, -6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="ConnLR" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(2, 0, 0, 0, 1, 0, 0, 0, 14, 20,  0.12, 6)
-mesh = SubResource("path_seg")
-material_override = SubResource("path_mat")
-
-[node name="SharedExit" type="MeshInstance3D" parent="PathVis"]
-transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 2, 27,  0.12, 0)
-mesh = SubResource("path_seg")
+[node name="PathBRibbon" type="MeshInstance3D" parent="PathVis"]
+script = ExtResource("10_ribbon")
+path_node = NodePath("../../PathLower")
 material_override = SubResource("path_mat")
 
 [node name="Goal" type="MeshInstance3D" parent="PathVis"]
@@ -205,40 +132,40 @@ material_override = SubResource("goal_mat")
 [node name="Slots" type="Node3D" parent="."]
 
 [node name="Slot0" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28,  0.12, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -31, 0.12, 12)
 
 [node name="Slot1" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28,  0.12, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27, 0.12, -4)
 
 [node name="Slot2" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10,  0.12, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0.12, -8)
 
 [node name="Slot3" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10,  0.12, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14, 0.12, 6)
 
 [node name="Slot4" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10,  0.12, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 0.12, -6)
 
 [node name="Slot5" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10,  0.12, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.12, 1)
 
 [node name="Slot6" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28,  0.12, -4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.12, -8)
 
 [node name="Slot7" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28,  0.12, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.12, 8)
 
 [node name="Slot8" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18,  0.12, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0.12, -9)
 
 [node name="Slot9" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18,  0.12, -16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0.12, 3)
 
 [node name="Slot10" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18,  0.12, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0.12, -19)
 
 [node name="Slot11" parent="Slots" instance=ExtResource("4_slot")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18,  0.12, 16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.12, 14)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("5_hud")

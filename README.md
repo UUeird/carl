@@ -140,5 +140,5 @@ Collision layers: `2` = enemies (hittable), `4` = environment (blocks line of si
 ## Roadmap
 
 What's done, open, and next lives in the interactive roadmap — run `python3 roadmap/server.py`
-and open <http://localhost:8770/> (see [ROADMAP.md](ROADMAP.md) for details). Shipped changes
+and open <http://localhost:8770/>. Shipped changes
 are recorded in [CHANGELOG.md](CHANGELOG.md).

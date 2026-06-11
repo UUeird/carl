@@ -24,7 +24,7 @@
       "title": "Multi-resolution / HiDPI display support",
       "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue.",
       "type": "story",
-      "status": "wip",
+      "status": "done",
       "children": [
         {
           "title": "Add display/window/dpi/allow_hidpi=true to project.godot so the game renders at native Retina resolution on HiDPI Macs instead of appearing zoomed-out",
@@ -36,18 +36,14 @@
         },
         {
           "title": "Audit all UI scenes: replace hardcoded pixel positions with anchor-based layouts (anchor presets: top-left, top-right, bottom-left, bottom-right, full-rect) so the HUD stays correct at any window size",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Set a sensible base window size in project.godot (e.g. 1280x720) as the reference resolution that UI anchors are authored against",
           "status": "done"
-        },
-        {
-          "title": "Optional: clamp camera FOV in td_camera.gd based on viewport aspect ratio if ultrawide layouts reveal too much of the map and create a balance issue",
-          "status": "todo"
         }
       ],
-      "updatedAt": "2026-06-10T03:53:01.154Z",
+      "updatedAt": "2026-06-10T05:14:15.276Z",
       "statusChangedAt": "2026-06-10T03:50:02.747Z"
     },
     {
@@ -134,6 +130,36 @@
       ]
     },
     {
+      "title": "map improvements",
+      "note": "we should make the map prettier",
+      "type": "story",
+      "status": "wip",
+      "children": [
+        {
+          "title": "smooth pathing",
+          "status": "wip"
+        },
+        {
+          "title": "add texture to map tiles",
+          "status": "todo"
+        },
+        {
+          "title": "improve view of the \"base\" entity (enemy goal)",
+          "status": "todo"
+        },
+        {
+          "title": "when a tower is destroyed, it's zone goes into a 5s timeout",
+          "status": "todo"
+        },
+        {
+          "title": "improve wall assets and add more detail",
+          "status": "todo"
+        }
+      ],
+      "updatedAt": "2026-06-10T05:26:46.672Z",
+      "statusChangedAt": "2026-06-10T05:26:31.455Z"
+    },
+    {
       "title": "Navigation: map picker, in-game escape, pause, game-over/victory screens",
       "note": "Map picker on load is done. In-game escape back to the map picker is next. Pause screen and post-game screens (stats, retry, back to menu) still to do.",
       "type": "story",
@@ -162,54 +188,6 @@
       "type": "story",
       "status": "todo",
       "title": "More combat juice \u2014 hit particles, screen shake, death effects, SFX"
-    },
-    {
-      "title": "More enemy types: tower-debuff aura + fast exploder",
-      "note": "shaking up the enemy types (round 2, building on the Grunt/Healer/Gunner system)",
-      "type": "story",
-      "status": "todo",
-      "children": [
-        {
-          "title": "creep that casts a debuff aura on towers, slowing their fire rate",
-          "status": "todo"
-        },
-        {
-          "title": "creep that moves quickly but has lower health, it also explodes on the base",
-          "status": "todo"
-        }
-      ]
-    },
-    {
-      "title": "map improvements",
-      "note": "we should make the map prettier",
-      "type": "story",
-      "status": "todo",
-      "children": [
-        {
-          "title": "smooth pathing",
-          "status": "todo"
-        },
-        {
-          "title": "add texture to map tiles",
-          "status": "todo"
-        },
-        {
-          "title": "improve view of the \"base\" entity (enemy goal)",
-          "status": "todo"
-        },
-        {
-          "title": "improve view of valid tower zones",
-          "status": "todo"
-        },
-        {
-          "title": "when a tower is destroyed, it's zone goes into a 5s timeout",
-          "status": "todo"
-        },
-        {
-          "title": "improve wall assets",
-          "status": "todo"
-        }
-      ]
     },
     {
       "title": "enemy visual improvements",
@@ -684,16 +662,6 @@
       "note": "Damage numbers are already pooled. Projectiles and blast rings are still allocated per-spawn. Not yet confirmed as a bottleneck \u2014 profile before investing.",
       "type": "bug",
       "status": "idea"
-    },
-    {
-      "title": "Test ticket from Playwright",
-      "type": "story",
-      "status": "todo"
-    },
-    {
-      "title": "Test ticket from Playwright",
-      "type": "story",
-      "status": "todo"
     }
   ]
 }
