@@ -15,7 +15,8 @@ Everything is placeholder primitives (capsules/boxes) — no art is committed ye
 2. Open Godot and import this project (`project.godot`), then press **F5**.
 
 CLI: `godot --path .` (or `/Applications/Godot.app/Contents/MacOS/Godot --path .` on macOS).
-The main scene is `scenes/td_main.tscn`.
+The game boots into the map picker (`scenes/map_picker.tscn`), which loads the main
+gameplay scene `scenes/td_main.tscn`.
 
 ## How to play
 
@@ -70,13 +71,15 @@ The damage type / health layer / damage number system is deliberately modelled o
 ### Enemy types
 
 Enemies are data-driven from a `TYPES` table the same way towers are; the spawner mixes them
-by wave (Healers from wave 2, Gunners from wave 3).
+by wave (Healers from wave 2, Gunners from wave 3), and a solo Boss walks in before each wave
+from wave 2 on.
 
 | Enemy  | Behavior |
 |--------|----------|
 | **Grunt** (red)   | Common creep. **Explosive**: a blast when it reaches the goal, and on death a small AoE that damages nearby towers. |
 | **Healer** (green) | Periodically pulses a **heal aura** that restores HP to nearby living allies. |
 | **Gunner** (purple) | Carries a turret that **shoots the nearest tower** in range, damaging and eventually destroying it. |
+| **Boss** (dark red) | Large (2× scale), high-HP (120 flesh + 60 armor), slow creep worth 40g that spawns **solo between waves** (from wave 2). Costs **5 lives** if it reaches the goal. |
 
 ## Testing
 
@@ -121,8 +124,8 @@ checklist run by launching the game and inspecting screenshots. Both should be g
 
 ```
 carl/
-├── project.godot          # config + input map; main scene = scenes/td_main.tscn
-├── scenes/                # td_main, td_test_map (straight lane for screenshot tests), td_tower, td_enemy, td_projectile, td_bomb, tower_slot
+├── project.godot          # config + input map; main scene = scenes/map_picker.tscn
+├── scenes/                # map_picker (boot scene), td_main (gameplay), td_test_map (straight lane for screenshot tests), td_tower, td_enemy, td_projectile, td_bomb, tower_slot
 ├── scripts/               # one .gd per system (see links above)
 ├── test/                  # GUT tests (test_*.gd) + VISUAL_CHECKLIST.md
 ├── addons/gut/            # vendored test framework
@@ -132,10 +135,6 @@ carl/
 
 Collision layers: `2` = enemies (hittable), `4` = environment (blocks line of sight),
 `8` = tower slots.
-
-> Note: the repo still contains the earlier action-prototype scenes/scripts (player, boss,
-> combat, level). They're not part of the TD game and are slated for cleanup — see the
-> roadmap's debt list.
 
 ## Roadmap
 

@@ -684,16 +684,6 @@
       "note": "Damage numbers are already pooled. Projectiles and blast rings are still allocated per-spawn. Not yet confirmed as a bottleneck \u2014 profile before investing.",
       "type": "bug",
       "status": "idea"
-    },
-    {
-      "title": "Test ticket from Playwright",
-      "type": "story",
-      "status": "todo"
-    },
-    {
-      "title": "Test ticket from Playwright",
-      "type": "story",
-      "status": "todo"
     }
   ]
 }

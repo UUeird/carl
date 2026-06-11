@@ -13,6 +13,16 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ---
 
+## Unreleased
+
+### Fixed
+- **Gunner shot pool leak** — a Gunner's in-flight projectile mover was parented to the Gunner, so if the Gunner died or reached the goal mid-flight the mover was freed with it, orphaning a visible pooled sphere on the map and permanently draining the shot pool. The mover is now parented to the scene and flies to completion.
+
+### Docs
+- README & CLAUDE.md: corrected the boot scene to `map_picker.tscn` (it loads `td_main.tscn`); documented the Boss enemy in the README enemy table; removed the stale "leftover action-prototype scripts" note (those files no longer exist).
+- Removed dead `DamageNumber.popup()` API (superseded by `acquire`/`release`).
+- Roadmap: removed two stray "Test ticket from Playwright" items.
+
 ## 2026.06.09
 
 ### Added

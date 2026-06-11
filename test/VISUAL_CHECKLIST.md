@@ -66,6 +66,7 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 - [ ] An exploding grunt that reaches the goal shows the blast (cosmetic) and costs a life as before.
 - [ ] **Healer** (green) periodically emits a green **heal pulse**; a damaged ally inside the pulse visibly regains HP (its bar grows back).
 - [ ] **Gunner** (purple) fires a visible **red/orange moving sphere** at the nearest tower in range; the sphere travels across the map and hits; the targeted tower loses HP.
+- [ ] A Gunner's in-flight shot **completes even if the Gunner dies or reaches the goal mid-flight** — the sphere keeps traveling to the tower and disappears (no frozen orphan spheres litter the map over a long game; the shot pool stays healthy).
 - [ ] **Boss** (2× scale grunt) spawns solo between waves, walks the path with noticeably more HP, and requires sustained fire to kill.
 - [ ] A tower under sustained Gunner / blast damage is **destroyed** (shrinks away), its slot frees up, and a "tower destroyed" message shows; if it was selected, the panel closes.
 

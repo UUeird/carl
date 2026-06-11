@@ -2,11 +2,10 @@ extends Label3D
 class_name DamageNumber
 
 ## A small white number that pops at a hit, drifts upward, and fades out.
-## Spawned via the static popup() helper so callers don't need the scene path.
 ## Uses a static free-list pool to avoid per-hit alloc + add_child cost.
 ##
-## Beam mode: acquire() pins a node in place (no drift/fade) so the tower can
-## update its text each frame. release() lets it drift and fade as normal.
+## acquire() pins a node in place (no drift/fade) so the caller can update its
+## text each frame as damage accumulates; release() lets it drift and fade.
 
 const RISE := 1.2
 const LIFE := 0.7
@@ -53,25 +52,6 @@ static func prewarm(scene_root: Node) -> void:
 		dn.visible = false
 		scene_root.add_child(dn)
 		_pool.append(dn)
-
-## Spawn a damage number at a world position. No-op if no valid parent.
-static func popup(scene_root: Node, world_pos: Vector3, amount: int) -> void:
-	if scene_root == null or not scene_root.is_inside_tree():
-		return
-	var dn: DamageNumber
-	if _pool.size() > 0:
-		dn = _pool.pop_back()
-	else:
-		dn = DamageNumber.new()
-		dn._setup()
-		scene_root.add_child(dn)
-	dn.text = str(amount)
-	dn._t = 0.0
-	dn._pinned = false
-	dn.visible = true
-	dn.set_process(true)
-	dn.modulate = Color.WHITE
-	dn.global_position = world_pos
 
 ## Grab a node from the pool and pin it — no drift or fade until release().
 ## The caller must call release() or the node leaks from the pool permanently.

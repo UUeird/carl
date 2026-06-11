@@ -15,7 +15,8 @@ done / next*, see the roadmap (below).
    `later`, `ideas`, `completed` (status `done`), `debt`.
 3. **[CHANGELOG.md](CHANGELOG.md)** — shipped changes.
 
-The main scene is `scenes/td_main.tscn`. Engine: Godot 4.6, run via
+The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
+`scenes/td_main.tscn`. Engine: Godot 4.6, run via
 `/Applications/Godot.app/Contents/MacOS/Godot` on this machine.
 
 ## The non-negotiables
