@@ -205,11 +205,6 @@
       ]
     },
     {
-      "title": "tower visual improvements",
-      "type": "story",
-      "status": "todo"
-    },
-    {
       "title": "Roadmap 2.0",
       "note": "A major rewrite of the Roadmap tool, shifting to a kanban layout, expanded data model, and more of a custom look and feel.",
       "type": "story",
@@ -647,6 +642,34 @@
         },
         {
           "title": "floating damage values should be of absolute size, not scale with map zoom",
+          "status": "todo"
+        }
+      ]
+    },
+    {
+      "title": "Tower mesh redesigns",
+      "note": "Each tower type needs a purpose-built mesh that reads its role at a glance and supports the gameplay (Beam: no barrel to mis-aim; Cannon: clear gun barrel; Bomb: silo that telegraphs the launch).",
+      "type": "story",
+      "status": "todo",
+      "children": [
+        {
+          "title": "Beam tower \u2014 replace the current emitter-barrel head with a domed turret base and a rotating crown of electrodes; the arc fires from the electrode tips so there is no barrel to mis-align with the beam direction",
+          "status": "todo"
+        },
+        {
+          "title": "Cannon tower \u2014 adopt the current Beam layout (gun barrel extending from the turret) so it clearly reads as a ballistic weapon; the barrel should visually track the target before firing",
+          "status": "todo"
+        },
+        {
+          "title": "Bomb tower \u2014 redesign as a missile silo: closed hatch at rest, hatch opens when a target is acquired, a rocket rises out and flies an arcing trajectory to the predicted landing point, hatch closes after launch",
+          "status": "todo"
+        },
+        {
+          "title": "Update shader prewarm and mesh cache in td_game._prewarm_shaders() for any new .glb assets added by the redesigns",
+          "status": "todo"
+        },
+        {
+          "title": "Update VISUAL_CHECKLIST.md with per-type shape checks for the new designs",
           "status": "todo"
         }
       ]
