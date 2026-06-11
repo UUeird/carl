@@ -22,9 +22,9 @@
   "items": [
     {
       "title": "Multi-resolution / HiDPI display support",
-      "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue.",
+      "note": "3D scene fills any viewport naturally; work is UI anchoring + two project.godot settings. Chosen approach: expand (bigger screens see more map \u2014 right for a desktop strategy game, not letterboxed). No changes to camera or game logic unless extreme ultrawide aspect ratios become a balance issue. [Shipped: stretch=canvas_items/expand + allow_hidpi=true in project.godot; HUD top-right cluster (Maps/Demo/Start-wave) and build-type row re-anchored in td_hud.gd so the layout holds at any window size, verified headed at 800x600 and 1920x1080.]",
       "type": "story",
-      "status": "wip",
+      "status": "done",
       "children": [
         {
           "title": "Add display/window/dpi/allow_hidpi=true to project.godot so the game renders at native Retina resolution on HiDPI Macs instead of appearing zoomed-out",
@@ -36,18 +36,14 @@
         },
         {
           "title": "Audit all UI scenes: replace hardcoded pixel positions with anchor-based layouts (anchor presets: top-left, top-right, bottom-left, bottom-right, full-rect) so the HUD stays correct at any window size",
-          "status": "todo"
+          "status": "done"
         },
         {
           "title": "Set a sensible base window size in project.godot (e.g. 1280x720) as the reference resolution that UI anchors are authored against",
           "status": "done"
-        },
-        {
-          "title": "Optional: clamp camera FOV in td_camera.gd based on viewport aspect ratio if ultrawide layouts reveal too much of the map and create a balance issue",
-          "status": "todo"
         }
       ],
-      "updatedAt": "2026-06-10T03:53:01.154Z",
+      "updatedAt": "2026-06-11T03:28:42.660Z",
       "statusChangedAt": "2026-06-10T03:50:02.747Z"
     },
     {

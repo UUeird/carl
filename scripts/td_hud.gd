@@ -71,10 +71,13 @@ func _build_demo_button() -> void:
 func _build_map_button() -> void:
 	var b := Button.new()
 	b.text = "⬡ Maps"
-	b.anchor_left = 0.0
-	b.anchor_right = 0.0
-	b.offset_left = 430.0
-	b.offset_right = 530.0
+	# Right-anchored, tucked left of the Demo button so the whole top-right cluster
+	# (Maps · Demo · Start-wave) stays grouped and moves together as the window
+	# widens — a fixed left offset would let it drift away from the rest of the bar.
+	b.anchor_left = 1.0
+	b.anchor_right = 1.0
+	b.offset_left = -490.0
+	b.offset_right = -400.0
 	b.offset_top = 16.0
 	b.offset_bottom = 44.0
 	b.add_theme_font_size_override("font_size", 12)
@@ -83,7 +86,12 @@ func _build_map_button() -> void:
 
 func _build_type_buttons() -> void:
 	var box := HBoxContainer.new()
-	box.position = Vector2(20, 78)
+	# Anchor to the top-left corner with a fixed inset, so the row holds its place
+	# under the stats/hint at any window size instead of relying on a raw position.
+	box.anchor_left = 0.0
+	box.anchor_top = 0.0
+	box.offset_left = 20.0
+	box.offset_top = 78.0
 	box.add_theme_constant_override("separation", 8)
 	root.add_child(box)
 	# Pull types/costs straight from the tower's TYPES table.
