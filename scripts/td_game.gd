@@ -21,6 +21,7 @@ signal selection_cleared
 @export var tower_scene: PackedScene
 @export var projectile_scene: PackedScene   ## used only for shader pre-warm at startup
 @export var bomb_scene: PackedScene         ## used only for shader pre-warm at startup
+@export var rocket_scene: PackedScene       ## used only for shader pre-warm at startup
 @export var path_node: NodePath        ## primary Path3D route
 @export var path_node_b: NodePath      ## secondary (branch) Path3D route; if set, enemies randomly take either
 @export var enemy_y: float = 1.0       ## height creeps walk at
@@ -95,6 +96,7 @@ func _prewarm_shaders() -> void:
 	for shape in TDTower._HEAD_MESHES:
 		TDTower._load_glb_mesh(TDTower._HEAD_MESHES[shape])
 	TDTower._load_glb_mesh(TDTower._BASE_MESH_PATH)
+	TDTower._load_glb_mesh(TDTower._PETAL_MESH_PATH)
 
 	# Pre-allocate the damage number pool so hits never alloc a Label3D mid-frame.
 	preload("res://scripts/damage_number.gd").prewarm(self)
@@ -110,11 +112,13 @@ func _prewarm_shaders() -> void:
 				e.configure(type)
 			nodes.append(e)
 
-	# Pre-allocate projectile and bomb pools so shots never instantiate mid-wave.
+	# Pre-allocate projectile, bomb, and rocket pools so shots never instantiate mid-wave.
 	if projectile_scene != null:
 		TDProjectile.prewarm(self, projectile_scene)
 	if bomb_scene != null:
 		TDBomb.prewarm(self, bomb_scene)
+	if rocket_scene != null:
+		TDRocket.prewarm(self, rocket_scene)
 
 	# One instance per tower type so all head meshes, materials, and the beam
 	# electrode/arc shader are compiled before the first wave. The BEAM instance

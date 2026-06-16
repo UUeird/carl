@@ -75,14 +75,14 @@ const TYPES := {
 	},
 	Type.MISSILE: {
 		"name": "Missile",
-		"color": Color(0.95, 0.6, 0.25),
-		"shape": "bomb",
+		"color": Color(0.82, 0.84, 0.88),  # silver; nose tinted red by TDRocket
+		"shape": "rocket_silo",
 		"base_cost": 80,
 		"upgrade_costs": [65, 100],
 		"tiers": [
-			{ "range": 7.0, "damage": 18.0, "cooldown": 1.6, "proj_speed": 10.0, "aoe": 2.2, "bomb": true },
-			{ "range": 7.8, "damage": 28.0, "cooldown": 1.4, "proj_speed": 13.0, "aoe": 2.6, "bomb": true },
-			{ "range": 8.6, "damage": 42.0, "cooldown": 1.2, "proj_speed": 17.0, "aoe": 3.2, "bomb": true },
+			{ "range": 7.0, "damage": 18.0, "cooldown": 1.6, "proj_speed": 10.0, "aoe": 2.2, "rocket": true },
+			{ "range": 7.8, "damage": 28.0, "cooldown": 1.4, "proj_speed": 13.0, "aoe": 2.6, "rocket": true },
+			{ "range": 8.6, "damage": 42.0, "cooldown": 1.2, "proj_speed": 17.0, "aoe": 3.2, "rocket": true },
 		],
 	},
 }
@@ -93,7 +93,8 @@ const SHOCK_SLOW_FACTOR   := 0.55   # multiplier on enemy speed (lower = slower)
 const SHOCK_SLOW_DURATION := 1.4    # seconds the slow lasts
 
 @export var projectile_scene: PackedScene
-@export var bomb_scene: PackedScene
+@export var bomb_scene: PackedScene    ## legacy; kept for scenes that still ref it
+@export var rocket_scene: PackedScene  ## TDRocket — used by MISSILE tower
 
 @onready var turret: Node3D = $Turret
 @onready var muzzle: Node3D = $Turret/Muzzle
@@ -105,16 +106,16 @@ const SHOCK_SLOW_DURATION := 1.4    # seconds the slow lasts
 
 # Elemental cap mesh (the colored piece on top) — one per tower shape.
 const _HEAD_MESHES := {
-	"cannon": "res://assets/models/towers/cannon_cap.glb",
-	"beam":   "res://assets/models/towers/beam_head.glb",
-	"bomb":   "res://assets/models/towers/bomb_head.glb",
+	"cannon":      "res://assets/models/towers/cannon_head.glb",
+	"beam":        "res://assets/models/towers/beam_head.glb",
+	"bomb":        "res://assets/models/towers/bomb_head.glb",
+	"rocket_silo": "res://assets/models/towers/rocket_silo_base.glb",
 }
-# Grey body mesh shown under the cap — cannon has a dedicated split body;
-# beam/bomb still use the head mesh for the full shape (no split yet).
-const _BODY_MESHES := {
-	"cannon": "res://assets/models/towers/cannon_body.glb",
-}
-const _BASE_MESH_PATH := "res://assets/models/towers/base.glb"
+# Optional grey body mesh shown under the cap. The cannon is now a single unified
+# head mesh (housing + barrel + cap together), so it has no separate body here.
+const _BODY_MESHES := {}
+const _PETAL_MESH_PATH := "res://assets/models/towers/rocket_silo_petal.glb"
+const _BASE_MESH_PATH  := "res://assets/models/towers/base.glb"
 
 ## Cache loaded meshes so we only extract them from the PackedScene once.
 static var _mesh_cache: Dictionary = {}
@@ -131,10 +132,11 @@ var _beam_targets: Array = []
 ## Arc MeshInstance3D slots — one per max possible target (6). Created once.
 var _arc_meshes: Array = []
 var _arc_materials: Array = []
-const ELECTRODE_ROD_RADIUS := 0.04
-const ELECTRODE_ROD_LENGTH := 0.48
-const ELECTRODE_CROWN_RADIUS := 0.18   # base of rods distance from dome centre
-const ELECTRODE_CROWN_HEIGHT := 0.28   # height of rod bases above turret origin
+const ELECTRODE_ROD_RADIUS := 0.022   # thin so they read as crisp prongs (was 0.04)
+const ELECTRODE_ROD_LENGTH := 0.22    # short, tidy prongs (was 0.48 — splayed out)
+const ELECTRODE_CROWN_RADIUS := 0.13  # tighter ring around the emitter
+const ELECTRODE_CROWN_HEIGHT := 0.30  # height of rod bases above turret origin
+const ELECTRODE_TILT_DEG     := 18.0  # near-vertical lean (was 45° — looked random)
 const ELECTRODE_SPIN_SPEED   := 1.2    # radians/sec idle rotation
 const BEAM_ARC_RADIUS        := 0.035  # visual thickness of each arc cylinder
 
@@ -155,6 +157,31 @@ var _destroyed: bool = false
 const FLASH_TIME := 0.15
 var _flash_timer: float = 0.0
 
+## Iris petal nodes for the rocket silo — 6 MeshInstance3D children spawned at
+## configure() time, tweened open/closed by _iris_open() / _iris_close().
+var _iris_petals: Array = []
+## Y height of the iris hinge ring above the turret origin. The silo_base GLB is
+## centred on its origin (Y −0.21..0.21 after export), so its top rim sits at
+## +SILO_H/2; the blades sit recessed slightly BELOW the rim, inside the well.
+const IRIS_Y          := 0.155  # below the rim top (≈0.21) so blades sit in the well
+const SILO_INNER_R    := 0.20   # must match SILO_INNER_R in generate_rocket_tower.py
+## Radius of the petal hinge ring — matches PETAL_R0 in generate_rocket_tower.py.
+const IRIS_HINGE_R    := 0.20
+## The iris opens by sweeping each blade IN-PLANE about Y (a real aperture), not by
+## tilting up. rotation.y = (slot angle) when closed; opening adds IRIS_OPEN_SWEEP
+## so the curled blades rotate aside and clear the bore.
+## Opening drops each blade straight down into the recessed well (with a small
+## in-plane twist for flavour) so the bore clears — pure in-plane rotation can't
+## retract blades over a bore this size, so the hatch sinks away instead.
+const IRIS_OPEN_SWEEP := 0.45    # radians (~26°) of in-plane twist while sinking
+const IRIS_SINK       := 0.16    # metres the blades drop into the well to open
+const IRIS_OPEN_TIME  := 0.18    # seconds to open
+const IRIS_CLOSE_TIME := 0.22    # seconds to close
+const IRIS_PETAL_COUNT := 6
+## Each successive blade is layered IRIS_STAGGER higher so the curled slivers
+## overlap cleanly (continuous spiral, no z-fighting). << the blade thickness.
+const IRIS_STAGGER    := 0.006
+
 
 func _ready() -> void:
 	_head_material = StandardMaterial3D.new()
@@ -165,6 +192,10 @@ func _ready() -> void:
 	_head_material.roughness = 0.7
 	_head_material.emission_enabled = true
 	_head_material.emission_energy_multiplier = 0.6
+	# The head .glb carries a baked ambient-occlusion vertex-colour layer (from
+	# generate_meshes.py); multiply it against the elemental tint so flat-coloured
+	# caps gain crease/contact depth without a texture.
+	_head_material.vertex_color_use_as_albedo = true
 	if _head:
 		_head.material_override = _head_material
 	# Static grey for the body/barrel mesh — no emission, slightly rougher so it
@@ -173,6 +204,7 @@ func _ready() -> void:
 	_barrel_material.albedo_color = Color(0.38, 0.40, 0.44)
 	_barrel_material.metallic = 0.3
 	_barrel_material.roughness = 0.85
+	_barrel_material.vertex_color_use_as_albedo = true   # baked-AO layer (see above)
 	TDTower.all_towers.append(self)
 	# $Beam (the old single-cylinder beam) is superseded by per-arc meshes; hide it permanently.
 	if _beam:
@@ -330,6 +362,9 @@ func _apply_visual() -> void:
 static func _load_glb_mesh(path: String) -> Mesh:
 	if _mesh_cache.has(path):
 		return _mesh_cache[path]
+	if not ResourceLoader.exists(path):
+		_mesh_cache[path] = null
+		return null
 	var packed: PackedScene = load(path)
 	if packed == null:
 		return null
@@ -356,6 +391,12 @@ func _apply_shape() -> void:
 		_base.mesh = _load_glb_mesh(_BASE_MESH_PATH)
 	var head_path: String = _HEAD_MESHES.get(shape, _HEAD_MESHES["cannon"])
 	_head.mesh = _load_glb_mesh(head_path)
+	# Rocket silo head carries its own texture; let the GLB surface material show.
+	# All other shapes use _head_material (the colored elemental cap material).
+	if shape == "rocket_silo":
+		_head.material_override = null
+	else:
+		_head.material_override = _head_material
 	# Cannon uses a split mesh: grey boxy housing on _barrel, colored cap on _head.
 	# Other tower types have no dedicated body mesh yet — keep _barrel hidden.
 	if _barrel:
@@ -368,6 +409,67 @@ func _apply_shape() -> void:
 			_barrel.visible = false
 	if shape == "beam":
 		_build_beam_emitter()
+	elif shape == "rocket_silo":
+		_build_iris_petals()
+
+# Spawn IRIS_PETAL_COUNT MeshInstance3D petals around the silo bore, each pivoted
+# at its inner edge so rotation.x opens (IRIS_OPEN_X) or closes (IRIS_CLOSE_X) it.
+# Called once from _apply_shape(); safe to call again — re-uses existing petals.
+func _build_iris_petals() -> void:
+	if turret == null:
+		return
+	# Tear down any petals from a previous configure() call (e.g. type switch).
+	for p in _iris_petals:
+		if is_instance_valid(p):
+			p.queue_free()
+	_iris_petals.clear()
+
+	var petal_mesh := _load_glb_mesh(_PETAL_MESH_PATH)
+
+	for i in IRIS_PETAL_COUNT:
+		var angle := (i * TAU / IRIS_PETAL_COUNT)
+		var p := MeshInstance3D.new()
+		if petal_mesh:
+			p.mesh = petal_mesh
+			# GLB surface material carries the texture; don't override it.
+		# Thin blades form a ring around a small central hole when closed. They sit
+		# at IRIS_Y in the recessed well, fanned by rotation.y to their slot angle.
+		# Opening drops them IRIS_SINK into the well (with a small twist) so the
+		# bore clears; closing raises them back. Store both closed targets.
+		var stagger: float = i * IRIS_STAGGER
+		var closed_y_pos: float = IRIS_Y + stagger
+		p.position = Vector3(cos(angle) * IRIS_HINGE_R, closed_y_pos, sin(angle) * IRIS_HINGE_R)
+		p.rotation.y = angle
+		p.set_meta("closed_yrot", angle)
+		p.set_meta("closed_ypos", closed_y_pos)
+		turret.add_child(p)
+		_iris_petals.append(p)
+
+## Open the iris — blades sink into the well (with a small twist) to clear the
+## bore. Returns a Tween so the caller can chain a callback on finish.
+func iris_open() -> Tween:
+	var tw := create_tween().set_parallel(true)
+	for p in _iris_petals:
+		if is_instance_valid(p):
+			var yrot: float = p.get_meta("closed_yrot", p.rotation.y)
+			var ypos: float = p.get_meta("closed_ypos", p.position.y)
+			tw.tween_property(p, "position:y", ypos - IRIS_SINK, IRIS_OPEN_TIME) \
+			  .set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
+			tw.tween_property(p, "rotation:y", yrot + IRIS_OPEN_SWEEP, IRIS_OPEN_TIME) \
+			  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	return tw
+
+## Close the iris — blades rise back up and untwist over the bore.
+func iris_close() -> void:
+	var tw := create_tween().set_parallel(true)
+	for p in _iris_petals:
+		if is_instance_valid(p):
+			var yrot: float = p.get_meta("closed_yrot", p.rotation.y)
+			var ypos: float = p.get_meta("closed_ypos", p.position.y)
+			tw.tween_property(p, "position:y", ypos, IRIS_CLOSE_TIME) \
+			  .set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+			tw.tween_property(p, "rotation:y", yrot, IRIS_CLOSE_TIME) \
+			  .set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_CUBIC)
 
 # Build (once) the Beam tower's tesla-coil / ray-gun emitter under the Turret. It
 # reads as a ray gun: a short vertical coil post on the head lifts a prominent
@@ -440,7 +542,7 @@ func _build_electrode_crown() -> void:
 		# Tilt outward: positive X rotation in local space leans the top away from
 		# centre. rotate_y first to face outward, then tilt on local X.
 		rod.rotation.y = angle
-		rod.rotate_object_local(Vector3.RIGHT, deg_to_rad(45.0))
+		rod.rotate_object_local(Vector3.RIGHT, deg_to_rad(ELECTRODE_TILT_DEG))
 		_electrode_crown.add_child(rod)
 		_electrode_rods.append(rod)
 
@@ -471,7 +573,9 @@ func _pick_beam_targets() -> Array:
 	# Collect all valid candidates with their progress scores.
 	var candidates: Array = []
 	for e in TDEnemy.all_enemies:
-		if not is_instance_valid(e) or e._dead:
+		if not is_instance_valid(e):
+			continue
+		if "_dead" in e and e.get("_dead"):
 			continue
 		if global_position.distance_to(e.global_position) > r:
 			continue
@@ -727,7 +831,11 @@ func _has_los(origin: Vector3, enemy: Node3D) -> bool:
 	var space := get_world_3d().direct_space_state
 	var params := PhysicsRayQueryParameters3D.create(origin, enemy.global_position, BLOCKER_MASK)
 	params.hit_from_inside = false
-	params.exclude = [self, enemy]
+	# exclude only accepts RIDs from CollisionObject3D; plain Node3D has no RID.
+	var excl: Array[RID] = []
+	if enemy is CollisionObject3D:
+		excl.append((enemy as CollisionObject3D).get_rid())
+	params.exclude = excl
 	var hit := space.intersect_ray(params)
 	return hit.is_empty()
 
@@ -737,7 +845,9 @@ const DUAL_BARREL_OFFSET := 0.18
 func _fire(target: Node3D) -> void:
 	var s := _stats()
 	var origin := muzzle.global_position if muzzle else global_position
-	if s.get("bomb", false):
+	if s.get("rocket", false):
+		_fire_rocket(target, s, origin)
+	elif s.get("bomb", false):
 		_fire_bomb(target, s, origin)
 	elif s.get("lead_shot", false):
 		_fire_lead_shot(target, s, origin)
@@ -790,6 +900,28 @@ func _fire_projectile(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 		_tint_projectile(proj)
 	else:
 		proj.global_position = origin
+
+func _fire_rocket(target: Node3D, s: Dictionary, origin: Vector3) -> void:
+	if rocket_scene == null:
+		return
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
+	var speed: float    = s.get("proj_speed", 10.0)
+	var lead            := _predict_landing(target, origin, speed)
+	var rocket          := TDRocket.acquire(scene_root, rocket_scene)
+	rocket.add_to_group("td_projectile")
+	# Iris sequence: open → launch when open → close behind rocket.
+	if _iris_petals.size() > 0:
+		var tw := iris_open()
+		tw.finished.connect(func():
+			if rocket.has_method("launch_rocket"):
+				rocket.launch_rocket(origin, lead, speed, s["damage"], s["aoe"], damage_type)
+			iris_close()
+		)
+	else:
+		if rocket.has_method("launch_rocket"):
+			rocket.launch_rocket(origin, lead, speed, s["damage"], s["aoe"], damage_type)
 
 func _fire_bomb(target: Node3D, s: Dictionary, origin: Vector3) -> void:
 	if bomb_scene == null:

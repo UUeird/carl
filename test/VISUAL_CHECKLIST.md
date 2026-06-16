@@ -46,6 +46,17 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 - [ ] When a tower acquires a target, its turret **swings around to aim** (a visible rotation) rather than snapping instantly; projectile towers hold fire until the barrel is on target.
 - [ ] A tower taking Gunner/blast damage shows a **floating green-over-red health bar** above it (same style as enemies) that shrinks as HP drops and fades after a couple seconds; the head keeps its **true type color** (no scorch tint), so a hurt tower never gets confused for a different type.
 
+### Mesh visual quality (clean stylized / chunky pass)
+These judge the reworked Blender-generated meshes (`assets/models/generate_meshes.py`
+and `generate_rocket_tower.py`). After regenerating GLBs, let Godot reimport
+(`--import` or open the editor) so embedded textures re-extract.
+- [ ] **Smooth-shaded, not faceted**: round forms (base pedestal, cannon cap dome, beam obelisk/coils, silo body) read as smooth curves at game zoom — no obvious flat segment facets on the silhouette.
+- [ ] **Beveled edges catch light**: hard edges have a thin highlight rather than looking like raw boxes/cylinders; the cannon housing and cap rim read as machined, not primitive.
+- [ ] **Baked AO depth on tinted caps**: the elemental cap/head has subtle darkening in creases and toward its base (from the baked COLOR_0 vertex layer, shown via `vertex_color_use_as_albedo`) — flat-colored caps are no longer uniformly flat.
+- [ ] **Machine gun head is one solid unit**: housing + gun barrel + cap dome read as a single connected turret head — when it aims sideways, no piece floats off detached from the rest.
+- [ ] **Beam electrodes are tidy**: the emitter is topped by a small, symmetric, near-vertical crown of short prongs — not long rods splaying out at random angles.
+- [ ] No **stray detached fragments** floating near any tower base.
+
 ### Range & line of sight
 - [ ] Hovering a free slot (with a type selected) shows a translucent **range dome** sized to that type.
 - [ ] Selecting a built tower shows its range dome; it grows when upgraded.
@@ -56,6 +67,20 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 - [ ] Frost-hit enemies tint blue and visibly slow down.
 - [ ] Beam tower draws a **solid beam** from its muzzle to the locked target; it retargets when that enemy dies.
 - [ ] Bomb tower lobs an arcing bomb that rises and lands; an expanding blast ring shows the AoE; it visibly **misses** when the target rounds a corner.
+
+### Rocket tower (Missile)
+- [ ] **Silo reads cleanly**: a recessed silver drum with a bold **yellow/black hazard band** around the top rim (the striping must be clearly visible), the thin iris blades capping the opening. No stray red/mis-mapped texture, no disk protruding from one side.
+- [ ] **Idle iris closed**: the 6 short iris blades sit flat in the well, ringed around a small central opening when the tower has no target or is between shots.
+- [ ] **Iris opens on fire**: when the tower fires, the blades **sink down into the well** (with a small twist, ~0.18 s) clearing the bore before the rocket emerges — they do NOT tilt up out of the silo.
+- [ ] **Iris closes after launch**: the blades rise back up over the bore (~0.22 s) — the sink/raise motion is visible during the attack cycle.
+- [ ] **Rocket arc**: the silver rocket with red nose cone rises in a ballistic arc toward the enemy's predicted intercept position; it does not fly in a straight line.
+- [ ] **Flame trail**: an orange-yellow flame cone trails the rocket's exhaust during flight; it is a separate runtime node (not baked into the GLB mesh).
+- [ ] **Impact — shockwave ring**: on hit, a flat torus ring expands outward from the impact point and fades within ~0.14 s.
+- [ ] **Impact — dome burst**: an orange sphere expands and transitions from orange → dark grey → transparent over ~0.22 s.
+- [ ] **Impact — mushroom cloud**: after the dome fades, a stem cylinder and cap sphere rise upward and fade — the mushroom shape is legible even at typical game camera distance.
+- [ ] **Impact — debris**: ~6 small grey cubes arc upward from the impact, fall under gravity, bounce once at ground level, and fade to transparent.
+- [ ] **No orphaned VFX**: after a rocket explodes and all debris/smoke settles (~0.7 s), no invisible nodes remain attached to the scene tree from that rocket (pool is healthy after sustained fire).
+- [ ] **AoE damage**: multiple enemies clustered in the blast radius all take damage; single enemies just outside the ring take none.
 
 ### Combat feedback
 - [ ] Enemy **health bars** appear on damage, show **green over red** (green shrinks left→right as HP drops), and **fade out** after ~2s; further damage resets the timer.

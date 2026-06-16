@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://td_main"]
+[gd_scene load_steps=33 format=3 uid="uid://td_main"]
 
 [ext_resource type="Script" path="res://scripts/td_game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/path_ribbon.gd" id="10_ribbon"]
@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scripts/td_camera.gd" id="9_cam"]
 [ext_resource type="PackedScene" uid="uid://td_projectile" path="res://scenes/td_projectile.tscn" id="7_proj"]
 [ext_resource type="PackedScene" uid="uid://td_bomb" path="res://scenes/td_bomb.tscn" id="8_bomb"]
+[ext_resource type="PackedScene" uid="uid://td_rocket" path="res://scenes/td_rocket.tscn" id="9_rocket"]
 
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
@@ -50,6 +51,12 @@ _data = {
 }
 point_count = 7
 
+[sub_resource type="BoxMesh" id="wall_mesh"]
+size = Vector3(2, 4, 16)
+
+[sub_resource type="BoxShape3D" id="wall_shape"]
+size = Vector3(2, 4, 16)
+
 [sub_resource type="BoxMesh" id="path_seg"]
 size = Vector3(1, 0.15, 1)
 
@@ -74,6 +81,7 @@ enemy_scene = ExtResource("2_enemy")
 tower_scene = ExtResource("3_tower")
 projectile_scene = ExtResource("7_proj")
 bomb_scene = ExtResource("8_bomb")
+rocket_scene = ExtResource("9_rocket")
 path_node = NodePath("PathUpper")
 path_node_b = NodePath("PathLower")
 starting_currency = 150
@@ -100,6 +108,17 @@ collision_mask = 0
 mesh = SubResource("ground_mesh")
 material_override = SubResource("ground_mat")
 
+
+[node name="WallB" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="WallB"]
+mesh = SubResource("wall_mesh")
+
+[node name="Shape" type="CollisionShape3D" parent="WallB"]
+shape = SubResource("wall_shape")
 
 [node name="PathUpper" type="Path3D" parent="."]
 curve = SubResource("path_upper")

@@ -5,8 +5,9 @@ class_name MapPicker
 ## To add a new map: append one entry to MAPS. Nothing else to change.
 
 const MAPS := [
-	{ "name": "Main Map",  "scene": "res://scenes/td_main.tscn" },
-	{ "name": "Test Map",  "scene": "res://scenes/td_test_map.tscn" },
+	{ "name": "Main Map",     "scene": "res://scenes/td_main.tscn" },
+	{ "name": "Test Map",     "scene": "res://scenes/td_test_map.tscn" },
+	{ "name": "Tower Sandbox", "scene": "res://scenes/tower_sandbox.tscn" },
 ]
 
 func _ready() -> void:
