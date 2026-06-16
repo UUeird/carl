@@ -21,6 +21,43 @@
   ],
   "items": [
     {
+      "title": "Rocket Tower redesign \u2014 missile silo base, rocket projectile, flame trail, mushroom explosion",
+      "note": "Redesigning the Missile tower into a full rocket silo. Silver metal silo base with yellow/black warning stripes around the top opening; camera-lens iris mechanism that opens to reveal the rocket. Rocket: silver body, red tip, low-poly flame trail transitioning to smoke. Arc flight to predicted lead position. On impact: dome fire burst + mushroom smoke cloud that fades fast. Assets built twice: Blender Python (procedural, game-ready .glb) and Houdini Python (high-res, flexible). TDRocket replaces TDBomb for the MISSILE type.",
+      "type": "story",
+      "status": "wip",
+      "children": [
+        {
+          "title": "Blender Python script: silo head mesh (striped ring, iris petals)",
+          "status": "done",
+          "note": "generate_rocket_tower.py produces rocket_silo_base.glb + rocket_silo_petal.glb (separate for runtime iris animation). Petal pivot at inner-arc midpoint so rotation.x opens/closes the shutter."
+        },
+        {
+          "title": "Blender Python script: rocket body mesh (silver cylinder, red tip cone)",
+          "status": "done",
+          "note": "generate_rocket_tower.py also produces rocket_body.glb. Flame/smoke kept as runtime GDScript nodes, not baked into GLB."
+        },
+        {
+          "title": "Houdini Python script: high-res silo + rocket (flexible script or manual walk-through)",
+          "status": "todo"
+        },
+        {
+          "title": "TDRocket script: arc flight, flame trail VFX, mushroom explosion on impact",
+          "status": "done",
+          "note": "td_rocket.gd: arc flight with predictive targeting, static mesh/material pools, 3-phase explosion (shockwave torus, orange\u2192grey dome burst, mushroom cloud + 6 debris cubes with gravity/bounce). Iris open/close animation in td_tower.gd triggers on fire."
+        },
+        {
+          "title": "Wire TDRocket into MISSILE tower type; prewarm in td_game.gd",
+          "status": "done",
+          "note": "rocket_scene wired in td_tower.tscn, td_main.tscn, td_test_map.tscn. TDRocket.prewarm() called in _prewarm_shaders(). ResourceLoader.exists() guard added to _load_glb_mesh() so tests pass before GLBs are generated."
+        },
+        {
+          "title": "Tests + VISUAL_CHECKLIST.md entries",
+          "status": "done",
+          "note": "47/48 passing (pre-existing LOS failure unrelated). VISUAL_CHECKLIST.md updated with rocket tower section: iris animation, flame trail, 3-phase explosion, AoE damage, pool health."
+        }
+      ]
+    },
+    {
       "title": "Path tiles \u2014 curved segments at 15\u00b0 increments",
       "note": "Work was done on another machine and not pushed. Needs to be retrieved or recreated. Spec: tileset for building curved paths at any 15\u00b0 heading increment so maps aren't limited to 90\u00b0 turns. Likely a Blender Python script (similar to generate_meshes.py) producing straight, 15\u00b0, 30\u00b0, 45\u00b0, 60\u00b0, 75\u00b0, and 90\u00b0 curve tiles as .glb files.",
       "type": "story",
@@ -745,6 +782,18 @@
         {
           "title": "Update VISUAL_CHECKLIST.md with per-type shape checks for all redesigned towers",
           "status": "todo"
+        },
+        {
+          "title": "Visual quality pass \u2014 reworked Blender generators (generate_meshes.py + generate_rocket_tower.py): smooth shading + angle-limited baked bevels, higher segment counts, baked vertex AO (COLOR_0) read via vertex_color_use_as_albedo on the runtime head/barrel materials, and a far richer rocket diffuse atlas (vertical AO gradients, panel-line grid, edge darkening, rivets, crisp hazard stripes). Lowered silo metallic 0.65\u21920.25 so the texture reads.",
+          "status": "done"
+        },
+        {
+          "title": "Mesh coordinate-convention fix + spiral iris \u2014 fixed the lopsided \"disk protruding from one side\" of the base/turret (cyl/box helpers stacked along the wrong axis vs. the Y-up export; tower helpers now stack along Blender-Z = export up-axis, enemy helpers kept the original convention since the enemy scene rotates its mesh upright). Reworked the iris petals into curved interleaving blades that spiral closed like a real camera aperture and pinwheel open to clear the bore.",
+          "status": "done"
+        },
+        {
+          "title": "Tower readability pass \u2014 Machine Gun: merged cap+housing+barrel into ONE cannon_head.glb so parts never float apart when aiming. Beam: shortened/thinned the electrode prongs into a tidy crown (was splayed). Missile: rebuilt the silo as a recessed drum with a dedicated yellow/black hazard band (own stripe image, no atlas bleed), short interleaving iris blades that SINK into the well to open (in-plane spin alone can't retract a full bore), clean solid-metal body, dark floor. Fixed a glTF UV V-flip in _unwrap_and_place that was mismapping silo textures (red nose bleeding in).",
+          "status": "done"
         }
       ],
       "updatedAt": "2026-06-11T05:08:56.172Z"
@@ -760,6 +809,13 @@
       "note": "Damage numbers are already pooled. Projectiles and blast rings are still allocated per-spawn. Not yet confirmed as a bottleneck \u2014 profile before investing.",
       "type": "bug",
       "status": "idea"
+    },
+    {
+      "title": "Rocket silo iris petals float above the bore and read scattered (open) at idle \u2014 the petal mesh arc-width maps to Y after Blender Y-up export, so petals orient as vertical fins rather than flat blades. Fix petal mesh axes in generate_rocket_tower.py (or the placement in td_tower._build_iris_petals).",
+      "type": "bug",
+      "status": "done",
+      "note": "FIXED in the petal rework. Root cause: (1) the petal mesh built its arc-width on Blender Y, which export_yup maps to Godot Y, so blades stood as vertical fins \u2014 rebuilt the mesh in glTF convention (length \u2212X inward, arc-width Z, thin in Y) hinging at the origin; (2) IRIS_Y was 0.42 but the silo_base GLB is centred on its origin (top rim at +0.21), so petals floated \u2014 corrected IRIS_Y to 0.21; (3) open/close angles updated (close 0\u00b0, open +80\u00b0) and alternating petals get a small Y-stagger so coplanar trapezoids overlap and seal the bore. Verified headed: flush closed hatch, splays open to clear the bore.",
+      "updatedAt": "2026-06-15T03:39:13Z"
     }
   ]
 }

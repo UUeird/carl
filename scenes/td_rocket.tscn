@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://td_rocket"]
+
+[ext_resource type="Script" path="res://scripts/td_rocket.gd" id="1_r"]
+
+[sub_resource type="CylinderMesh" id="body_mesh"]
+top_radius = 0.060
+bottom_radius = 0.060
+height = 0.40
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="mat_body"]
+albedo_color = Color(0.82, 0.84, 0.88, 1)
+metallic = 0.55
+roughness = 0.35
+
+[node name="TDRocket" type="Node3D"]
+script = ExtResource("1_r")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("body_mesh")
+material_override = SubResource("mat_body")

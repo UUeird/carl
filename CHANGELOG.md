@@ -16,12 +16,15 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 ## Unreleased
 
 ### Added
+- **Missile tower (rocket silo)** — a recessed silo with a hazard-striped rim and a short interleaving iris hatch. On fire the blades sink into the well to clear the bore, a rocket rises and arcs to the predicted landing point, then the hatch closes. Generated via `assets/models/generate_rocket_tower.py`; rocket VFX in `scripts/td_rocket.gd`.
+- **Tower Sandbox** — a standalone scene (from the map picker) for inspecting each tower type up close: orbit/zoom the camera and hold Fire at the tower's natural cadence.
 - **Multi-resolution / HiDPI display support** — the HUD holds its layout at any window size: the top-right cluster and the build-type row are anchor-based instead of fixed-pixel. Restored `allow_hidpi=true` for native Retina rendering.
 - **Cannon tower split mesh** — the cannon now renders as two independent pieces: a grey boxy housing + gun barrel (body), and an octagonal cap disc + dome that takes the elemental color on upgrade. Generated via `assets/models/generate_meshes.py`.
 - **↺ Reset button** — always-available button in the top-right HUD cluster; reloads the current scene immediately without waiting for waves to finish.
 - **Shock slow** — Shock-typed towers now apply the slow effect (0.55× speed, 1.4 s) to any enemy with no active shield, in addition to their 2× damage multiplier against shields. Enemies with an active shield take the damage bonus but are not slowed. Works for both projectile and beam towers.
 
 ### Changed
+- **Tower mesh visual-quality overhaul** — the Blender generators now produce smooth-shaded, beveled meshes with baked vertex AO and higher segment counts. The machine gun is a single unified head (housing + barrel + cap), so parts no longer float apart when aiming; the beam emitter has a tidy short electrode crown. Fixed a mesh-stacking axis bug that left a disk "protruding from one side" of the base/silo, and a glTF UV V-flip that mis-mapped silo textures.
 - **Frost damage type removed** — Frost's slow-and-armor-bonus role is now folded into Shock. The damage type picker shows Fire / Poison / Shock only.
 - **Tower type buttons are now monochrome** — color identity is carried by the tower's elemental cap, not the build buttons. Selected button shows a bright white border.
 - **Pre-element tower cap is neutral grey** — a freshly built tower's cap stays grey until the player assigns a damage type at level 1 upgrade.
