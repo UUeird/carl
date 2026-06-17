@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "tada": {
+      "command": "python3",
+      "args": [
+        "${TADA_HOME}/mcp_server.py",
+        "--data",
+        "roadmap/roadmap.json"
+      ],
+      "env": {
+        "TADA_PORT": "8770"
+      }
+    }
+  }
+}

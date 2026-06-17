@@ -13,6 +13,15 @@ done / next*, see the roadmap (below).
    and open <http://localhost:8770/>; data lives in
    [roadmap/roadmap.json](roadmap/roadmap.json). Sections: `next` (do these),
    `later`, `ideas`, `completed` (status `done`), `debt`.
+   - **Editing the roadmap via MCP:** [.mcp.json](.mcp.json) wires in the external
+     [tada](https://github.com/UUeird/tada) plain-board MCP server, pointed at
+     `roadmap/roadmap.json`. It gives you tools (`view_plan`, `add_item`,
+     `set_status`, `board_url`, …) instead of hand-editing JSON. The config
+     references `${TADA_HOME}`, so **on a new machine you must:** clone `tada`,
+     then add `export TADA_HOME=/path/to/your/tada` to your shell profile
+     (`~/.zshrc`) and restart Claude Code. If the `tada` MCP server fails to
+     start, that env var is almost certainly unset. Editing the JSON by hand
+     still works fine if you'd rather not set it up.
 3. **[CHANGELOG.md](CHANGELOG.md)** — shipped changes.
 
 The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
