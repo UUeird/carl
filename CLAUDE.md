@@ -9,20 +9,28 @@ done / next*, see the roadmap (below).
 
 1. **[README.md](README.md)** — game overview, systems map (one `.gd` per system),
    project structure, collision layers. Start here.
-2. **Roadmap** — the source of truth for priorities. Run `python3 roadmap/server.py`
-   and open <http://localhost:8770/>; data lives in
-   [roadmap/roadmap.json](roadmap/roadmap.json). Sections: `next` (do these),
-   `later`, `ideas`, `completed` (status `done`), `debt`.
-   - **Editing the roadmap via MCP:** [.mcp.json](.mcp.json) wires in the external
-     [tada](https://github.com/UUeird/tada) plain-board MCP server, pointed at
-     `roadmap/roadmap.json`. It gives you tools (`view_plan`, `add_item`,
-     `set_status`, `board_url`, …) instead of hand-editing JSON. The config
-     references `${TADA_HOME}`, so **on a new machine you must:** clone `tada`,
-     then add `export TADA_HOME=/path/to/your/tada` to your shell profile
-     (`~/.zshrc`) and restart Claude Code. If the `tada` MCP server fails to
-     start, that env var is almost certainly unset. Editing the JSON by hand
-     still works fine if you'd rather not set it up.
+2. **Roadmap** — the source of truth for priorities is the hosted tada board
+   `carl`: <https://app.tada-ai.app/b/carl>. Columns: Idea / Planned /
+   In Progress / Done; shipped stories get archived to its Changelog.
+   - **Edit it via the `tada` MCP server** wired in [.mcp.json](.mcp.json)
+     (`view_board`, `add_story`, `set_status`, `update_story`, `board_url`, …).
+     It runs `$TADA_HOME/app/mcp/server.ts` from a local
+     [tada](https://github.com/UUeird/tada) clone and reads `PROD_MONGODB_URI`
+     from `$TADA_HOME/app/.env.local`. **On a new machine:** clone `tada`,
+     `npm install` in its `app/`, create that `.env.local`, add
+     `export TADA_HOME=/path/to/your/tada` to `~/.zshrc`, and create a
+     gitignored `.env.local` in this repo's root containing
+     `TADA_OWNER_EMAIL=<board owner's email>` (kept out of this public repo).
+     Then fully reload the editor window. If the server fails to start, check
+     those.
 3. **[CHANGELOG.md](CHANGELOG.md)** — shipped changes.
+4. **Skills** in [.claude/skills/](.claude/skills/), ported from tada:
+   `/tada` (pick up the In Progress story and work it), `/change-feature`
+   (every place a gameplay change must land), `/change-ui` (HUD/visual
+   checklist against the design canvas), `/release` (test gate, merge,
+   cleanup, board), `/story-review` (re-assess Idea/Planned stories),
+   `/git-flow` (branch lifecycle — this file wins where they differ, e.g.
+   commit only when asked).
 
 The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
 `scenes/td_main.tscn`. Engine: Godot 4.6, run via
@@ -38,11 +46,11 @@ The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
   to it when you add visible behavior.
 - **Commit/push only when asked.** Branch first if on `main`.
 - **Keep the roadmap honest — every session, not just at the end.**
-  - When you *start* a roadmap item, set its status to `"wip"`.
-  - When it ships, set status to `"done"` and update the `note` with what actually landed.
-  - If a user request doesn't map to any existing item, **add one** (or a child task) before doing the work.
-  - If you discover a problem or leave something half-done, add a `debt` item.
-  - Validate after every edit: `python3 -m json.tool roadmap/roadmap.json`.
+  All of this is on the hosted tada board via the `tada` MCP tools.
+  - When you *start* a story, set its status to `in-progress`.
+  - When it ships, set status to `done` and update the `note` with what actually landed.
+  - If a user request doesn't map to any existing story, **add one** (or a task) before doing the work.
+  - If you discover a problem or leave something half-done, add a `bug` or `chore` story.
 
 ## Conventions that matter (follow the existing grain)
 

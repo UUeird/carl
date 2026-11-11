@@ -1,15 +1,17 @@
 {
   "mcpServers": {
     "tada": {
-      "command": "python3",
+      "command": "${TADA_HOME}/app/node_modules/.bin/tsx",
       "args": [
-        "${TADA_HOME}/mcp_server.py",
-        "--data",
-        "roadmap/roadmap.json"
-      ],
-      "env": {
-        "TADA_PORT": "8770"
-      }
+        "--env-file-if-exists=${TADA_HOME}/app/.env.local",
+        "--env-file-if-exists=.env.local",
+        "${TADA_HOME}/app/mcp/server.ts",
+        "--project",
+        "carl",
+        "--url",
+        "https://app.tada-ai.app",
+        "--prod"
+      ]
     }
   }
 }

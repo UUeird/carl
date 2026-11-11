@@ -17,12 +17,13 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 
-# Local editor / agent settings
-.claude/
+# Local editor / agent settings (skills are shared, so they're tracked)
+.claude/*
+!.claude/skills/
 
 # Editor-local settings
 .vscode/
 
-# Roadmap app
-roadmap/node_modules/
-roadmap/test-results/
+
+# Local secrets / per-machine config (e.g. TADA_OWNER_EMAIL for the tada MCP server)
+.env.local
