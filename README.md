@@ -129,7 +129,6 @@ carl/
 ├── scripts/               # one .gd per system (see links above)
 ├── test/                  # GUT tests (test_*.gd) + VISUAL_CHECKLIST.md
 ├── addons/gut/            # vendored test framework
-├── roadmap/               # interactive roadmap app (index.html + roadmap.json + server.py)
 └── run_tests.sh           # headless test gate
 ```
 
@@ -138,6 +137,5 @@ Collision layers: `2` = enemies (hittable), `4` = environment (blocks line of si
 
 ## Roadmap
 
-What's done, open, and next lives in the interactive roadmap — run `python3 roadmap/server.py`
-and open <http://localhost:8770/>. Shipped changes
-are recorded in [CHANGELOG.md](CHANGELOG.md).
+What's done, open, and next lives on the hosted [tada](https://app.tada-ai.app) board at
+<https://app.tada-ai.app/b/carl>. Shipped changes are recorded in [CHANGELOG.md](CHANGELOG.md).

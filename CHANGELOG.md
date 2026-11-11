@@ -7,7 +7,7 @@ All notable changes to **carl**, newest first.
 Date-based (**CalVer**), format `YYYY.MM.DD`. A second cut on the same day gets a `.N`
 suffix (e.g. `2026.05.29`, then `2026.05.29.2`). Versions sort chronologically. The current
 version is shown in-app (bottom-right overlay) and defined in
-[scripts/version.gd](scripts/version.gd) — keep that constant in sync with the top entry here.
+[project.godot](project.godot) as `config/version` — keep it in sync with the top versioned entry here.
 
 Pre-1.0 by nature: this is a prototype, anything can still change.
 
