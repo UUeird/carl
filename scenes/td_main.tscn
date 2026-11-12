@@ -196,55 +196,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
 
-[node name="Stats" type="Label" parent="HUD/Root"]
-offset_left = 20.0
-offset_top = 16.0
-offset_right = 420.0
-offset_bottom = 44.0
-theme_override_font_sizes/font_size = 20
-text = "♥ 20    ⬢ 150    Wave 0/5"
-
-[node name="Hint" type="Label" parent="HUD/Root"]
-offset_left = 20.0
-offset_top = 46.0
-offset_right = 700.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(0.7, 0.74, 0.8, 1)
-
-[node name="StartBtn" type="Button" parent="HUD/Root"]
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -190.0
-offset_top = 16.0
-offset_right = -20.0
-offset_bottom = 54.0
-text = "Start wave 1  ▶"
-
-[node name="VersionLabel" type="Label" parent="HUD/Root"]
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -24.0
-offset_right = -8.0
-offset_bottom = -6.0
-horizontal_alignment = 2
-theme_override_font_sizes/font_size = 10
-theme_override_colors/font_color = Color(0.4, 0.42, 0.48, 0.7)
-
-[node name="Message" type="Label" parent="HUD/Root"]
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -300.0
-offset_top = -56.0
-offset_right = 300.0
-offset_bottom = -28.0
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
-
 [node name="DebugOverlay" type="CanvasLayer" parent="."]
 layer = 10
 script = ExtResource("6_dbg")

@@ -38,8 +38,8 @@ so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
 ## Checks
 
 ### Towers & build
-- [ ] Four build buttons appear — **Cannon, Frost, Beam, Bomb** — each showing its cost.
-- [ ] The **active** build type is unmistakable: its button is filled in that tower's color with a bright border; the others are muted with a thin colored accent. Selecting another type moves the highlight.
+- [ ] The **build bar** sits bottom-center: one card per tower type (**Machine Gun, Beam, Missile**), each with a line icon, its name, and its cost in gold.
+- [ ] The **active** build type is unmistakable: its card has a lighter fill and a white border; the others have a thin grey edge. Selecting another type moves the highlight.
 - [ ] Building a tower places a visible turret on the chosen slot; the slot turns occupied (dim).
 - [ ] Each tower type is visually distinguishable by **both color and head shape** — Cannon: boxy head + barrel; Frost: crystalline prism; Beam: a **tesla-coil/ray-gun emitter** (a coil post lifting a horizontal barrel that extends forward to glowing prongs + a bright tip at the muzzle, where the beam begins); Bomb: squat mortar dome + stubby tube — and upgraded towers look bigger/brighter.
 - [ ] The Beam tower's emitter **barrel and tip line up with the start of its beam** — when it fires, the beam emerges from the glowing tip at the end of the barrel, and the whole emitter swings with the turret as it tracks targets.
@@ -97,15 +97,26 @@ and `generate_rocket_tower.py`). After regenerating GLBs, let Godot reimport
 
 ### Damage types & health layers
 - [ ] Enemies show a **three-segment health bar**: blue (shield) → yellow (armor) → green (flesh); each segment depletes before the next begins.
-- [ ] Tower upgrade panel at level 1 shows a **damage type picker** (Fire / Poison / Shock); the chosen type appears in panel stats after selection.
+- [ ] Tower panel at level 1 shows **CHOOSE ELEMENT (PERMANENT)** with three buttons — orange flame **Fire**, green drop **Poison**, blue bolt **Shock**; Upgrade reads "Choose an element" and is disabled until one is picked. After picking, the picker hides and the element appears in the stats grid.
 - [ ] **Shock-typed hits slow enemies that have no active shield** — they tint blue and move visibly slower. Enemies that still have a shield take the Shock damage multiplier but are not slowed.
 
-### HUD & flow
-- [ ] The **Maps** button sits in the top-right cluster (left of **Demo** and **Start wave**) and does not overlap the tower panel.
-- [ ] **At different window sizes** (resize the window, or launch with `--resolution 800x600` and `--resolution 1920x1080`): the top-right cluster (Maps · Demo · Start-wave) stays grouped at the right edge, the build-type row stays under the stats at the left, and nothing clips off-screen or overlaps. On a HiDPI/Retina Mac the UI renders crisp, not zoomed-out/blurry.
+### HUD & flow ("Tabletop War Room", design canvas carl-43 › Screens › In-game HUD)
+Screenshot: `Godot --path . --script test/shot_ui.gd -- hud <out.png> [WxH]` (builds and selects a Machine Gun so the tower panel shows).
+- [ ] Slate panels (`#14171C`/`#1B1F26`, `#2C323C` edges) over the map; headings and stat numbers in **Chakra Petch**, body text in **Inter** — not Godot's default font.
+- [ ] Top-left stat panel: **LIVES** in coral, **GOLD** in yellow, **WAVE n / N** in white, small uppercase captions above, thin dividers between; the hint line sits under it in faint grey. The panel hugs its contents (doesn't stretch to the hint's width).
+- [ ] Top-right cluster, left to right: (debug: +500 gold, Demo ▶) · Reset · Maps · Pause (icon) · yellow **START WAVE N**. All at least 44px tall; the tower panel opens below it without overlap.
+- [ ] Tower panel (right): name + "Lv 1 / 3", a 3-column stats grid (Damage/Rate/Range or DPS/Targets/Range, then HP, Blast for Missile, Element once chosen), **Upgrade · cost** (light button) and **Sell · refund** (red text).
+- [ ] **Pause** freezes enemies and towers, swaps its icon to ▶, and shows "Paused"; pressing again resumes. Maps/Reset still work while paused.
+- [ ] **At different window sizes** (`shot_ui.gd … 1200x900` and `… 1800x760`, or resize the window): the stat panel stays top-left, the action cluster and tower panel stay at the right edge, the build bar stays bottom-center, and nothing clips or overlaps. On a HiDPI/Retina Mac the UI renders crisp, not zoomed-out/blurry.
 - [ ] Lives / currency / wave update correctly as you play.
 - [ ] Start-wave button is unavailable mid-wave and available between waves.
 - [ ] Win message after the last wave; lose message at 0 lives; **R** restarts.
+
+### Map picker (design canvas carl-43 › Screens › Map picker)
+Screenshot: `Godot --path . --script test/shot_ui.gd -- picker <out.png> [WxH]`.
+- [ ] Large **carl** title in Chakra Petch, "Select a map" under it, the version string at the right of the header.
+- [ ] Three map cards fill the row: a thumbnail of the map, the name, a tag (**Play** in yellow for Main Map, **Dev** in grey for the others) and a one-line description. Main Map has the yellow border.
+- [ ] Hovering a card lightens it and shows a pointer cursor; clicking loads that map. Cards keep their border visible all the way round (the thumbnail doesn't cover it).
 
 ### Selection UX
 - [ ] Clicking a built tower opens its panel (stats + Upgrade + Sell).

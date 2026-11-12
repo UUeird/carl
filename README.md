@@ -116,6 +116,11 @@ checklist run by launching the game and inspecting screenshots. Both should be g
   AoE bomb ([scripts/td_bomb.gd](scripts/td_bomb.gd)).
 - **Slots** — clickable buildable spots ([scripts/tower_slot.gd](scripts/tower_slot.gd)).
 - **HUD** — lives/currency/wave, build buttons, the tower panel ([scripts/td_hud.gd](scripts/td_hud.gd)).
+- **UI theme** — the "Tabletop War Room" palette, fonts (Chakra Petch + Inter, bundled in
+  `assets/fonts/`), button/panel styles and SVG icons, shared by every screen
+  ([scripts/ui_theme.gd](scripts/ui_theme.gd)).
+- **Map picker** — boot screen with one card per map; maps are listed in its `MAPS` table
+  ([scripts/map_picker.gd](scripts/map_picker.gd)).
 - **Feedback** — billboarded enemy health bars ([scripts/health_bar.gd](scripts/health_bar.gd)) and
   floating damage numbers ([scripts/damage_number.gd](scripts/damage_number.gd)).
 - **Health** — one reusable component for anything damageable ([scripts/health.gd](scripts/health.gd)).
