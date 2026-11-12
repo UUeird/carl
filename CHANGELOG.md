@@ -16,6 +16,8 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 ## Unreleased
 
 ### Added
+- **"Tabletop War Room" UI restyle** — the HUD and map picker follow the new design canvas: slate panels, Chakra Petch headings over Inter body text (both bundled), a Lives / Gold / Wave stat panel, a yellow **Start wave** button, a tower panel with a stats grid and an element picker using flame / drop / bolt glyphs, a bottom-center build bar with tower cards and costs, and a map picker with thumbnail cards. All UI colors, fonts and button styles now live in one place, `scripts/ui_theme.gd`.
+- **Pause button** — top-right of the HUD; freezes the game until pressed again. (A full pause screen is still planned.)
 - **Missile tower (rocket silo)** — a recessed silo with a hazard-striped rim and a short interleaving iris hatch. On fire the blades sink into the well to clear the bore, a rocket rises and arcs to the predicted landing point, then the hatch closes. Generated via `assets/models/generate_rocket_tower.py`; rocket VFX in `scripts/td_rocket.gd`.
 - **Tower Sandbox** — a standalone scene (from the map picker) for inspecting each tower type up close: orbit/zoom the camera and hold Fire at the tower's natural cadence.
 - **Multi-resolution / HiDPI display support** — the HUD holds its layout at any window size: the top-right cluster and the build-type row are anchor-based instead of fixed-pixel. Restored `allow_hidpi=true` for native Retina rendering.
