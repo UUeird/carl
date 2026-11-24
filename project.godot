@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="carl"
-config/version="2026.06.09.1"
+config/version="2026.11.23"
 run/main_scene="res://scenes/map_picker.tscn"
 config/features=PackedStringArray("4.6")
 config/icon="res://icon.svg"

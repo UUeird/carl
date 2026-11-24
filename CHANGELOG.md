@@ -15,6 +15,8 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ## Unreleased
 
+## 2026.11.23
+
 ### Added
 - **"Find Carl" crowd-surf prototype** (map picker → *Find Carl: Main Stage*): the game's new direction, replacing tower defense. You crowd-surf toward the stage at a music festival, looking for your lost friend Carl. One level lasts one song.
   - **Song-driven pacing:** fans spawn on the beat, and each section of the track (intro / groove / build / drop / breakdown / boss drop / outro) sets the spawn rate, fan mix and scroll speed. Drops hit with a burst of superfans; the boss drop brings the DJ.
