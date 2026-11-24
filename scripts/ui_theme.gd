@@ -1,8 +1,8 @@
 extends RefCounted
 class_name UITheme
 
-## "Tabletop War Room" UI look (design canvas, carl-43): a quiet slate panel UI
-## where saturation is saved for what matters in combat. Every UI color, font,
+## Shared UI look (originally the "Tabletop War Room" design canvas, carl-43): a
+## quiet slate panel UI where saturation is saved for what matters in play. Every UI color, font,
 ## panel and button style lives here so the HUD and screens read from one place.
 
 # --- Palette ---------------------------------------------------------------
@@ -16,16 +16,7 @@ const TEXT := Color("#E6E9EE")
 const MUTED := Color("#9AA3B0")          ## captions, secondary text
 const FAINT := Color("#7D8794")          ## version string, hints
 const ACCENT := Color("#F2CF5B")         ## primary action
-const LIVES := Color("#FF7B6E")
-const GOLD := Color("#F2CF5B")
-const DANGER := Color("#FF9D92")         ## sell
-
-## Element colors: glyph/border, the chosen-button fill, and its label.
-const ELEMENTS := {
-	"fire":   { "color": Color("#FF8A3D"), "fill": Color("#2A1D14"), "text": Color("#FFB27E") },
-	"poison": { "color": Color("#B6F23A"), "fill": Color("#1E2612"), "text": Color("#D4F78A") },
-	"shock":  { "color": Color("#6B8DFF"), "fill": Color("#161C2E"), "text": Color("#A9BCFF") },
-}
+const DANGER := Color("#FF9D92")         ## destructive actions
 
 # --- Type ------------------------------------------------------------------
 const MIN_TOUCH := 44.0                  ## smallest clickable height/width
@@ -98,11 +89,11 @@ static func panel_box(radius: int = 12, pad: float = 16.0) -> StyleBoxFlat:
 
 # --- Buttons ---------------------------------------------------------------
 ## Button kinds:
-##   primary   — yellow accent fill, dark display text (Start wave)
+##   primary   — yellow accent fill, dark display text (Play again)
 ##   secondary — glass fill, strong border (Maps, Pause, Reset)
-##   light     — light fill, dark text (Upgrade)
-##   danger    — transparent, red text (Sell)
-##   card      — build-bar / map card: panel fill, white border when selected
+##   light     — light fill, dark text (general light action)
+##   danger    — transparent, red text (destructive actions)
+##   card      — map/stage card: panel fill, white border when selected
 static func style_button(b: Button, kind: String = "secondary") -> void:
 	var states := _button_states(kind)
 	for state in states["boxes"]:
@@ -113,25 +104,6 @@ static func style_button(b: Button, kind: String = "secondary") -> void:
 		b.add_theme_font_override("font", states["font"])
 	b.add_theme_font_size_override("font_size", states.get("size", 14))
 	b.custom_minimum_size.y = max(b.custom_minimum_size.y, MIN_TOUCH)
-	b.focus_mode = Control.FOCUS_NONE
-	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-
-## An element-picker button, tinted when `chosen`.
-static func style_element_button(b: Button, element: String, chosen: bool) -> void:
-	var e: Dictionary = ELEMENTS[element]
-	var idle := box(e["fill"], e["color"], 2, 8, 6, 8) if chosen else box(PANEL, BORDER_STRONG, 1, 8, 6, 8)
-	var hover := idle.duplicate()
-	hover.border_color = e["color"]
-	for state in ["normal", "focus", "pressed", "hover_pressed"]:
-		b.add_theme_stylebox_override(state, idle)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("disabled", idle)
-	var text_c: Color = e["text"] if chosen else TEXT
-	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_disabled_color"]:
-		b.add_theme_color_override(c, text_c)
-	b.add_theme_font_override("font", body_font(600))
-	b.add_theme_font_size_override("font_size", 13)
-	b.custom_minimum_size.y = 58
 	b.focus_mode = Control.FOCUS_NONE
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
@@ -211,23 +183,14 @@ static func label(text: String, size: int = 14, color: Color = TEXT, font: Font 
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l
 
-## Small uppercase muted caption ("LIVES", "CHOOSE ELEMENT").
+## Small uppercase muted caption ("LIFT", "GROOVE").
 static func caption(text: String, size: int = 10) -> Label:
 	return label(text.to_upper(), size, MUTED, body_font(500, 1))
 
 # --- Icons (inline SVG from the design canvas) -----------------------------
-const ICON_FIRE := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><path d="M28 53 C16 53 9 45 9 35 C9 25 16 19 20 10 C22 16 25 19 28 20 C29 13 33 7 39 3 C38 12 47 21 47 34 C47 45 40 53 28 53 Z" fill="#FF8A3D"/></svg>'
-const ICON_POISON := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16"><path d="M7 0 C9 4 13 7 13 10.5 C13 13.5 10.3 16 7 16 C3.7 16 1 13.5 1 10.5 C1 7 5 4 7 0 Z" fill="#B6F23A"/></svg>'
-const ICON_SHOCK := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56"><path d="M34 2 L12 31 H25 L19 54 L45 21 H31 L38 2 Z" fill="#6B8DFF"/></svg>'
-const ICON_MACHINE_GUN := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#FFFFFF" stroke-width="2"><rect x="7" y="14" width="18" height="12" rx="2"/><line x1="12" y1="14" x2="12" y2="4"/><line x1="20" y1="14" x2="20" y2="4"/></svg>'
-const ICON_BEAM := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M8 26 h16 l-3 -8 h-10 z"/><path d="M16 18 v-6 M11 12 l5 -7 l5 7"/></svg>'
-const ICON_MISSILE := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" stroke="#FFFFFF" stroke-width="2"><ellipse cx="16" cy="22" rx="10" ry="4"/><path d="M13 20 v-10 l3 -5 l3 5 v10"/></svg>'
 const ICON_PAUSE := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><line x1="8" y1="5" x2="8" y2="19"/><line x1="16" y1="5" x2="16" y2="19"/></svg>'
 const ICON_PLAY := '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7 4.5 L19 12 L7 19.5 Z" fill="#FFFFFF"/></svg>'
 
-## Icon per tower shape (TDTower.TYPES[type]["shape"]).
-const TOWER_ICONS := { "cannon": ICON_MACHINE_GUN, "beam": ICON_BEAM, "rocket_silo": ICON_MISSILE }
-const ELEMENT_ICONS := { "fire": ICON_FIRE, "poison": ICON_POISON, "shock": ICON_SHOCK }
 
 static var _icon_cache: Dictionary = {}
 
