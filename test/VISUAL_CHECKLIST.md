@@ -129,3 +129,20 @@ Screenshot: `Godot --path . --script test/shot_ui.gd -- picker <out.png> [WxH]`.
 
 ### Camera / scene
 - [ ] The iso scene is well-lit (no black/unlit surfaces); path, slots, goal, and obstacle all read clearly.
+
+### "Find Carl" crowd-surf prototype (`scenes/cs_main.tscn`)
+Capture with `godot --path . --script test/shot_crowd_surf.gd -- <beat|results> /tmp/cs.png`
+(silent manual clock, scripted surfer that weaves and blasts on the beat). For
+*feel*, play it with sound: map picker → **Find Carl: Main Stage**.
+- [ ] Playfield is a centered vertical column; left gutter shows title / section / score / combo / controls, right gutter shows Lift, Distance to stage, Carl sightings, and a DJ WON OVER bar that fills up (status line: "Arrives on the final drop" → "NN% · blast on the beat!" → "WON OVER!"). Left gutter states the GOAL. Nothing in the play layer (boss rings, lasers) draws over the gutters.
+- [ ] Floor stripes flow toward the surfer; stage lights at the top pulse on every beat, and sweep the crowd with colored beams during drops and the boss section.
+- [ ] Glowsticks leave the surfer on every eighth note (audibly locked to the hats); at combo ≥ 8 they fan out three-wide.
+- [ ] Mouse is captured during play; moving it steers a reticle (four white corner ticks, visible even under the surfer, with a faint line to it) that the surfer chases at a capped speed. The cursor comes back on the results screen.
+- [ ] A closing ring around the surfer lands on each beat. Every click (or Space) fires a Hype Blast sized by GROOVE: a gold ring when locked in, cyan when grooving, small grey when off. The left gutter's GROOVE bar and tier label ("LOCKED IN · quarter notes", "FREAKING OUT · 16th notes" …) track the rhythm. Tier changes pop above the surfer. Clicking in time at 16ths during a build reads FREAKING OUT; random mashing reads OFF BEAT.
+- [ ] Fans read by type: pink plain, blue with headphones, yellow with crossed-arm X, big purple superfans with both. A layer bar (blue/yellow/pink) appears under a fan once it starts being won over.
+- [ ] Converted fans change color, put their arms up and bob on the beat; surfing over one shows "+lift".
+- [ ] Drop 1 and the boss drop hit with a white flash, a camera shake, a "DROP!" popup, and a burst of superfans.
+- [ ] When the DJ arrives, a pink "WIN OVER THE DJ!" popup appears with a smaller "blast on the beat to send cheers to the stage" line under it, and on-beat blasts pop "cheer!" at the booth.
+- [ ] The DJ slides onto the booth at the boss drop. Bass rings expand on the beat, each with an opening that drifts but stays near the middle, so you surf through it without being pinned to a wall. While the DJ is on the booth, glowsticks fly toward the booth, not straight up. Phase 2 adds dashed laser telegraphs that fire on the next beat.
+- [ ] Carl (orange, black bucket hat) darts sideways through the crowd during the groove/breakdown; touching him pops "CARL?! ...he slipped away".
+- [ ] The results panel shows the right ending (DJ won over / dropped / reached the stage but the DJ wasn't won over). It explains why in plain words, including how far the DJ got won over (NN%) and what to do differently, and shows the stats, with Play again and Map picker buttons.
