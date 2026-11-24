@@ -1,0 +1,57 @@
+{
+  "title": "Placeholder Festival Track",
+  "artist": "carl tools/gen_test_track.py",
+  "bpm": 128,
+  "offset": 0.0,
+  "length_beats": 224,
+  "sections": [
+    {
+      "name": "Intro",
+      "kind": "intro",
+      "start": 0,
+      "end": 16
+    },
+    {
+      "name": "Groove",
+      "kind": "groove",
+      "start": 16,
+      "end": 48
+    },
+    {
+      "name": "Build",
+      "kind": "build",
+      "start": 48,
+      "end": 64
+    },
+    {
+      "name": "Drop 1",
+      "kind": "drop",
+      "start": 64,
+      "end": 112
+    },
+    {
+      "name": "Breakdown",
+      "kind": "break",
+      "start": 112,
+      "end": 128
+    },
+    {
+      "name": "Build 2",
+      "kind": "build",
+      "start": 128,
+      "end": 144
+    },
+    {
+      "name": "The Drop (boss)",
+      "kind": "boss",
+      "start": 144,
+      "end": 208
+    },
+    {
+      "name": "Outro",
+      "kind": "outro",
+      "start": 208,
+      "end": 224
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/cs_game.gd" id="1_csgame"]
+
+[node name="CSMain" type="Node2D"]
+script = ExtResource("1_csgame")
