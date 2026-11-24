@@ -10,127 +10,31 @@ This is deliberately not code. These checks are about "does it look/feel right,"
 which a human (or an agent reading a screenshot) judges better than a pixel assert.
 
 ## How to run it
-1. Start the game windowed: `godot --path .` (main scene = `scenes/td_main.tscn`).
-2. For each item: set up the situation (often via a temporary `--script` SceneTree
-   helper that builds towers / spawns enemies), capture a screenshot, and inspect.
-3. Record pass/fail (a screenshot per item is ideal) in the PR.
-
-### Screenshot test map (preferred for tower/enemy visuals)
-For *looking at towers and enemies* — shapes, emitters, health bars, damage
-numbers — use the dedicated **straight test map** instead of `td_main`: a flat
-spawn→goal lane with 8 tower pads (4 per side) and **no walls**, so nothing
-occludes the view and the head-on camera frames everything cleanly. The main map's
-isometric camera + walls made offscreen screenshots fiddly and prone to empty
-frames; the test map removes that.
-
-Render it (use the **headed** Godot binary, not `--headless`, so it actually draws):
+1. Play it windowed with sound: `godot --path .` → map picker → **Find Carl: Main Stage**
+   (or straight in: `godot --path . scenes/cs_main.tscn`). Feel — sync, groove,
+   mouse steering — can only be judged this way.
+2. For screenshots, use the headed helper (NOT `--headless`, so it draws). It plays
+   the level silently on the manual clock with a scripted surfer that weaves and
+   taps (quarters, 16ths in builds/drops/boss), then saves a PNG:
 
 ```
 /Applications/Godot.app/Contents/MacOS/Godot --path . \
-	--script test/shot_test_map.gd -- /tmp/shot.png
+	--script test/shot_crowd_surf.gd -- <beat|results> /tmp/cs.png [mouse]
 ```
 
-`test/shot_test_map.gd` builds one of each tower type on the pads, spawns an enemy
-ahead so turrets aim *across* the view (showing barrels/emitters in profile), and
-saves the PNG. Scene: `scenes/td_test_map.tscn` (it reuses `td_game.gd` + the HUD,
-so HUD/economy/wave checks work there too). Edit the helper for one-off setups.
+   Useful beats: 40 (groove), 60 (build), 72 (Drop 1), 146 (DJ arrives), 170 (boss).
+   Add `mouse` to show the steering reticle.
+3. Record pass/fail (a screenshot per item is ideal) in the PR.
 
 ## Checks
 
-### Towers & build
-- [ ] The **build bar** sits bottom-center: one card per tower type (**Machine Gun, Beam, Missile**), each with a line icon, its name, and its cost in gold.
-- [ ] The **active** build type is unmistakable: its card has a lighter fill and a white border; the others have a thin grey edge. Selecting another type moves the highlight.
-- [ ] Building a tower places a visible turret on the chosen slot; the slot turns occupied (dim).
-- [ ] Each tower type is visually distinguishable by **both color and head shape** — Cannon: boxy head + barrel; Frost: crystalline prism; Beam: a **tesla-coil/ray-gun emitter** (a coil post lifting a horizontal barrel that extends forward to glowing prongs + a bright tip at the muzzle, where the beam begins); Bomb: squat mortar dome + stubby tube — and upgraded towers look bigger/brighter.
-- [ ] The Beam tower's emitter **barrel and tip line up with the start of its beam** — when it fires, the beam emerges from the glowing tip at the end of the barrel, and the whole emitter swings with the turret as it tracks targets.
-- [ ] When a tower acquires a target, its turret **swings around to aim** (a visible rotation) rather than snapping instantly; projectile towers hold fire until the barrel is on target.
-- [ ] A tower taking Gunner/blast damage shows a **floating green-over-red health bar** above it (same style as enemies) that shrinks as HP drops and fades after a couple seconds; the head keeps its **true type color** (no scorch tint), so a hurt tower never gets confused for a different type.
-
-### Mesh visual quality (clean stylized / chunky pass)
-These judge the reworked Blender-generated meshes (`assets/models/generate_meshes.py`
-and `generate_rocket_tower.py`). After regenerating GLBs, let Godot reimport
-(`--import` or open the editor) so embedded textures re-extract.
-- [ ] **Smooth-shaded, not faceted**: round forms (base pedestal, cannon cap dome, beam obelisk/coils, silo body) read as smooth curves at game zoom — no obvious flat segment facets on the silhouette.
-- [ ] **Beveled edges catch light**: hard edges have a thin highlight rather than looking like raw boxes/cylinders; the cannon housing and cap rim read as machined, not primitive.
-- [ ] **Baked AO depth on tinted caps**: the elemental cap/head has subtle darkening in creases and toward its base (from the baked COLOR_0 vertex layer, shown via `vertex_color_use_as_albedo`) — flat-colored caps are no longer uniformly flat.
-- [ ] **Machine gun head is one solid unit**: housing + gun barrel + cap dome read as a single connected turret head — when it aims sideways, no piece floats off detached from the rest.
-- [ ] **Beam electrodes are tidy**: the emitter is topped by a small, symmetric, near-vertical crown of short prongs — not long rods splaying out at random angles.
-- [ ] No **stray detached fragments** floating near any tower base.
-
-### Range & line of sight
-- [ ] Hovering a free slot (with a type selected) shows a translucent **range dome** sized to that type.
-- [ ] Selecting a built tower shows its range dome; it grows when upgraded.
-- [ ] A tower behind the obstacle wall does **not** fire at creeps hidden on the far side (LOS), but does once they clear the wall.
-
-### Firing visuals
-- [ ] Cannon/Frost fire a visible projectile that travels to and hits the target.
-- [ ] Frost-hit enemies tint blue and visibly slow down.
-- [ ] Beam tower draws a **solid beam** from its muzzle to the locked target; it retargets when that enemy dies.
-- [ ] Bomb tower lobs an arcing bomb that rises and lands; an expanding blast ring shows the AoE; it visibly **misses** when the target rounds a corner.
-
-### Rocket tower (Missile)
-- [ ] **Silo reads cleanly**: a recessed silver drum with a bold **yellow/black hazard band** around the top rim (the striping must be clearly visible), the thin iris blades capping the opening. No stray red/mis-mapped texture, no disk protruding from one side.
-- [ ] **Idle iris closed**: the 6 short iris blades sit flat in the well, ringed around a small central opening when the tower has no target or is between shots.
-- [ ] **Iris opens on fire**: when the tower fires, the blades **sink down into the well** (with a small twist, ~0.18 s) clearing the bore before the rocket emerges — they do NOT tilt up out of the silo.
-- [ ] **Iris closes after launch**: the blades rise back up over the bore (~0.22 s) — the sink/raise motion is visible during the attack cycle.
-- [ ] **Rocket arc**: the silver rocket with red nose cone rises in a ballistic arc toward the enemy's predicted intercept position; it does not fly in a straight line.
-- [ ] **Flame trail**: an orange-yellow flame cone trails the rocket's exhaust during flight; it is a separate runtime node (not baked into the GLB mesh).
-- [ ] **Impact — shockwave ring**: on hit, a flat torus ring expands outward from the impact point and fades within ~0.14 s.
-- [ ] **Impact — dome burst**: an orange sphere expands and transitions from orange → dark grey → transparent over ~0.22 s.
-- [ ] **Impact — mushroom cloud**: after the dome fades, a stem cylinder and cap sphere rise upward and fade — the mushroom shape is legible even at typical game camera distance.
-- [ ] **Impact — debris**: ~6 small grey cubes arc upward from the impact, fall under gravity, bounce once at ground level, and fade to transparent.
-- [ ] **No orphaned VFX**: after a rocket explodes and all debris/smoke settles (~0.7 s), no invisible nodes remain attached to the scene tree from that rocket (pool is healthy after sustained fire).
-- [ ] **AoE damage**: multiple enemies clustered in the blast radius all take damage; single enemies just outside the ring take none.
-
-### Combat feedback
-- [ ] Enemy **health bars** appear on damage, show **green over red** (green shrinks left→right as HP drops), and **fade out** after ~2s; further damage resets the timer.
-- [ ] Floating **damage numbers** pop white at each hit, drift up, and fade; numbers read as whole integers, and stay a **constant on-screen size when you zoom the camera in/out** (they don't shrink with the map).
-
-### Enemy types
-- [ ] **Grunt** (red) is the common creep; on death it shows a small orange **blast ring**, and a tower next to it loses HP (flashes white).
-- [ ] An exploding grunt that reaches the goal shows the blast (cosmetic) and costs a life as before.
-- [ ] **Healer** (green) periodically emits a green **heal pulse**; a damaged ally inside the pulse visibly regains HP (its bar grows back).
-- [ ] **Gunner** (purple) fires a visible **red/orange moving sphere** at the nearest tower in range; the sphere travels across the map and hits; the targeted tower loses HP.
-- [ ] A Gunner's in-flight shot **completes even if the Gunner dies or reaches the goal mid-flight** — the sphere keeps traveling to the tower and disappears (no frozen orphan spheres litter the map over a long game; the shot pool stays healthy).
-- [ ] **Boss** (2× scale grunt) spawns solo between waves, walks the path with noticeably more HP, and requires sustained fire to kill.
-- [ ] A tower under sustained Gunner / blast damage is **destroyed** (shrinks away), its slot frees up, and a "tower destroyed" message shows; if it was selected, the panel closes.
-
-### Damage types & health layers
-- [ ] Enemies show a **three-segment health bar**: blue (shield) → yellow (armor) → green (flesh); each segment depletes before the next begins.
-- [ ] Tower panel at level 1 shows **CHOOSE ELEMENT (PERMANENT)** with three buttons — orange flame **Fire**, green drop **Poison**, blue bolt **Shock**; Upgrade reads "Choose an element" and is disabled until one is picked. After picking, the picker hides and the element appears in the stats grid.
-- [ ] **Shock-typed hits slow enemies that have no active shield** — they tint blue and move visibly slower. Enemies that still have a shield take the Shock damage multiplier but are not slowed.
-
-### HUD & flow ("Tabletop War Room", design canvas carl-43 › Screens › In-game HUD)
-Screenshot: `Godot --path . --script test/shot_ui.gd -- hud <out.png> [WxH]` (builds and selects a Machine Gun so the tower panel shows).
-- [ ] Slate panels (`#14171C`/`#1B1F26`, `#2C323C` edges) over the map; headings and stat numbers in **Chakra Petch**, body text in **Inter** — not Godot's default font.
-- [ ] Top-left stat panel: **LIVES** in coral, **GOLD** in yellow, **WAVE n / N** in white, small uppercase captions above, thin dividers between; the hint line sits under it in faint grey. The panel hugs its contents (doesn't stretch to the hint's width).
-- [ ] Top-right cluster, left to right: (debug: +500 gold, Demo ▶) · Reset · Maps · Pause (icon) · yellow **START WAVE N**. All at least 44px tall; the tower panel opens below it without overlap.
-- [ ] Tower panel (right): name + "Lv 1 / 3", a 3-column stats grid (Damage/Rate/Range or DPS/Targets/Range, then HP, Blast for Missile, Element once chosen), **Upgrade · cost** (light button) and **Sell · refund** (red text).
-- [ ] **Pause** freezes enemies and towers, swaps its icon to ▶, and shows "Paused"; pressing again resumes. Maps/Reset still work while paused.
-- [ ] **At different window sizes** (`shot_ui.gd … 1200x900` and `… 1800x760`, or resize the window): the stat panel stays top-left, the action cluster and tower panel stay at the right edge, the build bar stays bottom-center, and nothing clips or overlaps. On a HiDPI/Retina Mac the UI renders crisp, not zoomed-out/blurry.
-- [ ] Lives / currency / wave update correctly as you play.
-- [ ] Start-wave button is unavailable mid-wave and available between waves.
-- [ ] Win message after the last wave; lose message at 0 lives; **R** restarts.
-
-### Map picker (design canvas carl-43 › Screens › Map picker)
-Screenshot: `Godot --path . --script test/shot_ui.gd -- picker <out.png> [WxH]`.
+### Map picker
+Screenshot: `Godot --path . --script test/shot_crowd_surf.gd -- picker <out.png>`.
 - [ ] Large **carl** title in Chakra Petch, "Select a map" under it, the version string at the right of the header.
-- [ ] Three map cards fill the row: a thumbnail of the map, the name, a tag (**Play** in yellow for Main Map, **Dev** in grey for the others) and a one-line description. Main Map has the yellow border.
-- [ ] Hovering a card lightens it and shows a pointer cursor; clicking loads that map. Cards keep their border visible all the way round (the thumbnail doesn't cover it).
+- [ ] One card, **Find Carl: Main Stage**: a crowd thumbnail, the name, a **Proto** tag and a one-line description.
+- [ ] Hovering the card lightens it and shows a pointer cursor; clicking starts the song. The card's border stays visible all the way round (the thumbnail doesn't cover it).
 
-### Selection UX
-- [ ] Clicking a built tower opens its panel (stats + Upgrade + Sell).
-- [ ] Clicking empty ground, or pressing **Esc**, dismisses the panel; clicking another tower switches to it.
-
-### Demo mode (debug builds only)
-- [ ] A **Demo ▶** button appears (under Start-wave) in debug builds only — not in a release export.
-- [ ] Clicking it autoplays hands-free: towers build out across **all three types**, get upgraded, and all 5 waves start on their own.
-- [ ] The run shows varied situations (each tower type firing, Gunners damaging/destroying towers, Healer pulses) — the point of the demo.
-
-### Camera / scene
-- [ ] The iso scene is well-lit (no black/unlit surfaces); path, slots, goal, and obstacle all read clearly.
-
-### "Find Carl" crowd-surf prototype (`scenes/cs_main.tscn`)
+### Find Carl: Main Stage (`scenes/cs_main.tscn`)
 Capture with `godot --path . --script test/shot_crowd_surf.gd -- <beat|results> /tmp/cs.png`
 (silent manual clock, scripted surfer that weaves and blasts on the beat). For
 *feel*, play it with sound: map picker → **Find Carl: Main Stage**.

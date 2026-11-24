@@ -15,8 +15,10 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 
 ## Unreleased
 
+## 2026.11.23
+
 ### Added
-- **"Find Carl" crowd-surf prototype** (map picker → *Find Carl: Main Stage*): a possible pivot away from tower defense. You crowd-surf toward the stage at a music festival, looking for your lost friend Carl. One level lasts one song.
+- **"Find Carl" crowd-surf prototype** (map picker → *Find Carl: Main Stage*): the game's new direction, replacing tower defense. You crowd-surf toward the stage at a music festival, looking for your lost friend Carl. One level lasts one song.
   - **Song-driven pacing:** fans spawn on the beat, and each section of the track (intro / groove / build / drop / breakdown / boss drop / outro) sets the spawn rate, fan mix and scroll speed. Drops hit with a burst of superfans; the boss drop brings the DJ.
   - **Win fans over instead of hurting them:** fans have headphones / crossed-arms / hype layers. Won-over fans dance on the beat and give you Lift (your health).
   - **Groove meter:** every click fires a Hype Blast sized by how steady your rhythm has been over the last few beats. A constant lateness doesn't count against you. Going double-time in time during builds and drops hits harder ("FREAKING OUT"); random mashing scores near zero.
@@ -32,6 +34,15 @@ Pre-1.0 by nature: this is a prototype, anything can still change.
 - **Cannon tower split mesh** — the cannon now renders as two independent pieces: a grey boxy housing + gun barrel (body), and an octagonal cap disc + dome that takes the elemental color on upgrade. Generated via `assets/models/generate_meshes.py`.
 - **↺ Reset button** — always-available button in the top-right HUD cluster; reloads the current scene immediately without waiting for waves to finish.
 - **Shock slow** — Shock-typed towers now apply the slow effect (0.55× speed, 1.4 s) to any enemy with no active shield, in addition to their 2× damage multiplier against shields. Enemies with an active shield take the damage bonus but are not slowed. Works for both projectile and beam towers.
+
+### Removed
+- **The tower-defense game.** carl is now Find Carl. Removed:
+  - towers, enemies, projectiles, the TD maps, test map and tower sandbox
+  - their 3D models and Blender/Houdini generators, damage numbers, health bars, and the perf/debug overlay
+  - all TD tests and screenshot helpers, plus TD-only theme pieces (element colors and icons, tower icons)
+  - the `PerfTimer` autoload and the first-person `toggle_view` input
+
+  The UI theme, fonts and map picker stay. Everything removed is in git history; the unbuilt TD backlog is shelved on the board as carl-62.
 
 ### Changed
 - **Tower mesh visual-quality overhaul** — the Blender generators now produce smooth-shaded, beveled meshes with baked vertex AO and higher segment counts. The machine gun is a single unified head (housing + barrel + cap), so parts no longer float apart when aiming; the beam emitter has a tidy short electrode crown. Fixed a mesh-stacking axis bug that left a disk "protruding from one side" of the base/silo, and a glTF UV V-flip that mis-mapped silo textures.

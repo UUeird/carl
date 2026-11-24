@@ -9,7 +9,8 @@ extends SceneTree
 ## Plays the level silently on the manual clock from 12 beats before <beat> up
 ## to <beat>, with a scripted surfer that weaves and Hype Blasts on the beat, so
 ## the crowd, conversions, drops and boss attacks are all in frame. Pass
-## `results` instead of a beat to capture the end-of-song screen. Add a third
+## `results` instead of a beat to capture the end-of-song screen, or `picker`
+## for the map picker. Add a third
 ## arg `mouse` to show the mouse-steering reticle.
 
 func _initialize() -> void:
@@ -17,6 +18,15 @@ func _initialize() -> void:
 	var target: String = args[0] if args.size() > 0 else "70"
 	var out_path: String = args[1] if args.size() > 1 else "/tmp/carl_cs.png"
 
+	if target == "picker":
+		var picker: Node = (load("res://scenes/map_picker.tscn") as PackedScene).instantiate()
+		get_root().add_child(picker)
+		for _f in 10:
+			await process_frame
+		get_root().get_viewport().get_texture().get_image().save_png(out_path)
+		print("SAVED ", out_path)
+		quit()
+		return
 	var scene: Node = (load("res://scenes/cs_main.tscn") as PackedScene).instantiate()
 	scene.use_audio = false
 	get_root().add_child(scene)

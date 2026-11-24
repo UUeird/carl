@@ -2,8 +2,7 @@ extends Node2D
 class_name CSFan
 
 ## A festival-goer in the crowd. You don't hurt fans — you win them over. Each
-## fan has up to three stacked "vibe" layers, worn down in order, the same way
-## TD enemies had shield → armor → flesh:
+## fan has up to three stacked "vibe" layers, worn down in order:
 ##   headphones (blue)  — tuned out; glowsticks barely register, Hype Blast knocks them off
 ##   arms crossed (yellow) — skeptical
 ##   hype (pink)        — once full, they're converted

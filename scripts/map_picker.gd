@@ -12,21 +12,6 @@ const MAPS := [
 		"desc": "Crowd-surf one song · win fans over on the beat",
 		"thumb": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><rect x="110" y="0" width="180" height="260" fill="#1E1A26"/><rect x="110" y="0" width="180" height="30" fill="#2A2F3A"/><circle cx="150" cy="80" r="9" fill="#C85A7C"/><circle cx="230" cy="110" r="9" fill="#4F7BD9"/><circle cx="190" cy="150" r="9" fill="#FF5FA2"/><circle cx="250" cy="60" r="12" fill="#8E3FD1"/><circle cx="160" cy="170" r="9" fill="#FF8A3D"/><rect x="190" y="205" width="14" height="22" fill="#F2F4F7"/></svg>',
 	},
-	{
-		"name": "Main Map", "scene": "res://scenes/td_main.tscn", "tag": "Play",
-		"desc": "5 waves · 20 lives · walls block line of sight",
-		"thumb": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><polygon points="200,30 380,130 200,230 20,130" fill="#6F7A5A"/><polyline points="80,100 180,155 240,120 320,165" fill="none" stroke="#B89A6E" stroke-width="18" stroke-linejoin="round" stroke-linecap="round"/><polygon points="150,95 175,108 200,95 175,82" fill="#BFC3C9"/><circle cx="320" cy="165" r="9" fill="#D9483B"/></svg>',
-	},
-	{
-		"name": "Test Map", "scene": "res://scenes/td_test_map.tscn", "tag": "Dev",
-		"desc": "Straight lane, 8 pads, no walls",
-		"thumb": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><polygon points="200,30 380,130 200,230 20,130" fill="#6F7A5A"/><line x1="80" y1="98" x2="320" y2="162" stroke="#B89A6E" stroke-width="18" stroke-linecap="round"/><circle cx="320" cy="162" r="9" fill="#D9483B"/></svg>',
-	},
-	{
-		"name": "Tower Sandbox", "scene": "res://scenes/tower_sandbox.tscn", "tag": "Dev",
-		"desc": "Inspect tower meshes and effects",
-		"thumb": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260"><polygon points="200,30 380,130 200,230 20,130" fill="#4A5240"/><rect x="150" y="105" width="22" height="26" rx="3" fill="#5F6672"/><rect x="190" y="120" width="22" height="26" rx="3" fill="#5F6672"/><rect x="230" y="105" width="22" height="26" rx="3" fill="#5F6672"/></svg>',
-	},
 ]
 const THUMB_HEIGHT := 260   ## raster height of the thumbnail SVGs
 const THUMB_BG := Color("#191D23")

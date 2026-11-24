@@ -1,6 +1,8 @@
 # Working on `carl`
 
-A Godot 4 tower-defense game (3D, isometric camera). This file is for AI agents
+**Find Carl**, a Godot 4 rhythm crowd-surfing game (2D, one level = one song).
+It pivoted from tower defense in Nov 2026; the TD code is in git history and its
+backlog is shelved on the board (carl-62). This file is for AI agents
 picking up the work — it captures **how we work in this repo**, not what the game
 is. For *what it is and how to play*, read [README.md](README.md); for *what's
 done / next*, see the roadmap (below).
@@ -32,8 +34,8 @@ done / next*, see the roadmap (below).
    `/git-flow` (branch lifecycle — this file wins where they differ, e.g.
    commit only when asked).
 
-The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
-`scenes/td_main.tscn`. Engine: Godot 4.6, run via
+The boot scene is `scenes/map_picker.tscn`, which loads the level
+`scenes/cs_main.tscn`. Engine: Godot 4.6, run via
 `/Applications/Godot.app/Contents/MacOS/Godot` on this machine.
 
 ## The non-negotiables
@@ -54,92 +56,72 @@ The boot scene is `scenes/map_picker.tscn`, which loads the main gameplay scene
 
 ## Conventions that matter (follow the existing grain)
 
-- **Data-driven type tables.** Both towers and enemies define a `const TYPES := {}`
-  keyed by an `enum Type`, holding per-type stats + behavior flags, and a
-  `configure(type)` that reads from it. Adding or balancing a type is a *one-place
-  edit in the table* — don't scatter constants across methods. See
-  [scripts/td_tower.gd](scripts/td_tower.gd) and
-  [scripts/td_enemy.gd](scripts/td_enemy.gd).
-- **Static registries instead of group scans.** Live entities self-register in a
-  `static var all_*: Array` (`TDEnemy.all_enemies`, `TDTower.all_towers`):
-  append in `_ready`, `erase` in `_exit_tree`. Iterate these instead of
-  `get_nodes_in_group(...)` on hot paths — the group scan was a measured
-  bottleneck. Always `is_instance_valid()`-check entries while iterating.
-- **Timer-driven flashes/effects, not per-hit tweens.** Repeated damage refreshes
-  a `_flash_timer` that a `_process`/`_physics_process` tick fades — so a beam
-  hitting every frame costs nothing extra. Don't spawn a tween per hit.
-- **Stagger per-frame work across instances.** When many instances do periodic
-  work (retarget, heal pulse, gun shot), seed their timer with
-  `randf() * INTERVAL` in `configure()` so they don't all fire on the same frame.
-- **`_process` vs `_physics_process`.** Stationary things that don't move/collide
-  (towers) run in `_process`; things that move via the physics path (enemies) run
-  in `_physics_process`. Putting stationary logic in `_physics_process` caused
-  physics-catchup bursts.
-- **Guard against a null `current_scene`.** Effects that `add_child` into
-  `get_tree().current_scene` must no-op when it's null (tests run without one).
-  Do gameplay-affecting work (damage) *before* the visual so the visual's null
-  guard doesn't skip it. See `_spawn_explosion` in
-  [scripts/td_enemy.gd](scripts/td_enemy.gd).
-- **GDScript gotchas seen here:** a static var with a leading underscore can't be
-  read as `ClassName._name` from another class (drop the underscore if it must be
-  cross-class); `var x := scene.instantiate()` can't infer type — annotate
-  `var x: Node = ...`. Godot 4 projects need `config_version=5` in `project.godot`.
+- **The song is the clock.** Gameplay timing comes from `CSConductor`
+  ([scripts/cs_conductor.gd](scripts/cs_conductor.gd)): connect to its
+  `beat` / `half_beat` / `section_changed` / `finished` signals or read
+  `song_time` / `beat_pos()`. Don't run gameplay off frame timers when it
+  should follow the music. While audio plays, the clock is the latency-adjusted
+  playback position; with `manual_clock = true` (tests, the bot,
+  `CSGame.use_audio = false`) it only moves through `advance(dt)`. Never make
+  gameplay depend on sound actually playing.
+- **Pacing is data.** Per-section behavior (spawn rate, fan mix, scroll speed,
+  drop bursts, Carl chance, boss) lives in `CSGame.SECTION_RULES`, keyed by
+  section *kind*. The beatmap JSON only describes the music. Tune pacing in
+  the table, not in code paths.
+- **Data-driven type tables.** Fans define `const TYPES := {}` keyed by
+  `enum Type`, with stats and flags read in `configure(type)`
+  ([scripts/cs_fan.gd](scripts/cs_fan.gd)). Adding or balancing a type is a
+  one-place edit; don't scatter constants across methods. Damage-like numbers
+  (blast radius/power, cheer, Lift) are named consts at the top of their script.
+- **Rhythm input goes through the groove.** Every rhythm input (click, Space,
+  later touch or shake) calls `CSGame.try_hype_blast()`, which records into
+  `CSGroove` and sizes the blast by the groove. Don't add per-beat hit/miss
+  judging to new mechanics: groove deliberately tolerates constant lateness and
+  rewards in-time double-time.
+- **Static registries instead of group scans.** Live entities self-register in
+  a `static var all_*: Array` (`CSFan.all_fans`): append in `_ready`, `erase`
+  in `_exit_tree`. Always `is_instance_valid()`-check entries while iterating,
+  and `duplicate()` the array if anything might free a fan mid-loop.
+  Shared per-frame context (scroll speed, player position, beat pulse) is set
+  once per frame as static vars on `CSFan` by the game.
+- **Pool short-lived nodes; draw cheap effects as data.** Glowsticks use a
+  static free-list plus `prewarm()` (`CSGlowstick`). Boss rings/lasers and
+  popups are arrays of dictionaries drawn in `_draw()`, not nodes. Effects
+  fade on a timer refreshed by hits (`_flash`), not a tween per hit.
+- **Mouse = captured + relative.** Steering uses `MOUSE_MODE_CAPTURED` and
+  `InputEventMouseMotion.relative` to move a virtual reticle
+  (`CSPlayer.nudge_reticle`). Absolute cursor positions
+  (`get_global_mouse_position()`, confined/hidden modes) were stale or frozen on
+  macOS. Don't switch back without a real-hardware test.
+- **GDScript gotchas seen here:** `min()`/`max()` return Variant, so `:=` can't
+  infer from them; use `mini`/`maxi`/`minf`/`maxf` or annotate the type. A
+  static var with a leading underscore can't be read as `ClassName._name` from
+  another class. Self-referential typed static arrays
+  (`static var _pool: Array[MyClass]`) break the parser, so use untyped `Array`.
+  `var x := scene.instantiate()` can't infer its type, so annotate it
+  (`var x: Node = ...`). Godot 4 projects need `config_version=5` in `project.godot`.
 
-## Adding or replacing assets (meshes, animations, effects)
+## Tuning difficulty
 
-Every new visual asset needs to be wired into three systems to avoid mid-wave
-hitches. We learned this the hard way — skipping any one of them causes a
-visible freeze the first time that asset appears in gameplay.
+Feel is judged by playing with sound. Numbers come from the bot:
+`godot --headless --path . --script test/sim_crowd_surf.gd -- <skill 0..1> <runs>`.
+The bot dodges fans and ring openings, and taps a rhythm with timing wobble
+scaled by `1 - skill` (going double-time in builds and drops when skilled). It
+reports survival, DJ wins and average groove. Calibrate against playtests:
+the bot sees everything, so real players do worse than its numbers.
 
-### 1. Static mesh cache (`_load_glb_mesh`)
-`.glb` files are loaded via `TDEnemy._load_glb_mesh(path)` and
-`TDTower._load_glb_mesh(path)` — both `static func`, both backed by a
-`static var _mesh_cache: Dictionary`. The cache means `load()` +
-`instantiate()` only happen once per path. When you add a new `.glb`:
-- Add its path to the relevant `_MESHES` / `_HEAD_MESHES` const.
-- Call `_load_glb_mesh(path)` for it in `_prewarm_shaders()` in
-  [scripts/td_game.gd](scripts/td_game.gd) so the cache is warm before
-  the first wave. Without this, the first spawn of that type hitches.
+## Adding a fan type or mechanic (the common task)
 
-### 2. Shader prewarm (`_prewarm_shaders` in `td_game.gd`)
-Godot compiles shaders on first render. `_prewarm_shaders()` adds one
-invisible instance of every scene/material off-screen for a single frame
-so compilation happens at load time, not mid-wave. When you add:
-- A new enemy or tower scene → add it to the scene loop in `_prewarm_shaders`.
-- A new effect with a unique material (e.g. a new pulse ring, particle, VFX
-  mesh) → add a `MeshInstance3D` with that material to `_prewarm_shaders`.
-- A new `.glb` mesh type → add the `_load_glb_mesh` call (see above).
-
-### 3. Object pools (short-lived nodes)
-Nodes that spawn and die repeatedly — damage numbers, hit effects, pulse
-rings — must be pooled, not allocated per-event. Allocating a `Label3D` or
-`MeshInstance3D` mid-frame causes consistent stutter under combat load.
-- **Damage numbers** are pooled in `DamageNumber` (`scripts/damage_number.gd`)
-  via a static free-list. `DamageNumber.prewarm(scene_root)` is called at
-  startup; `popup()` pulls from the pool and returns to it on expiry.
-- **Heal pulses and similar one-shot VFX** should share a single static
-  material instance rather than allocating `StandardMaterial3D.new()` per
-  pulse. If a new repeating effect allocates a material per spawn, extract
-  it to a `static var` initialized once.
-- If you add a new short-lived visual (hit sparks, explosion ring, etc.),
-  use the same pattern: static pool + prewarm, not `Node.new()` per event.
-
-### 4. GDScript static method gotcha
-Self-referential typed static arrays (`static var _pool: Array[MyClass]`)
-cause a parser bootstrapping failure in Godot 4 — the class isn't fully
-defined when the static initializer runs. Use untyped `Array` instead.
-
-## Adding an enemy or tower type (the common task)
-
-1. Add an entry to the `TYPES` table (color, health/stats, behavior flags).
-2. If it needs new behavior, add the tick logic gated on its flag (e.g.
-   `if _heal_radius > 0.0: _tick_heal(delta)`), reusing the registries above.
-3. For enemies, the spawner picks types in `_pick_enemy_type()` in
-   [scripts/td_game.gd](scripts/td_game.gd) — wire the wave-mix there.
-4. Add GUT tests (see [test/test_enemy_types.gd](test/test_enemy_types.gd) as the
-   model: configure stats, range in/out, behavior on/off).
-5. Add the visible behavior to [test/VISUAL_CHECKLIST.md](test/VISUAL_CHECKLIST.md).
-6. Run `./run_tests.sh`, do a headed check, update the roadmap.
+1. Add an entry to the `TYPES` table (color, layers, chase, grab cost, score).
+2. If it needs new behavior, gate it on a flag in the table and reuse the
+   registries, the conductor signals, and `SECTION_RULES` for when it appears.
+3. Wire it into the `mix` (or `burst`) of the sections where it should spawn.
+4. Add GUT tests ([test/test_crowd_surf.gd](test/test_crowd_surf.gd) is the
+   model; set `game.use_audio = false` and step the manual clock).
+5. Add the visible behavior to [test/VISUAL_CHECKLIST.md](test/VISUAL_CHECKLIST.md)
+   and check it with `test/shot_crowd_surf.gd`.
+6. Run `./run_tests.sh`, run the difficulty bot if balance moved, do a headed
+   check, and update the roadmap.
 
 ## ultrareview
 
